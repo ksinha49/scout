@@ -124,7 +124,18 @@ def set_faster_whisper_model(model: str, auto_update: bool = False):
                 "WhisperModel initialization failed, attempting download with local_files_only=False"
             )
             faster_whisper_kwargs["local_files_only"] = False
-            whisper_model = WhisperModel(**faster_whisper_kwargs)
+            try:
+                whisper_model = WhisperModel(**faster_whisper_kwargs)
+            except Exception as e:
+                error_message = str(e).lower()
+                if "cudnn" in error_message or "libcudnn" in error_message:
+                    log.warning(
+                        "CUDA-related error detected (%s); falling back to CPU", e
+                    )
+                    faster_whisper_kwargs["device"] = "cpu"
+                    whisper_model = WhisperModel(**faster_whisper_kwargs)
+                else:
+                    raise
     return whisper_model
 
 
