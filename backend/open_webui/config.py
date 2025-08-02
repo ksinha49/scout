@@ -3,8 +3,9 @@ Modification Log:
 ------------------
 | Date       | Author         | MOD TAG            | Description                                       |
 |------------|----------------|--------------------|---------------------------------------------------|
-| 2024-11-06 | AAK7S          | AMER-MOD           | ADDED CREDENTIALS FOR MILVUS VECTOR DB ACCESS                                          
+| 2024-11-06 | AAK7S          | AMER-MOD           | ADDED CREDENTIALS FOR MILVUS VECTOR DB ACCESS
 """
+
 import json
 import logging
 import os
@@ -806,7 +807,9 @@ if ENV == "prod":
         if USE_OLLAMA_DOCKER.lower() == "true":
             # if you use all-in-one docker container (Open WebUI + Ollama)
             # with the docker build arg USE_OLLAMA=true (--build-arg="USE_OLLAMA=true") this only works with http://localhost:11434
-            OLLAMA_BASE_URL =os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434")
+            OLLAMA_BASE_URL = os.environ.get(
+                "OLLAMA_BASE_URL", "http://localhost:11434"
+            )
 
         else:
             OLLAMA_BASE_URL = "http://host.docker.internal:11434"
@@ -2421,6 +2424,12 @@ WHISPER_MODEL = PersistentConfig(
     "WHISPER_MODEL",
     "audio.stt.whisper_model",
     os.getenv("WHISPER_MODEL", "base"),
+)
+
+WHISPER_MODEL_DIR_CONFIG = PersistentConfig(
+    "WHISPER_MODEL_DIR",
+    "audio.stt.whisper_model_dir",
+    str(WHISPER_MODEL_DIR),
 )
 
 WHISPER_MODEL_AUTO_UPDATE = (
