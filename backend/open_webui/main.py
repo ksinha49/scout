@@ -7,8 +7,9 @@ Modification Log:
 |            |                |                    | **Old Code:** Exposed detailed exception messages to users.                                         |
 |            |                |                    | **New Code:** Logged exception details while providing a generic error message to users.            |
 | 2025-12-02 | X1BA           | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
-| 2025-03-15 | X1BA           | AMER-ENH           | Removed swagger info                                                                                |           
+| 2025-03-15 | X1BA           | AMER-ENH           | Removed swagger info                                                                                |
 """
+
 import asyncio
 import inspect
 import json
@@ -176,6 +177,7 @@ from open_webui.config import (
     DEEPGRAM_API_KEY,
     WHISPER_MODEL_AUTO_UPDATE,
     WHISPER_MODEL_DIR,
+    WHISPER_MODEL_DIR_CONFIG,
     # Retrieval
     RAG_TEMPLATE,
     DEFAULT_RAG_TEMPLATE,
@@ -776,27 +778,21 @@ app.state.config.STT_MODEL = AUDIO_STT_MODEL
 
 app.state.config.WHISPER_MODEL = WHISPER_MODEL
 app.state.config.DEEPGRAM_API_KEY = DEEPGRAM_API_KEY
-app.state.config.WHISPER_MODEL_DIR = WHISPER_MODEL_DIR
+app.state.config.WHISPER_MODEL_DIR = WHISPER_MODEL_DIR_CONFIG
 
 if app.state.config.STT_ENGINE == "":
-    logger.info(
-        f"Preloading Whisper model '{WHISPER_MODEL}' into {WHISPER_MODEL_DIR}"
-    )
+    logger.info(f"Preloading Whisper model '{WHISPER_MODEL}' into {WHISPER_MODEL_DIR}")
     try:
         app.state.faster_whisper_model = audio.set_faster_whisper_model(
             WHISPER_MODEL, auto_update=WHISPER_MODEL_AUTO_UPDATE
         )
         device = getattr(app.state.faster_whisper_model, "device", "cpu")
         if device == "cpu":
-            logger.warning(
-                "Whisper model loaded on CPU; performance may be degraded"
-            )
+            logger.warning("Whisper model loaded on CPU; performance may be degraded")
         else:
             logger.info(f"Whisper model loaded on {device}")
     except Exception as e:
-        logger.warning(
-            f"Failed to preload Whisper model '{WHISPER_MODEL}': {e}"
-        )
+        logger.warning(f"Failed to preload Whisper model '{WHISPER_MODEL}': {e}")
 else:
     app.state.faster_whisper_model = None
 
@@ -1373,6 +1369,7 @@ async def get_app_latest_release_version(user=Depends(get_verified_user)):
 async def get_app_changelog():
     return {key: CHANGELOG[key] for idx, key in enumerate(CHANGELOG) if idx < 5}
 
+
 @app.get("/api/securitymd")
 async def get_app_securitymd():
     return {key: SECURITYMD[key] for idx, key in enumerate(SECURITYMD) if idx < 5}
@@ -1485,8 +1482,8 @@ def swagger_ui_html(*args, **kwargs):
 AMER-ENH  
 """
 
-#AMER-ENH  
-#applications.get_swagger_ui_html = swagger_ui_html
+# AMER-ENH
+# applications.get_swagger_ui_html = swagger_ui_html
 
 if os.path.exists(FRONTEND_BUILD_DIR):
     mimetypes.add_type("text/javascript", ".js")
