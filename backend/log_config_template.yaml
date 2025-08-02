@@ -1,0 +1,161 @@
+version: 1
+disable_existing_loggers: False
+
+formatters:
+  standard:
+    format: '{timestamp: %(asctime)s, name: %(name)s, levelname: %(levelname)s, message: %(message)s}'
+  no_name:
+    format: "%(asctime)s - %(levelname)s - %(message)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: standard
+    level: __GLOBAL_LOG_LEVEL__
+    stream: ext://sys.stdout
+
+  file:
+    class: logging.FileHandler
+    formatter: standard
+    level: __GLOBAL_LOG_LEVEL__
+    filename: __LOG_FILENAME__
+    mode: a
+
+  file_concise:
+    class: logging.FileHandler
+    formatter: no_name
+    level: __GLOBAL_LOG_LEVEL__
+    filename: __LOG_FILENAME__
+    mode: a
+
+loggers:
+  uvicorn:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  uvicorn.error:
+    formatter: no_name
+    handlers: [console, 'file_concise']
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  uvicorn.access:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+    
+  open_webui.env:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no    
+ 
+  open_webui.rag.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.rag.utils:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no  
+
+
+  open_webui.socket.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+  
+  open_webui.ollama.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+  
+  open_webui.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.internal.db:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.internal.wrappers:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.auths:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.documents:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.files:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.functions:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.models:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.tags:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.routers.chats:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.routers.files:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.routers.users:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.models.routers.memories:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.audio.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.images.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no
+
+  open_webui.main:
+    handlers: [console, file]
+    level: __GLOBAL_LOG_LEVEL__
+    propagate: no  
+
+
+root:
+  handlers: [console, file]
+  level: __GLOBAL_LOG_LEVEL__
