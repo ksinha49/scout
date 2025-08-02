@@ -104,7 +104,9 @@ def convert_mp4_to_wav(file_path, output_path):
     log.debug(f"Converted {file_path} to {output_path}")
 
 
-def set_faster_whisper_model(model: str, auto_update: bool = False):
+def set_faster_whisper_model(
+    model: str, auto_update: bool = False, device: str | None = None
+):
     whisper_model = None
     if model:
         force_cpu = False
@@ -129,7 +131,13 @@ def set_faster_whisper_model(model: str, auto_update: bool = False):
 
         faster_whisper_kwargs = {
             "model_size_or_path": model,
-            "device": "cpu" if force_cpu else (DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu"),
+            "device": device
+            if device
+            else (
+                "cpu"
+                if force_cpu
+                else (DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu")
+            ),
             "compute_type": "int8",
             "download_root": WHISPER_MODEL_DIR,
             "local_files_only": not auto_update,
@@ -530,7 +538,36 @@ def transcribe(request: Request, file_path):
             )
 
         model = request.app.state.faster_whisper_model
-        segments, info = model.transcribe(file_path, beam_size=5)
+        try:
+            segments, info = model.transcribe(file_path, beam_size=5)
+        except (RuntimeError, OSError) as e:
+            error_message = str(e).lower()
+            if (
+                "cuda" in error_message
+                or "cudnn" in error_message
+                or "libcudnn" in error_message
+            ):
+                log.warning(
+                    "CUDA-related error during transcription (%s); attempting CPU fallback",
+                    e,
+                )
+                try:
+                    request.app.state.faster_whisper_model = set_faster_whisper_model(
+                        request.app.state.config.WHISPER_MODEL,
+                        device="cpu",
+                    )
+                    model = request.app.state.faster_whisper_model
+                    if model is None:
+                        raise RuntimeError("Failed to initialize WhisperModel on CPU")
+                    segments, info = model.transcribe(file_path, beam_size=5)
+                except Exception as cpu_e:
+                    log.exception(cpu_e)
+                    raise RuntimeError(
+                        "CUDA/cuDNN libraries missing and CPU fallback failed"
+                    ) from cpu_e
+            else:
+                log.exception(e)
+                raise
         log.info(
             "Detected language '%s' with probability %f"
             % (info.language, info.language_probability)
