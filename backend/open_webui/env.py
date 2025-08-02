@@ -328,6 +328,15 @@ if FROM_INIT_PY:
     ).resolve()
 
 ####################################
+# Whisper model directory
+####################################
+
+WHISPER_MODEL_DIR = Path(
+    os.getenv("WHISPER_MODEL_DIR", DATA_DIR / "cache" / "whisper" / "models")
+).resolve()
+WHISPER_MODEL_DIR.mkdir(parents=True, exist_ok=True)
+
+####################################
 # Database
 ####################################
 
