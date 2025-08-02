@@ -136,7 +136,7 @@ def set_faster_whisper_model(
             else (
                 "cpu"
                 if force_cpu
-                else (DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu")
+                else (DEVICE_TYPE if DEVICE_TYPE == "cuda" else "cpu")
             ),
             "compute_type": "int8",
             "download_root": WHISPER_MODEL_DIR,
