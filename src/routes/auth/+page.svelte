@@ -1,3 +1,11 @@
+<!--
+Modification Log:
+------------------
+| Date       | Author | MOD TAG    | Description                                   |
+|------------|--------|------------|-----------------------------------------------|
+| 2025-08-02 | AAK7S  | AUTH-FIX   | Make silent SSO login provider-aware          |
+-->
+
 <script>
 	import { toast } from 'svelte-sonner';
 
@@ -140,37 +148,40 @@
 		}
 	}
 
-	onMount(async () => {
-		if ($user !== undefined) {
-			const redirectPath = querystringValue('redirect') || '/';
-			goto(redirectPath);
-		}
-		await checkOauthCallback();
-
-                try {
-                        const resp = await fetch(
-                                `${WEBUI_BASE_URL}/oauth/microsoft/silent-login`,
-                                { redirect: 'manual', credentials: 'include' }
-                        );
-                        if (resp.status >= 300 && resp.status < 400) {
-                                const url = resp.headers.get('Location');
-                                if (url) {
-                                        window.location.href = url;
-                                        return;
-                                }
-                        }
-                } catch (e) {
-                        console.error(e);
+        onMount(async () => {
+                if ($user !== undefined) {
+                        const redirectPath = querystringValue('redirect') || '/';
+                        goto(redirectPath);
                 }
-		loaded = true;
-		setLogoImage();
+                await checkOauthCallback();
 
-		if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
-			await signInHandler();
-		} else {
-			onboarding = $config?.onboarding ?? false;
-		}
-	});
+                const provider = Object.keys($config?.oauth?.providers ?? {})[0];
+                if (provider) {
+                        try {
+                                const resp = await fetch(
+                                        `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
+                                        { redirect: 'manual', credentials: 'include' }
+                                );
+                                if (resp.status >= 300 && resp.status < 400) {
+                                        const url = resp.headers.get('Location');
+                                        if (url) {
+                                                window.location.href = url;
+                                                return;
+                                        }
+                                }
+                        } catch (e) {
+                                console.error(e);
+                        }
+                }
+                loaded = true;
+                setLogoImage();
+
+                if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
+                        await signInHandler();
+                } else {
+                        onboarding = $config?.onboarding ?? false;
+                }
+        });
 </script>
 
 <svelte:head>
