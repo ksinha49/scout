@@ -776,6 +776,29 @@ app.state.config.STT_MODEL = AUDIO_STT_MODEL
 
 app.state.config.WHISPER_MODEL = WHISPER_MODEL
 app.state.config.DEEPGRAM_API_KEY = DEEPGRAM_API_KEY
+app.state.config.WHISPER_MODEL_DIR = WHISPER_MODEL_DIR
+
+if app.state.config.STT_ENGINE == "":
+    logger.info(
+        f"Preloading Whisper model '{WHISPER_MODEL}' into {WHISPER_MODEL_DIR}"
+    )
+    try:
+        app.state.faster_whisper_model = audio.set_faster_whisper_model(
+            WHISPER_MODEL, auto_update=WHISPER_MODEL_AUTO_UPDATE
+        )
+        device = getattr(app.state.faster_whisper_model, "device", "cpu")
+        if device == "cpu":
+            logger.warning(
+                "Whisper model loaded on CPU; performance may be degraded"
+            )
+        else:
+            logger.info(f"Whisper model loaded on {device}")
+    except Exception as e:
+        logger.warning(
+            f"Failed to preload Whisper model '{WHISPER_MODEL}': {e}"
+        )
+else:
+    app.state.faster_whisper_model = None
 
 app.state.config.TTS_OPENAI_API_BASE_URL = AUDIO_TTS_OPENAI_API_BASE_URL
 app.state.config.TTS_OPENAI_API_KEY = AUDIO_TTS_OPENAI_API_KEY
@@ -790,7 +813,6 @@ app.state.config.TTS_AZURE_SPEECH_REGION = AUDIO_TTS_AZURE_SPEECH_REGION
 app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT = AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT
 
 
-app.state.faster_whisper_model = None
 app.state.speech_synthesiser = None
 app.state.speech_speaker_embeddings_dataset = None
 

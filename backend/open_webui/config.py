@@ -29,6 +29,7 @@ from open_webui.env import (
     REDIS_SENTINEL_HOSTS,
     REDIS_SENTINEL_PORT,
     FRONTEND_BUILD_DIR,
+    WHISPER_MODEL_DIR,
     OFFLINE_MODE,
     OPEN_WEBUI_DIR,
     WEBUI_AUTH,
@@ -2422,7 +2423,6 @@ WHISPER_MODEL = PersistentConfig(
     os.getenv("WHISPER_MODEL", "base"),
 )
 
-WHISPER_MODEL_DIR = os.getenv("WHISPER_MODEL_DIR", f"{CACHE_DIR}/whisper/models")
 WHISPER_MODEL_AUTO_UPDATE = (
     not OFFLINE_MODE
     and os.environ.get("WHISPER_MODEL_AUTO_UPDATE", "").lower() == "true"
