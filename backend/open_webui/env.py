@@ -53,14 +53,17 @@ USE_CUDA = os.environ.get("USE_CUDA_DOCKER", "false")
 if USE_CUDA.lower() == "true":
     try:
         import torch
-
-        assert torch.cuda.is_available(), "CUDA not available"
+        # Confirm both CUDA and cuDNN are available before enabling GPU
+        assert torch.cuda.is_available() and torch.backends.cudnn.is_available(), (
+            "CUDA or cuDNN not available"
+        )
         DEVICE_TYPE = "cuda"
     except Exception as e:
-        cuda_error = (
-            "Error when testing CUDA but USE_CUDA_DOCKER is true. "
+        cuda_warning = (
+            "CUDA/cuDNN unavailable but USE_CUDA_DOCKER is true. "
             f"Resetting USE_CUDA_DOCKER to false: {e}"
         )
+        # Fall back to CPU when either CUDA or cuDNN is missing
         os.environ["USE_CUDA_DOCKER"] = "false"
         USE_CUDA = "false"
         DEVICE_TYPE = "cpu"
@@ -88,9 +91,9 @@ else:
 log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
-if "cuda_error" in locals():
-    log.exception(cuda_error)
-    del cuda_error
+if "cuda_warning" in locals():
+    log.warning(cuda_warning)
+    del cuda_warning
 
 log_sources = [
     "AUDIO",
