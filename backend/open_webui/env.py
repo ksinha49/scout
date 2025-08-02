@@ -215,8 +215,13 @@ security_json = {}
 
 # Iterate over each version
 for version in soup.find_all("h2"):
-    version_number = version.get_text().strip().split(" - ")[0][1:-1]  # Remove brackets
-    date = version.get_text().strip().split(" - ")[1]
+    version_text = version.get_text().strip()
+    parts = version_text.split(" - ", 1)
+    if len(parts) < 2:
+        log.warning(f"Skipping changelog entry with missing date: {version_text}")
+        continue
+    version_number = parts[0][1:-1]  # Remove brackets
+    date = parts[1]
 
     version_data = {"date": date}
 
