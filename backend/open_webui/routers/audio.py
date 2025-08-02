@@ -107,11 +107,29 @@ def convert_mp4_to_wav(file_path, output_path):
 def set_faster_whisper_model(model: str, auto_update: bool = False):
     whisper_model = None
     if model:
-        from faster_whisper import WhisperModel
+        force_cpu = False
+        try:
+            from faster_whisper import WhisperModel
+        except (ImportError, OSError) as e:
+            error_message = str(e).lower()
+            if "cuda" in error_message or "cudnn" in error_message or "libcudnn" in error_message:
+                log.warning(
+                    "WhisperModel import failed due to missing CUDA/cuDNN libraries (%s); retrying on CPU",
+                    e,
+                )
+                try:
+                    from faster_whisper import WhisperModel
+                except Exception as inner_e:
+                    log.error("Retrying WhisperModel import failed: %s", inner_e)
+                    return None
+                force_cpu = True
+            else:
+                log.error("Failed to import WhisperModel: %s", e)
+                return None
 
         faster_whisper_kwargs = {
             "model_size_or_path": model,
-            "device": DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu",
+            "device": "cpu" if force_cpu else (DEVICE_TYPE if DEVICE_TYPE and DEVICE_TYPE == "cuda" else "cpu"),
             "compute_type": "int8",
             "download_root": WHISPER_MODEL_DIR,
             "local_files_only": not auto_update,
@@ -128,14 +146,19 @@ def set_faster_whisper_model(model: str, auto_update: bool = False):
                 whisper_model = WhisperModel(**faster_whisper_kwargs)
             except Exception as e:
                 error_message = str(e).lower()
-                if "cudnn" in error_message or "libcudnn" in error_message:
+                if "cudnn" in error_message or "libcudnn" in error_message or "cuda" in error_message:
                     log.warning(
                         "CUDA-related error detected (%s); falling back to CPU", e
                     )
                     faster_whisper_kwargs["device"] = "cpu"
-                    whisper_model = WhisperModel(**faster_whisper_kwargs)
+                    try:
+                        whisper_model = WhisperModel(**faster_whisper_kwargs)
+                    except Exception as cpu_e:
+                        log.error("Failed to initialize WhisperModel on CPU: %s", cpu_e)
+                        return None
                 else:
-                    raise
+                    log.error("WhisperModel initialization failed: %s", e)
+                    return None
     return whisper_model
 
 
