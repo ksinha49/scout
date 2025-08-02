@@ -125,28 +125,34 @@ Modification Log:
 
 	let onboarding = false;
 
-	async function setLogoImage() {
-		await tick();
-		const logo = document.getElementById('logo');
+       async function setLogoImage() {
+               await tick();
+               const isDarkMode = document.documentElement.classList.contains('dark');
+               const logos = ['logo', 'auth-logo'];
 
-		if (logo) {
-			const isDarkMode = document.documentElement.classList.contains('dark');
+               logos.forEach((id) => {
+                       const logo = document.getElementById(id);
+                       if (logo) {
+                               if (isDarkMode) {
+                                       const darkImage = new Image();
+                                       darkImage.src = '/static/favicon-dark.png';
 
-			if (isDarkMode) {
-				const darkImage = new Image();
-				darkImage.src = '/static/favicon-dark.png';
+                                       darkImage.onload = () => {
+                                               logo.src = '/static/favicon-dark.png';
+                                               logo.style.filter = ''; // Ensure no inversion is applied if favicon-dark.png exists
+                                       };
 
-				darkImage.onload = () => {
-					logo.src = '/static/favicon-dark.png';
-					logo.style.filter = ''; // Ensure no inversion is applied if favicon-dark.png exists
-				};
-
-				darkImage.onerror = () => {
-					logo.style.filter = 'invert(1)'; // Invert image if favicon-dark.png is missing
-				};
-			}
-		}
-	}
+                                       darkImage.onerror = () => {
+                                               logo.src = '/static/favicon.png';
+                                               logo.style.filter = 'invert(1)'; // Invert image if favicon-dark.png is missing
+                                       };
+                               } else {
+                                       logo.src = '/static/favicon.png';
+                                       logo.style.filter = '';
+                               }
+                       }
+               });
+       }
 
         onMount(async () => {
                 if ($user !== undefined) {
@@ -238,14 +244,20 @@ Modification Log:
 					</div>
 				{:else}
 					<div class="  my-auto pb-10 w-full dark:text-gray-100">
-						<form
-							class=" flex flex-col justify-center"
-							on:submit={(e) => {
-								e.preventDefault();
-								submitHandler();
-							}}
-						>
-							<div class="mb-1">
+                                                <form
+                                                        class=" flex flex-col justify-center"
+                                                        on:submit={(e) => {
+                                                                e.preventDefault();
+                                                                submitHandler();
+                                                        }}
+                                                >
+                                                        <img
+                                                                id="auth-logo"
+                                                                src="/static/favicon.png"
+                                                                alt="App logo"
+                                                                class="mx-auto mb-4 w-16 h-16"
+                                                        />
+                                                        <div class="mb-1">
 								<div class=" text-2xl font-medium">
 									{#if $config?.onboarding ?? false}
 										{$i18n.t(`Get started with {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
