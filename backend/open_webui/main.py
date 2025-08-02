@@ -781,10 +781,12 @@ app.state.config.DEEPGRAM_API_KEY = DEEPGRAM_API_KEY
 app.state.config.WHISPER_MODEL_DIR = WHISPER_MODEL_DIR_CONFIG
 
 if app.state.config.STT_ENGINE == "":
-    log.info(f"Preloading Whisper model '{WHISPER_MODEL}' into {WHISPER_MODEL_DIR}")
+    log.info(
+        f"Preloading Whisper model '{WHISPER_MODEL.value}' into {WHISPER_MODEL_DIR}"
+    )
     try:
         app.state.faster_whisper_model = audio.set_faster_whisper_model(
-            WHISPER_MODEL, auto_update=WHISPER_MODEL_AUTO_UPDATE
+            WHISPER_MODEL.value, auto_update=WHISPER_MODEL_AUTO_UPDATE
         )
         device = getattr(app.state.faster_whisper_model, "device", "cpu")
         if device == "cpu":
@@ -792,7 +794,9 @@ if app.state.config.STT_ENGINE == "":
         else:
             log.info(f"Whisper model loaded on {device}")
     except Exception as e:
-        log.warning(f"Failed to preload Whisper model '{WHISPER_MODEL}': {e}")
+        log.warning(
+            f"Failed to preload Whisper model '{WHISPER_MODEL.value}': {e}"
+        )
 else:
     app.state.faster_whisper_model = None
 
