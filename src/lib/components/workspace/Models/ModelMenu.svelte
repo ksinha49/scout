@@ -18,16 +18,11 @@
 
 	const i18n = getContext('i18n');
 
-	export let user;
-	export let model;
-
-	export let shareHandler: Function;
-	export let cloneHandler: Function;
-	export let exportHandler: Function;
-
-	export let hideHandler: Function;
-	export let deleteHandler: Function;
-	export let onClose: Function;
+        export let shareHandler: Function;
+        export let cloneHandler: Function;
+        export let exportHandler: Function;
+        export let deleteHandler: Function;
+        export let onClose: Function;
 
 	let show = false;
 </script>

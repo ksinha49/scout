@@ -6,11 +6,10 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VirtualList from '@sveltejs/svelte-virtual-list';
 
-	export let onClose = () => {};
-	export let onSubmit = (name) => {};
-	export let side = 'top';
-	export let align = 'start';
-	export let user = null;
+        export let onClose = () => {};
+        export let onSubmit = (name) => {};
+        export let side = 'top';
+        export let align = 'start';
 
 	let show = false;
 	let emojis = emojiShortCodes;
