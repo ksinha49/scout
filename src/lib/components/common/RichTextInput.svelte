@@ -11,8 +11,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const eventDispatch = createEventDispatcher();
 
-	import { EditorState, Plugin, PluginKey, TextSelection } from 'prosemirror-state';
-	import { Decoration, DecorationSet } from 'prosemirror-view';
+        import { TextSelection } from 'prosemirror-state';
 
 	import { Editor } from '@tiptap/core';
 
