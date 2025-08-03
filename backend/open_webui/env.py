@@ -327,6 +327,16 @@ if FROM_INIT_PY:
         os.getenv("FRONTEND_BUILD_DIR", OPEN_WEBUI_DIR / "frontend")
     ).resolve()
 
+CACHE_DIR = DATA_DIR / "cache"
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+os.environ.setdefault("XDG_CACHE_HOME", str(CACHE_DIR))
+os.environ.setdefault("TORCH_HOME", str(CACHE_DIR / "torch"))
+os.environ.setdefault("HF_HOME", str(CACHE_DIR / "huggingface"))
+os.environ.setdefault("HF_DATASETS_CACHE", str(CACHE_DIR / "huggingface" / "datasets"))
+os.environ.setdefault("TRANSFORMERS_CACHE", str(CACHE_DIR / "huggingface"))
+for env_var in ("TORCH_HOME", "HF_HOME", "HF_DATASETS_CACHE", "TRANSFORMERS_CACHE"):
+    Path(os.environ[env_var]).mkdir(parents=True, exist_ok=True)
+
 ####################################
 # Whisper model directory
 ####################################

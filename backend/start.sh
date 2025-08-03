@@ -182,8 +182,14 @@ export DATABASE_URL="postgresql://${POSTGRESQL_USERID}:${POSTGRESQL_PASSCODE}@${
 # Additional non-SSM environment variables
 export ALLOWED_MODULES_FILE="ALLOWED_MODULES.json"
 export SENTENCE_TRANSFORMERS_HOME=$SCRIPT_DIR/data/cache/embedding/models
+export XDG_CACHE_HOME=$SCRIPT_DIR/data/cache
+export TORCH_HOME=$SCRIPT_DIR/data/cache/torch
+export HF_HOME=$SCRIPT_DIR/data/cache/huggingface
+export HF_DATASETS_CACHE=$SCRIPT_DIR/data/cache/huggingface/datasets
+export TRANSFORMERS_CACHE=$SCRIPT_DIR/data/cache/huggingface
 export S3_REGION_NAME="$AWS_REGION"
 
+mkdir -p "$XDG_CACHE_HOME" "$TORCH_HOME" "$HF_HOME" "$HF_DATASETS_CACHE" "$SENTENCE_TRANSFORMERS_HOME"
 
 LOGS_DIR="$SCRIPT_DIR"/logs
 
