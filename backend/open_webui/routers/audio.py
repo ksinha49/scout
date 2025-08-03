@@ -286,14 +286,17 @@ async def update_audio_config(
     }
 
 
-def load_speech_pipeline(request):
+def load_speech_pipeline(request, device: int | None = None):
     from transformers import pipeline
     from datasets import load_dataset
     from datasets.config import HF_DATASETS_CACHE
 
+    if device is None:
+        device = 0 if DEVICE_TYPE != "cpu" else -1
+
     if request.app.state.speech_synthesiser is None:
         request.app.state.speech_synthesiser = pipeline(
-            "text-to-speech", "microsoft/speecht5_tts"
+            "text-to-speech", "microsoft/speecht5_tts", device=device
         )
 
     if request.app.state.speech_speaker_embeddings_dataset is None:
