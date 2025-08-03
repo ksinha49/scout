@@ -136,7 +136,7 @@ GUNICORN_CRASH_LOG_PATH = Path(
 
 ##Start of AMER-ENH
 
-WEBUI_NAME = os.environ.get("WEBUI_NAME", "AmeritasGPT")
+WEBUI_NAME = os.environ.get("WEBUI_NAME", "Scout")
 
 WEBUI_FAVICON_URL = os.environ.get("WEBUI_FAVICON_URL","https://marvel-b1-cdn.bc0a.com/f00000000142088/www.ameritas.com/wp-content/uploads/2021/07/logo_header_@2x.png")
 
