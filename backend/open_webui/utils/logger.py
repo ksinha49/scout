@@ -10,6 +10,8 @@ from open_webui.env import (
     AUDIT_LOG_LEVEL,
     AUDIT_LOGS_FILE_PATH,
     GLOBAL_LOG_LEVEL,
+    APP_ERROR_LOG_PATH,
+    APP_ADMIN_ACTIVITY_LOG_PATH,
 )
 
 
@@ -110,6 +112,14 @@ def start_logger():
         level=GLOBAL_LOG_LEVEL,
         format=stdout_format,
         filter=lambda record: "auditable" not in record["extra"],
+    )
+
+    logger.add(APP_ERROR_LOG_PATH, level="ERROR")
+
+    logger.add(
+        APP_ADMIN_ACTIVITY_LOG_PATH,
+        level="INFO",
+        filter=lambda record: record["extra"].get("admin_activity") is True,
     )
 
     if AUDIT_LOG_LEVEL != "NONE":
