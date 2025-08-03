@@ -260,7 +260,7 @@ echo "Starting Scout"
 
 current_date=$(date +"%m_%d_%y")
 export LOG_FILENAME="$LOGS_DIR/backendlog_${current_date}.log"
-export GUNICORN_CRASH_LOG_PATH="$LOGS_DIR/gunicorn_crash.log"
+export GUNICORN_CRASH_LOG_PATH="$LOGS_DIR/backendlog_gunicorn_crash_${current_date}.log"
 
 # Preprocess the log_config_template.yaml to replace placeholders with actual values
 sed "s|__GLOBAL_LOG_LEVEL__|$GLOBAL_LOG_LEVEL|g; s|__LOG_FILENAME__|$LOG_FILENAME|g" uvicorn_logconfig_template.ini > "$LOG_CONFIG"
