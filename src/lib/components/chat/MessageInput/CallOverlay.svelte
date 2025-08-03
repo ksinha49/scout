@@ -850,12 +850,13 @@
 				</button>
 			{:else}
 				<div class="relative flex video-container w-full max-h-full pt-2 pb-4 md:py-6 px-2 h-full">
-					<video
-						id="camera-feed"
-						autoplay
-						class="rounded-2xl h-full min-w-full object-cover object-center"
-						playsinline
-					/>
+                                       <video
+                                               id="camera-feed"
+                                               autoplay
+                                               class="rounded-2xl h-full min-w-full object-cover object-center"
+                                               playsinline
+                                               aria-hidden="true"
+                                       />
 
 					<canvas id="camera-canvas" style="display:none;" />
 
