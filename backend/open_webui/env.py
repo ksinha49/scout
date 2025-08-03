@@ -16,7 +16,6 @@ import sys
 import shutil
 from pathlib import Path
 import builtins           #AMER-ENH
-from datetime import datetime
 
 import markdown
 from bs4 import BeautifulSoup
@@ -125,10 +124,15 @@ log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
 LOGS_DIR = BACKEND_DIR / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
-current_date = datetime.now().strftime("%m_%d_%y")
-APP_ERROR_LOG_PATH = LOGS_DIR / f"backendlog_error_{current_date}.log"
-APP_ADMIN_ACTIVITY_LOG_PATH = LOGS_DIR / f"backendlog_admin_activity_{current_date}.log"
-GUNICORN_CRASH_LOG_PATH = LOGS_DIR / f"backendlog_gunicorn_crash_{current_date}.log"
+APP_ERROR_LOG_PATH = Path(
+    os.environ.get("APP_ERROR_LOG_PATH", LOGS_DIR / "backendlog_error.log")
+)
+APP_ADMIN_ACTIVITY_LOG_PATH = Path(
+    os.environ.get("APP_ADMIN_ACTIVITY_LOG_PATH", LOGS_DIR / "backendlog_admin_activity.log")
+)
+GUNICORN_CRASH_LOG_PATH = Path(
+    os.environ.get("GUNICORN_CRASH_LOG_PATH", LOGS_DIR / "backendlog_gunicorn_crash.log")
+)
 
 ##Start of AMER-ENH
 

@@ -260,6 +260,8 @@ echo "Starting Scout"
 
 current_date=$(date +"%m_%d_%y")
 export LOG_FILENAME="$LOGS_DIR/backendlog_${current_date}.log"
+export APP_ERROR_LOG_PATH="$LOGS_DIR/backendlog_error_${current_date}.log"
+export APP_ADMIN_ACTIVITY_LOG_PATH="$LOGS_DIR/backendlog_admin_activity_${current_date}.log"
 export GUNICORN_CRASH_LOG_PATH="$LOGS_DIR/backendlog_gunicorn_crash_${current_date}.log"
 
 # Preprocess the log_config_template.yaml to replace placeholders with actual values
