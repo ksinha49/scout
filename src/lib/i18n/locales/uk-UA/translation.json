@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "Коли активовано, модель буде відповідати на кожне повідомлення чату в режимі реального часу, генеруючи відповідь, як тільки користувач надішле повідомлення. Цей режим корисний для застосувань життєвих вітань чатів, але може позначитися на продуктивності на повільнішому апаратному забезпеченні.",
 	"wherever you are": "де б ви не були",
 	"Whisper (Local)": "Whisper (Локально)",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "Чому?",
 	"Widescreen Mode": "Широкоекранний режим",
 	"Won": "Переможець",

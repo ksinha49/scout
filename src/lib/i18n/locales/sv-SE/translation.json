@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "När det här läget är aktiverat svarar modellen på varje chattmeddelande i realtid och genererar ett svar så snart användaren skickar ett meddelande. Det här läget är användbart för livechattar, men kan påverka prestandan på långsammare maskinvara.",
 	"wherever you are": "var du än befinner dig",
 	"Whisper (Local)": "Whisper (lokal)",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "Varför?",
 	"Widescreen Mode": "Bredbildsläge",
 	"Won": "Vann",
