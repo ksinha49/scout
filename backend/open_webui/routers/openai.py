@@ -124,7 +124,7 @@ async def send_get_request(
                                 "X-Scout-User-Role": user.role,
                             }
                             if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                            else {},
+                            else {}
                         ),
                     },
                 ) as response:
