@@ -55,6 +55,38 @@ log.setLevel(SRC_LOG_LEVELS["MODELS"])
 router = APIRouter()
 
 
+def validate_model_id(request: Request, model_id: str, models: dict) -> str:
+    if model_id in models:
+        return model_id
+
+    default_models = request.app.state.config.DEFAULT_MODELS
+    if hasattr(default_models, "value"):
+        default_models = default_models.value
+
+    fallback_id = None
+    if isinstance(default_models, list):
+        fallback_id = next((m for m in default_models if m in models), None)
+    elif isinstance(default_models, str) and default_models in models:
+        fallback_id = default_models
+
+    if not fallback_id and models:
+        fallback_id = next(iter(models), None)
+
+    if fallback_id:
+        log.warning(
+            f"Model '{model_id}' not found. Falling back to '{fallback_id}'."
+        )
+        return fallback_id
+
+    log.warning(
+        f"Model '{model_id}' not found and no fallback model available."
+    )
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No valid model available",
+    )
+
+
 ##################################
 #
 # Task Endpoints
@@ -172,12 +204,7 @@ async def generate_title(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
@@ -272,12 +299,7 @@ async def generate_chat_tags(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
@@ -340,12 +362,7 @@ async def generate_image_prompt(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
@@ -427,12 +444,7 @@ async def generate_queries(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
@@ -515,12 +527,7 @@ async def generate_autocompletion(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
@@ -584,12 +591,7 @@ async def generate_emoji(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
@@ -660,13 +662,7 @@ async def generate_moa_response(
     else:
         models = request.app.state.MODELS
 
-    model_id = form_data["model"]
-
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
+    model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model

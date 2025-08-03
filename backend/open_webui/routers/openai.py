@@ -774,14 +774,34 @@ async def generate_chat_completion(
             )
 
     await get_all_models(request, user=user)
-    model = request.app.state.OPENAI_MODELS.get(model_id)
-    if model:
-        idx = model["urlIdx"]
-    else:
-        raise HTTPException(
-            status_code=404,
-            detail="Model not found",
-        )
+    available_models = request.app.state.OPENAI_MODELS
+    if model_id not in available_models:
+        default_models = request.app.state.config.DEFAULT_MODELS
+        if hasattr(default_models, "value"):
+            default_models = default_models.value
+        fallback_id = None
+        if isinstance(default_models, list):
+            fallback_id = next((m for m in default_models if m in available_models), None)
+        elif isinstance(default_models, str) and default_models in available_models:
+            fallback_id = default_models
+        if not fallback_id and available_models:
+            fallback_id = next(iter(available_models), None)
+        if fallback_id:
+            log.warning(
+                f"Model '{model_id}' not found. Falling back to '{fallback_id}'."
+            )
+            model_id = fallback_id
+            payload["model"] = fallback_id
+        else:
+            log.warning(
+                f"Model '{model_id}' not found and no fallback model available."
+            )
+            raise HTTPException(
+                status_code=404,
+                detail="No valid model available",
+            )
+    model = available_models.get(model_id)
+    idx = model["urlIdx"]
 
     # Get the API config for the model
     api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
