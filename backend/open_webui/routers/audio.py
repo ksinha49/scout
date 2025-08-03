@@ -9,6 +9,7 @@ Modification Log:
 | 2025-04-06 | AAK7S          | CWE-327            | Fix for Using a broken or weak cryptographic protocol may make a connection                         |
 |            |                |                    | vulnerable to interference from an attacker.                                                        |
 """
+
 import hashlib
 import json
 import logging
@@ -25,7 +26,7 @@ import aiofiles
 import requests
 from requests.adapters import HTTPAdapter
 import mimetypes
-from urllib.parse import urlparse     #ENH CWE-327
+from urllib.parse import urlparse  # ENH CWE-327
 from urllib3.util.retry import Retry
 
 
@@ -117,7 +118,11 @@ def set_faster_whisper_model(
             from faster_whisper import WhisperModel
         except (ImportError, OSError) as e:
             error_message = str(e).lower()
-            if "cuda" in error_message or "cudnn" in error_message or "libcudnn" in error_message:
+            if (
+                "cuda" in error_message
+                or "cudnn" in error_message
+                or "libcudnn" in error_message
+            ):
                 log.warning(
                     "WhisperModel import failed due to missing CUDA/cuDNN libraries (%s); retrying on CPU",
                     e,
@@ -134,12 +139,14 @@ def set_faster_whisper_model(
 
         faster_whisper_kwargs = {
             "model_size_or_path": model,
-            "device": device
-            if device
-            else (
-                "cpu"
-                if force_cpu
-                else (DEVICE_TYPE if DEVICE_TYPE == "cuda" else "cpu")
+            "device": (
+                device
+                if device
+                else (
+                    "cpu"
+                    if force_cpu
+                    else (DEVICE_TYPE if DEVICE_TYPE == "cuda" else "cpu")
+                )
             ),
             "compute_type": "int8",
             "download_root": WHISPER_MODEL_DIR,
@@ -424,9 +431,9 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                     if "error" in res:
                         detail = f"External: {res['error'].get('message', '')}"
             except Exception:
-                    ## MOD:CWE-209
-                    log.exception(f"Transcribe Exception: {e}")
-                    detail = "External: Issue in Speech"
+                ## MOD:CWE-209
+                log.exception(f"Transcribe Exception: {e}")
+                detail = "External: Issue in Speech"
 
             raise HTTPException(
                 status_code=getattr(r, "status", 500),
@@ -480,9 +487,9 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                     if "error" in res:
                         detail = f"External: {res['error'].get('message', '')}"
             except Exception:
-                    ## MOD:CWE-209
-                    log.exception(f"Transcribe Exception: {e}")
-                    detail = "External: Issue in Speech Processing"
+                ## MOD:CWE-209
+                log.exception(f"Transcribe Exception: {e}")
+                detail = "External: Issue in Speech Processing"
 
             raise HTTPException(
                 status_code=getattr(r, "status", 500),
@@ -547,6 +554,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
     elif request.app.state.config.TTS_ENGINE == "whisperspeech":
         import soundfile as sf
+
         try:
             if getattr(request.app.state, "whisperspeech_pipe", None) is None:
                 from whisperspeech.pipeline import Pipeline
@@ -556,9 +564,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 )
 
             pipe = request.app.state.whisperspeech_pipe
-            audio = pipe.generate(
-                payload["input"], speaker=payload.get("voice")
-            )
+            audio = pipe.generate(payload["input"], speaker=payload.get("voice"))
 
             sf.write(file_path, audio, 24000)
 
@@ -896,6 +902,11 @@ def get_available_models(request: Request) -> list[dict]:
             ]
         except requests.RequestException as e:
             log.error(f"Error fetching voices: {str(e)}")
+    elif request.app.state.config.TTS_ENGINE == "whisperspeech":
+        available_models = [
+            {"id": "collabora/whisperspeech:s2a-q4-tiny-en+pl.model"},
+            {"id": "collabora/whisperspeech:s2a-q4-base-en+pl.model"},
+        ]
     return available_models
 
 
@@ -951,6 +962,14 @@ def get_available_voices(request) -> dict:
         except Exception:
             # Avoided @lru_cache with exception
             pass
+    elif request.app.state.config.TTS_ENGINE == "whisperspeech":
+        available_voices = {"default": "default"}
+        try:
+            ws_voices = getattr(request.app.state, "whisperspeech_voices", {})
+            if isinstance(ws_voices, dict):
+                available_voices.update(ws_voices)
+        except Exception as e:
+            log.error(f"Error fetching voices: {str(e)}")
     elif request.app.state.config.TTS_ENGINE == "azure":
         try:
             region = request.app.state.config.TTS_AZURE_SPEECH_REGION
