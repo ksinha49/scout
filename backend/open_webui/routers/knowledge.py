@@ -235,6 +235,15 @@ async def update_knowledge_by_id(
 
     knowledge = Knowledges.update_knowledge_by_id(id=id, form_data=form_data)
     if knowledge:
+        log.info(
+            f"Updated knowledge {id} with data {form_data.model_dump(exclude_none=True)}",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "update_knowledge",
+                "knowledge_id": id,
+            },
+        )
         file_ids = knowledge.data.get("file_ids", []) if knowledge.data else []
         files = Files.get_files_by_ids(file_ids)
 
@@ -321,6 +330,15 @@ def add_file_to_knowledge_by_id(
             knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
 
             if knowledge:
+                log.info(
+                    f"Added file {form_data.file_id} to knowledge {id}",
+                    extra={
+                        "admin_activity": True,
+                        "admin_email": user.email,
+                        "action": "update_knowledge",
+                        "knowledge_id": id,
+                    },
+                )
                 files = Files.get_files_by_ids(file_ids)
 
                 return KnowledgeFilesResponse(
@@ -398,6 +416,16 @@ def update_file_from_knowledge_by_id(
     if knowledge:
         data = knowledge.data or {}
         file_ids = data.get("file_ids", [])
+
+        log.info(
+            f"Updated file {form_data.file_id} in knowledge {id}",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "update_knowledge",
+                "knowledge_id": id,
+            },
+        )
 
         files = Files.get_files_by_ids(file_ids)
 
@@ -481,6 +509,15 @@ def remove_file_from_knowledge_by_id(
             knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
 
             if knowledge:
+                log.info(
+                    f"Removed file {form_data.file_id} from knowledge {id}",
+                    extra={
+                        "admin_activity": True,
+                        "admin_email": user.email,
+                        "action": "update_knowledge",
+                        "knowledge_id": id,
+                    },
+                )
                 files = Files.get_files_by_ids(file_ids)
 
                 return KnowledgeFilesResponse(
@@ -599,6 +636,16 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
 
     knowledge = Knowledges.update_knowledge_data_by_id(id=id, data={"file_ids": []})
 
+    log.info(
+        f"Reset knowledge {id}; cleared file IDs",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_knowledge",
+            "knowledge_id": id,
+        },
+    )
+
     return knowledge
 
 
@@ -672,6 +719,20 @@ def add_files_to_knowledge_batch(
 
     data["file_ids"] = existing_file_ids
     knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
+
+    error_file_ids = [err.file_id for err in result.errors] if result.errors else []
+    log_message = f"Added files {successful_file_ids} to knowledge {id}"
+    if error_file_ids:
+        log_message += f"; errors: {error_file_ids}"
+    log.info(
+        log_message,
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_knowledge",
+            "knowledge_id": id,
+        },
+    )
 
     # If there were any errors, include them in the response
     if result.errors:
