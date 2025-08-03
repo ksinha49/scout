@@ -545,6 +545,35 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 detail=detail if detail else "Scout: Server Connection Error",
             )
 
+    elif request.app.state.config.TTS_ENGINE == "whisperspeech":
+        import soundfile as sf
+        try:
+            if getattr(request.app.state, "whisperspeech_pipe", None) is None:
+                from whisperspeech.pipeline import Pipeline
+
+                request.app.state.whisperspeech_pipe = Pipeline.from_pretrained(
+                    s2a_ref=request.app.state.config.TTS_MODEL
+                )
+
+            pipe = request.app.state.whisperspeech_pipe
+            audio = pipe.generate(
+                payload["input"], speaker=payload.get("voice")
+            )
+
+            sf.write(file_path, audio, 24000)
+
+            async with aiofiles.open(file_body_path, "w") as f:
+                await f.write(json.dumps(payload))
+
+            return FileResponse(file_path)
+        except Exception as e:
+            log.exception(e)
+            detail = f"External: {e}"
+            raise HTTPException(
+                status_code=500,
+                detail=detail if detail else "Scout: Server Connection Error",
+            )
+
     elif request.app.state.config.TTS_ENGINE == "transformers":
         payload = None
         try:
