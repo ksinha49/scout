@@ -560,13 +560,12 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                     from whisperspeech.pipeline import Pipeline
                 except ModuleNotFoundError as e:
                     log.exception(e)
-                    raise HTTPException(
-                        status_code=500,
-                        detail=(
-                            "WhisperSpeech optional dependencies are missing. "
-                            "Install them (e.g., 'webdataset') to enable this engine."
-                        ),
-                    )
+                    missing = getattr(e, "name", "")
+                    if missing == "webdataset":
+                        detail = "Install `webdataset` to use WhisperSpeech"
+                    else:
+                        detail = "Install WhisperSpeech to use this engine"
+                    raise HTTPException(status_code=500, detail=detail)
 
                 request.app.state.whisperspeech_pipe = Pipeline.from_pretrained(
                     s2a_ref=request.app.state.config.TTS_MODEL
