@@ -30,6 +30,7 @@ class InterceptHandler(logging.Handler):
         except ValueError:
             level = record.levelno
 
+
         frame, depth = inspect.currentframe(), 2
         while frame and os.path.abspath(frame.f_code.co_filename) in (
             os.path.abspath(logging.__file__),
@@ -77,6 +78,7 @@ class InterceptHandler(logging.Handler):
                 name=record.name, function=function, module=record.module, line=record.lineno
             )
         ).opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+
 
 
 
