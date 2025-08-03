@@ -23,17 +23,17 @@ export default {
 					950: 'var(--color-gray-950, #0d0d0d)'
 				}
 			},
-			typography: {
-				DEFAULT: {
-					css: {
-						pre: false,
-						code: false,
-						'pre code': false,
-						'code::before': false,
-						'code::after': false
-					}
-				}
-			},
+                        typography: {
+                                DEFAULT: {
+                                        css: {
+                                                pre: null,
+                                                code: null,
+                                                'pre code': null,
+                                                'code::before': { content: 'none' },
+                                                'code::after': { content: 'none' }
+                                        }
+                                }
+                        },
 			padding: {
 				'safe-bottom': 'env(safe-area-inset-bottom)'
 			}
