@@ -2006,7 +2006,7 @@
 							</div>
 						</div>
 
-						<div class=" pb-[1rem]">
+                                                <div class="relative pb-5">
 							<MessageInput
 								{history}
 								{selectedModels}
