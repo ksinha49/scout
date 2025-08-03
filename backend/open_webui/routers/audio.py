@@ -570,7 +570,8 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
                 device = 0 if torch.cuda.is_available() else "cpu"
 
-                request.app.state.whisperspeech_pipe = Pipeline.from_pretrained(
+                request.app.state.whisperspeech_pipe = Pipeline(
+                    t2s_ref="whisperspeech/whisperspeech:t2s-v1.95-small-8lang.model",
                     s2a_ref=request.app.state.config.TTS_MODEL,
                     device=device,
                 )

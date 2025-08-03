@@ -823,7 +823,8 @@ if app.state.config.TTS_ENGINE == "whisperspeech":
 
         device = 0 if torch.cuda.is_available() else "cpu"
 
-        app.state.whisperspeech_pipe = Pipeline.from_pretrained(
+        app.state.whisperspeech_pipe = Pipeline(
+            t2s_ref="whisperspeech/whisperspeech:t2s-v1.95-small-8lang.model",
             s2a_ref=app.state.config.TTS_MODEL,
             device=device,
         )
