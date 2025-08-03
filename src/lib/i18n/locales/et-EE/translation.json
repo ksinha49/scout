@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "Kui see on lubatud, vastab mudel igale vestlussõnumile reaalajas, genereerides vastuse niipea, kui kasutaja sõnumi saadab. See režiim on kasulik reaalajas vestlusrakendustes, kuid võib mõjutada jõudlust aeglasema riistvara puhul.",
 	"wherever you are": "kus iganes te olete",
 	"Whisper (Local)": "Whisper (lokaalne)",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "Miks?",
 	"Widescreen Mode": "Laiekraani režiim",
 	"Won": "Võitis",

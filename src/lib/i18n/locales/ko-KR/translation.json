@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "활성화하면 모델이 각 채팅 메시지에 실시간으로 응답하여 사용자가 메시지를 보내는 즉시 응답을 생성합니다. 이 모드는 실시간 채팅 애플리케이션에 유용하지만, 느린 하드웨어에서는 성능에 영향을 미칠 수 있습니다.",
 	"wherever you are": "",
 	"Whisper (Local)": "Whisper (로컬)",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "이유는?",
 	"Widescreen Mode": "와이드스크린 모드",
 	"Won": "승리",

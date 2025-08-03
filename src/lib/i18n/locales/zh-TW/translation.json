@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "啟用時，模型將即時回應每個對話訊息，在使用者傳送訊息後立即生成回應。此模式適用於即時對話應用程式，但在較慢的硬體上可能會影響效能。",
 	"wherever you are": "無論您在何處",
 	"Whisper (Local)": "Whisper（本機）",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "為什麼？",
 	"Widescreen Mode": "寬螢幕模式",
 	"Won": "獲勝",

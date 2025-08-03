@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "Hvis denne modusen er aktivert, svarer modellen på alle chattemeldinger i sanntid, og genererer et svar så snart brukeren sender en melding. Denne modusen er nyttig for live chat-applikasjoner, men kan påvirke ytelsen på tregere maskinvare.",
 	"wherever you are": "uansett hvor du er",
 	"Whisper (Local)": "Whisper (Lokal)",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "Hvorfor?",
 	"Widescreen Mode": "Bredskjermmodus",
 	"Won": "Vant",

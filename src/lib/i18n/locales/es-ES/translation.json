@@ -1185,6 +1185,7 @@
 	"When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.": "Cuando está habilitado, el modelo responderá a cada mensaje de chat en tiempo real, generando una respuesta tan pronto como el usuario envíe un mensaje. Este modo es útil para aplicaciones de chat en vivo, pero puede afectar al rendimiento en equipos más lentos.",
 	"wherever you are": "dondequiera que estés",
 	"Whisper (Local)": "Whisper (Local)",
+	"WhisperSpeech": "WhisperSpeech",
 	"Why?": "¿Por qué?",
 	"Widescreen Mode": "Modo Pantalla Ancha",
 	"Won": "Ganó",
