@@ -418,6 +418,42 @@ async def get_filtered_models(models, user):
     return filtered_models
 
 
+async def validate_model_id(request: Request, model_id: str, user: UserModel) -> str:
+    """Ensure the requested model exists, falling back to a default if needed."""
+    await get_all_models(request, user=user)
+    models = request.app.state.OLLAMA_MODELS
+
+    if model_id in models:
+        return model_id
+
+    default_models = request.app.state.config.DEFAULT_MODELS
+    if hasattr(default_models, "value"):
+        default_models = default_models.value
+
+    fallback_id = None
+    if isinstance(default_models, list):
+        fallback_id = next((m for m in default_models if m in models), None)
+    elif isinstance(default_models, str) and default_models in models:
+        fallback_id = default_models
+
+    if not fallback_id and models:
+        fallback_id = next(iter(models), None)
+
+    if fallback_id:
+        log.warning(
+            f"Model '{model_id}' not found. Falling back to '{fallback_id}'."
+        )
+        return fallback_id
+
+    log.warning(
+        f"Model '{model_id}' not found and no fallback model available."
+    )
+    raise HTTPException(
+        status_code=404,
+        detail="No valid model available",
+    )
+
+
 @router.get("/api/tags")
 @router.get("/api/tags/{url_idx}")
 async def get_ollama_tags(
@@ -884,22 +920,14 @@ async def embed(
 ):
     log.info(f"generate_ollama_batch_embeddings {form_data}")
 
+    model = form_data.model
+    if ":" not in model:
+        model = f"{model}:latest"
+    model = await validate_model_id(request, model, user)
+    form_data.model = model
+    models = request.app.state.OLLAMA_MODELS
     if url_idx is None:
-        await get_all_models(request, user=user)
-        models = request.app.state.OLLAMA_MODELS
-
-        model = form_data.model
-
-        if ":" not in model:
-            model = f"{model}:latest"
-
-        if model in models:
-            url_idx = random.choice(models[model]["urls"])
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=ERROR_MESSAGES.MODEL_NOT_FOUND(form_data.model),
-            )
+        url_idx = random.choice(models[model]["urls"])
 
     url = request.app.state.config.OLLAMA_BASE_URLS[url_idx]
     key = get_api_key(url_idx, url, request.app.state.config.OLLAMA_API_CONFIGS)
@@ -970,22 +998,14 @@ async def embeddings(
     ## MOD: CWE-209
     log.debug(f"generate_ollama_batch_embeddings {form_data}")
 
+    model = form_data.model
+    if ":" not in model:
+        model = f"{model}:latest"
+    model = await validate_model_id(request, model, user)
+    form_data.model = model
+    models = request.app.state.OLLAMA_MODELS
     if url_idx is None:
-        await get_all_models(request, user=user)
-        models = request.app.state.OLLAMA_MODELS
-
-        model = form_data.model
-
-        if ":" not in model:
-            model = f"{model}:latest"
-
-        if model in models:
-            url_idx = random.choice(models[model]["urls"])
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=ERROR_MESSAGES.MODEL_NOT_FOUND(form_data.model),
-            )
+        url_idx = random.choice(models[model]["urls"])
 
     url = request.app.state.config.OLLAMA_BASE_URLS[url_idx]
     log.info(f"url: {url}")
@@ -1060,22 +1080,14 @@ async def generate_completion(
     url_idx: Optional[int] = None,
     user=Depends(get_verified_user),
 ):
+    model = form_data.model
+    if ":" not in model:
+        model = f"{model}:latest"
+    model = await validate_model_id(request, model, user)
+    form_data.model = model
+    models = request.app.state.OLLAMA_MODELS
     if url_idx is None:
-        await get_all_models(request, user=user)
-        models = request.app.state.OLLAMA_MODELS
-
-        model = form_data.model
-
-        if ":" not in model:
-            model = f"{model}:latest"
-
-        if model in models:
-            url_idx = random.choice(models[model]["urls"])
-        else:
-            raise HTTPException(
-                status_code=400,
-                detail=ERROR_MESSAGES.MODEL_NOT_FOUND(form_data.model),
-            )
+        url_idx = random.choice(models[model]["urls"])
 
     url = request.app.state.config.OLLAMA_BASE_URLS[url_idx]
     api_config = request.app.state.config.OLLAMA_API_CONFIGS.get(
@@ -1204,6 +1216,7 @@ async def generate_chat_completion(
 
     if ":" not in payload["model"]:
         payload["model"] = f"{payload['model']}:latest"
+    payload["model"] = await validate_model_id(request, payload["model"], user)
 
     url, url_idx = await get_ollama_url(request, payload["model"], url_idx)
     api_config = request.app.state.config.OLLAMA_API_CONFIGS.get(
@@ -1307,6 +1320,7 @@ async def generate_openai_completion(
 
     if ":" not in payload["model"]:
         payload["model"] = f"{payload['model']}:latest"
+    payload["model"] = await validate_model_id(request, payload["model"], user)
 
     url, url_idx = await get_ollama_url(request, payload["model"], url_idx)
     api_config = request.app.state.config.OLLAMA_API_CONFIGS.get(
@@ -1387,6 +1401,7 @@ async def generate_openai_chat_completion(
 
     if ":" not in payload["model"]:
         payload["model"] = f"{payload['model']}:latest"
+    payload["model"] = await validate_model_id(request, payload["model"], user)
 
     url, url_idx = await get_ollama_url(request, payload["model"], url_idx)
     api_config = request.app.state.config.OLLAMA_API_CONFIGS.get(
