@@ -43,12 +43,13 @@
 	let modelTransferring = false;
 	let modelTag = '';
 
-	let createModelLoading = false;
-	let createModelName = '';
-	let createModelObject = '';
+        let createModelLoading = false;
+        let createModelName = '';
+        let createModelObject = '';
 
-	let createModelDigest = '';
-	let createModelPullProgress = null;
+        let createModelTag = '';
+        let createModelDigest = '';
+        let createModelPullProgress = null;
 
 	let digest = '';
 	let pullProgress = null;
@@ -464,11 +465,12 @@
 		}
 	};
 
-	const createModelHandler = async () => {
-		createModelLoading = true;
+        const createModelHandler = async () => {
+                createModelLoading = true;
+                createModelTag = createModelName;
 
-		let modelObject = {};
-		// parse createModelObject
+                let modelObject = {};
+                // parse createModelObject
 		try {
 			modelObject = JSON.parse(createModelObject);
 		} catch (error) {
@@ -553,11 +555,12 @@
 
 		createModelLoading = false;
 
-		createModelName = '';
-		createModelObject = '';
-		createModelDigest = '';
-		createModelPullProgress = null;
-	};
+                createModelName = '';
+                createModelObject = '';
+                createModelDigest = '';
+                createModelPullProgress = null;
+                createModelTag = '';
+        };
 
 	const init = async () => {
 		loading = true;
