@@ -114,7 +114,11 @@ def start_logger():
         filter=lambda record: "auditable" not in record["extra"],
     )
 
-    logger.add(APP_ERROR_LOG_PATH, level="ERROR")
+    logger.add(
+        APP_ERROR_LOG_PATH,
+        level="ERROR",
+        filter=lambda record: record["level"].no >= logger.level("ERROR").no,
+    )
 
     logger.add(
         APP_ADMIN_ACTIVITY_LOG_PATH,
