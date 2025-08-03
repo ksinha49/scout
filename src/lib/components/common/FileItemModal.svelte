@@ -33,22 +33,22 @@
 		<div class=" pb-2">
 			<div class="flex items-start justify-between">
 				<div>
-					<div class=" font-medium text-lg dark:text-gray-100">
-						<a
-							href="#"
-							class="hover:underline line-clamp-1"
-							on:click|preventDefault={() => {
-								if (!isPDF && item.url) {
-									window.open(
-										item.type === 'file' ? `${item.url}/content` : `${item.url}`,
-										'_blank'
-									);
-								}
-							}}
-						>
-							{item?.name ?? 'File'}
-						</a>
-					</div>
+                                        <div class=" font-medium text-lg dark:text-gray-100">
+                                                <button
+                                                        type="button"
+                                                        class="hover:underline line-clamp-1 bg-transparent p-0 text-left"
+                                                        on:click={() => {
+                                                                if (!isPDF && item.url) {
+                                                                        window.open(
+                                                                                item.type === 'file' ? `${item.url}/content` : `${item.url}`,
+                                                                                '_blank'
+                                                                        );
+                                                                }
+                                                        }}
+                                                >
+                                                        {item?.name ?? 'File'}
+                                                </button>
+                                        </div>
 				</div>
 
 				<div>
