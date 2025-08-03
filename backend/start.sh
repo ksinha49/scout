@@ -48,7 +48,7 @@ fi
 export ENV=$(aws ssm get-parameter --name "/parameters/aio/ameritasAI/SERVER_ENV" --with-decryption --query "Parameter.Value" --output text  --region $AWS_REGION)
 echo "Loading Env variables" $ENV
 
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
 
 if [[ "$*" == *"--debug"* ]]; then
     export GLOBAL_LOG_LEVEL="DEBUG"
