@@ -10,10 +10,9 @@
 	import Tooltip from './Tooltip.svelte';
 	import Plus from '../icons/Plus.svelte';
 
-	export let open = true;
+        export let open = true;
 
-	export let id = '';
-	export let name = '';
+        export let name = '';
 	export let collapsible = true;
 
 	export let onAddLabel: string = '';
