@@ -1,5 +1,7 @@
+import inspect
 import json
 import logging
+import os
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -28,14 +30,55 @@ class InterceptHandler(logging.Handler):
         except ValueError:
             level = record.levelno
 
-        frame, depth = logging.currentframe(), 2
-        while frame and frame.f_code.co_filename == logging.__file__:
+
+        frame, depth = inspect.currentframe(), 2
+        while frame and os.path.abspath(frame.f_code.co_filename) in (
+            os.path.abspath(logging.__file__),
+            __file__,
+        ):
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
+        function = record.funcName if record.funcName != "<module>" else record.name
+
+        # Extract any custom attributes attached via ``extra`` on the standard log record
+        # so they can be leveraged by Loguru (e.g., ``admin_activity``).
+        standard_attrs = {
+            "name",
+            "msg",
+            "args",
+            "levelname",
+            "levelno",
+            "pathname",
+            "filename",
+            "module",
+            "exc_info",
+            "exc_text",
+            "stack_info",
+            "lineno",
+            "funcName",
+            "created",
+            "msecs",
+            "relativeCreated",
+            "thread",
+            "threadName",
+            "processName",
+            "process",
+        }
+        extras = {
+            key: value
+            for key, value in record.__dict__.items()
+            if key not in standard_attrs
+        }
+
+        log = logger.bind(**extras) if extras else logger
+
+        log.patch(
+            lambda r: r.update(
+                name=record.name, function=function, module=record.module, line=record.lineno
+            )
+        ).opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+
 
 
 
