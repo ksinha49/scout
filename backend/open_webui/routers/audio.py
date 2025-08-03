@@ -558,6 +558,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             if getattr(request.app.state, "whisperspeech_pipe", None) is None:
                 try:
                     from whisperspeech.pipeline import Pipeline
+                    import torch
                 except ModuleNotFoundError as e:
                     log.exception(e)
                     missing = getattr(e, "name", "")
@@ -567,8 +568,11 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                         detail = "Install WhisperSpeech to use this engine"
                     raise HTTPException(status_code=500, detail=detail)
 
+                device = 0 if torch.cuda.is_available() else "cpu"
+
                 request.app.state.whisperspeech_pipe = Pipeline.from_pretrained(
-                    s2a_ref=request.app.state.config.TTS_MODEL
+                    s2a_ref=request.app.state.config.TTS_MODEL,
+                    device=device,
                 )
 
             pipe = request.app.state.whisperspeech_pipe
