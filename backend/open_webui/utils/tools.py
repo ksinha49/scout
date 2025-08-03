@@ -1,15 +1,20 @@
 import inspect
 import logging
 import re
-import inspect
-import uuid
 
-from typing import Any, Awaitable, Callable, get_type_hints
+from typing import Any, Awaitable, Callable, Literal, get_type_hints
 from functools import update_wrapper, partial
 
 
 from fastapi import Request
-from pydantic import BaseModel, Field, create_model
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    create_model,
+    field_validator,
+)
 from langchain_core.utils.function_calling import convert_to_openai_function
 
 
@@ -18,6 +23,47 @@ from open_webui.models.users import UserModel
 from open_webui.utils.plugin import load_tools_module_by_id
 
 log = logging.getLogger(__name__)
+
+
+class ToolParameter(BaseModel):
+    """Specification for a single tool parameter."""
+
+    type: Literal[
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "array",
+        "object",
+    ]
+    description: str | None = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class ToolParameters(BaseModel):
+    """Container for tool parameter definitions."""
+
+    type: str = "object"
+    properties: dict[str, ToolParameter] = Field(default_factory=dict)
+    required: list[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(extra="allow")
+
+    @field_validator("properties", mode="before")
+    @classmethod
+    def _exclude_internal(cls, v: dict) -> dict:
+        return {k: val for k, val in v.items() if not k.startswith("__")}
+
+
+class ToolSpec(BaseModel):
+    """Model representing a single tool specification."""
+
+    name: str
+    description: str | None = None
+    parameters: ToolParameters
+
+    model_config = ConfigDict(extra="allow")
 
 
 def apply_extra_params_to_tool_function(
@@ -63,21 +109,15 @@ def get_tools(
                 **Tools.get_user_valves_by_id_and_user_id(tool_id, user.id)
             )
 
-        for spec in tools.specs:
-            # TODO: Fix hack for OpenAI API
-            # Some times breaks OpenAI but others don't. Leaving the comment
-            for val in spec.get("parameters", {}).get("properties", {}).values():
-                if val["type"] == "str":
-                    val["type"] = "string"
+        for spec_dict in tools.specs:
+            try:
+                spec_model = ToolSpec.model_validate(spec_dict)
+            except ValidationError as e:
+                log.warning(f"Invalid spec for tool {tool_id}: {e}")
+                continue
 
-            # Remove internal parameters
-            spec["parameters"]["properties"] = {
-                key: val
-                for key, val in spec["parameters"]["properties"].items()
-                if not key.startswith("__")
-            }
-
-            function_name = spec["name"]
+            spec = spec_model.model_dump()
+            function_name = spec_model.name
 
             # convert to function that takes only model params and inserts custom params
             original_func = getattr(module, function_name)
@@ -100,13 +140,15 @@ def get_tools(
                 "citation": hasattr(module, "citation") and module.citation,
             }
 
-            # TODO: if collision, prepend toolkit name
             if function_name in tools_dict:
-                log.warning(f"Tool {function_name} already exists in another tools!")
-                log.warning(f"Collision between {tools} and {tool_id}.")
-                log.warning(f"Discarding {tools}.{function_name}")
-            else:
-                tools_dict[function_name] = tool_dict
+                log.warning(
+                    f"Tool {function_name} already exists; prefixing with {tool_id}."
+                )
+                function_name = f"{tool_id}_{function_name}"
+                spec["name"] = function_name
+                tool_dict["spec"] = spec
+
+            tools_dict[function_name] = tool_dict
 
     return tools_dict
 
