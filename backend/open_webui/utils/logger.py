@@ -19,6 +19,25 @@ if TYPE_CHECKING:
 
 
 
+class InterceptHandler(logging.Handler):
+    """Routes standard logging records to Loguru."""
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            level = logger.level(record.levelname).name
+        except ValueError:
+            level = record.levelno
+
+        frame, depth = logging.currentframe(), 2
+        while frame and frame.f_code.co_filename == logging.__file__:
+            frame = frame.f_back
+            depth += 1
+
+        logger.opt(depth=depth, exception=record.exc_info).log(
+            level, record.getMessage()
+        )
+
+
 
 def file_format(record: "Record"):
     """
@@ -85,4 +104,6 @@ def start_logger():
         except Exception as e:
             logger.error(f"Failed to initialize audit log file handler: {str(e)}")
 
-    logging.getLogger(__name__).info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
+    logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
+
+    logger.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
