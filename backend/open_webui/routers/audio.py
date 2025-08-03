@@ -294,6 +294,13 @@ def load_speech_pipeline(request, device: int | None = None):
     if device is None:
         device = 0 if DEVICE_TYPE != "cpu" else -1
 
+    # Skip reloading if dataset previously failed to load
+    if getattr(request.app.state, "speech_dataset_failed", False):
+        raise HTTPException(
+            status_code=500,
+            detail="Speech dataset failed to load previously; manual reset required",
+        )
+
     if request.app.state.speech_synthesiser is None:
         request.app.state.speech_synthesiser = pipeline(
             "text-to-speech", "microsoft/speecht5_tts", device=device
@@ -306,6 +313,7 @@ def load_speech_pipeline(request, device: int | None = None):
                 split="validation",
                 download_mode="reuse_dataset_if_exists",
             )
+            request.app.state.speech_dataset_failed = False
         except UnicodeDecodeError as e:
             log.warning(
                 "Unicode decode error when loading dataset, attempting to decompress: %s",
@@ -323,17 +331,26 @@ def load_speech_pipeline(request, device: int | None = None):
                     split="validation",
                     download_mode="reuse_dataset_if_exists",
                 )
+                request.app.state.speech_dataset_failed = False
             except Exception as decompress_error:
                 log.error("Failed to decompress dataset: %s", decompress_error)
+                request.app.state.speech_dataset_failed = True
                 raise HTTPException(
                     status_code=500,
-                    detail="Unable to load speech speaker embeddings dataset",
+                    detail=(
+                        "Unable to load speech speaker embeddings dataset; "
+                        "will not retry until reset"
+                    ),
                 )
         except Exception as e:
             log.exception("Unexpected error loading dataset: %s", e)
+            request.app.state.speech_dataset_failed = True
             raise HTTPException(
                 status_code=500,
-                detail="Unable to load speech speaker embeddings dataset",
+                detail=(
+                    "Unable to load speech speaker embeddings dataset; "
+                    "will not retry until reset"
+                ),
             )
 
 
