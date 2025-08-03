@@ -246,6 +246,16 @@ async def update_tools_by_id(
         tools = Tools.update_tool_by_id(id, updated)
 
         if tools:
+            log.info(
+                "Tool updated",
+                extra={
+                    "admin_activity": True,
+                    "admin_email": user.email,
+                    "action": "update_tool",
+                    "tool_id": id,
+                    "updated_fields": updated,
+                },
+            )
             return tools
         else:
             raise HTTPException(
@@ -392,6 +402,16 @@ async def update_tools_valves_by_id(
         form_data = {k: v for k, v in form_data.items() if v is not None}
         valves = Valves(**form_data)
         Tools.update_tool_valves_by_id(id, valves.model_dump())
+        log.info(
+            "Tool valves updated",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "update_tool",
+                "tool_id": id,
+                "valves": valves.model_dump(),
+            },
+        )
         return valves.model_dump()
     except Exception as e:
         log.exception(f"Failed to update tool valves by id {id}: {e}")
@@ -471,6 +491,16 @@ async def update_tools_user_valves_by_id(
                 user_valves = UserValves(**form_data)
                 Tools.update_user_valves_by_id_and_user_id(
                     id, user.id, user_valves.model_dump()
+                )
+                log.info(
+                    "User valves updated",
+                    extra={
+                        "admin_activity": True,
+                        "admin_email": user.email,
+                        "action": "update_tool",
+                        "tool_id": id,
+                        "valves": user_valves.model_dump(),
+                    },
                 )
                 return user_valves.model_dump()
             except Exception as e:
