@@ -29,5 +29,14 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
 ## Deployment Configuration
 
 - `GUNICORN_TIMEOUT` – Gunicorn worker timeout in seconds (default: `120`).
+ 
+### Audio/TTS
+
 - `AUDIO_TTS_MODEL` – Text-to-speech model (default: `tts-1`, or `collabora/whisperspeech:s2a-q4-base-en+pl.model` when `AUDIO_TTS_ENGINE` is `whisperspeech`). Set this environment variable to override the default.
-- `TTS_ENGINE` – Text-to-speech engine. Set `TTS_ENGINE=whisperspeech` to enable the WhisperSpeech backend. This requires additional packages such as `webdataset`, `fastcore`, `fastprogress`, `torchaudio`, `speechbrain`, and `vocos`.
+- `TTS_ENGINE` – Text-to-speech engine. Set `TTS_ENGINE=whisperspeech` to enable the WhisperSpeech backend.
+  - Requires extra packages: `webdataset`, `fastcore`, `fastprogress`, `torchaudio`, `speechbrain`, `vocos`, `huggingface-hub`.
+  - Install them along with backend dependencies:
+
+    ```bash
+    pip install -r backend/requirements.txt webdataset fastcore fastprogress torchaudio speechbrain vocos huggingface-hub
+    ```
