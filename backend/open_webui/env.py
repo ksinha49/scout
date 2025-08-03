@@ -83,12 +83,11 @@ except Exception:
 ####################################
 
 GLOBAL_LOG_LEVEL = os.environ.get("GLOBAL_LOG_LEVEL", "").upper()
-if GLOBAL_LOG_LEVEL in logging.getLevelNamesMapping():
-    logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL, force=True)
-else:
+if GLOBAL_LOG_LEVEL not in logging.getLevelNamesMapping():
     GLOBAL_LOG_LEVEL = "INFO"
 
 log = logging.getLogger(__name__)
+log.setLevel(GLOBAL_LOG_LEVEL)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
 if "cuda_warning" in locals():
