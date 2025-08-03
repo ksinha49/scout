@@ -268,9 +268,6 @@ Modification Log:
 									{:else}
 										{$i18n.t(`Sign up to {{WEBUI_NAME}}`, { WEBUI_NAME: $WEBUI_NAME })}
 {/if}
-<footer class="absolute bottom-4 w-full text-center text-xs text-gray-500 dark:text-gray-400 font-primary">
-{$i18n.t('© 2025 Ameritas Mutual Holding Company')}
-</footer>
 </div>
 
 								{#if $config?.onboarding ?? false}
