@@ -29,3 +29,4 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
 ## Deployment Configuration
 
 - `GUNICORN_TIMEOUT` – Gunicorn worker timeout in seconds (default: `120`).
+- `AUDIO_TTS_MODEL` – Text-to-speech model (default: `tts-1`, or `collabora/whisperspeech:s2a-q4-base-en+pl.model` when `AUDIO_TTS_ENGINE` is `whisperspeech`). Set this environment variable to override the default.
