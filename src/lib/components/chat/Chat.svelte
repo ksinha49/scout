@@ -2006,7 +2006,7 @@
 							</div>
 						</div>
 
-						<div class=" pb-[1rem]">
+                                                <div class="relative pb-5">
 							<MessageInput
 								{history}
 								{selectedModels}
@@ -2052,12 +2052,12 @@
 								}}
 							/>
 
-							<div
-								class="absolute bottom-1 text-xs text-gray-500 text-center line-clamp-1 right-0 left-0"
-							>
-								<!-- {$i18n.t('LLMs can make mistakes. Verify important information.')} -->
-							</div>
-						</div>
+                                                        <div
+                                                                class="absolute bottom-1 text-xs text-gray-500 text-center line-clamp-1 right-0 left-0"
+                                                        >
+                                                                {$WEBUI_NAME} can make mistakes. Check important info.
+                                                        </div>
+                                                </div>
 					{:else}
 						<div class="overflow-auto w-full h-full flex items-center">
 							<Placeholder
