@@ -56,7 +56,9 @@ class TestAudioRouter:
     def setup_method(self):
         app = FastAPI()
         app.include_router(audio_router, prefix="/api/v1/audio")
-        app.state.config = SimpleNamespace(TTS_ENGINE="whisperspeech", TTS_MODEL="dummy")
+        app.state.config = SimpleNamespace(
+            TTS_ENGINE="whisperspeech", TTS_MODEL="dummy"
+        )
         self.app = app
         self.client = TestClient(app)
 
@@ -65,11 +67,46 @@ class TestAudioRouter:
 
         def mock_import(name, *args, **kwargs):
             if name == "whisperspeech.pipeline":
-                raise ModuleNotFoundError("No module named 'webdataset'", name="webdataset")
+                raise ModuleNotFoundError(
+                    "No module named 'webdataset'", name="webdataset"
+                )
             return original_import(name, *args, **kwargs)
 
         with mock_user(self.app):
             with patch("builtins.__import__", side_effect=mock_import):
-                response = self.client.post("/api/v1/audio/speech", json={"input": "hello"})
+                response = self.client.post(
+                    "/api/v1/audio/speech", json={"input": "hello"}
+                )
         assert response.status_code == 500
         assert response.json()["detail"] == "Install `webdataset` to use WhisperSpeech"
+
+    def test_whisperspeech_tensor_output_saved(self, tmp_path):
+        import numpy as np
+        import torch
+
+        class DummyPipe:
+            def generate(self, text, speaker=None):
+                tensor = torch.tensor([0.1, -0.2])
+                if torch.cuda.is_available():
+                    tensor = tensor.to("cuda")
+                return tensor
+
+        self.app.state.whisperspeech_pipe = DummyPipe()
+
+        written = {}
+
+        def fake_write(path, data, samplerate):
+            written["data"] = data
+            Path(path).write_bytes(b"")
+
+        with mock_user(self.app):
+            with (
+                patch("open_webui.routers.audio.SPEECH_CACHE_DIR", tmp_path),
+                patch("soundfile.write", side_effect=fake_write),
+            ):
+                response = self.client.post(
+                    "/api/v1/audio/speech", json={"input": "hello"}
+                )
+
+        assert response.status_code == 200
+        assert isinstance(written["data"], np.ndarray)

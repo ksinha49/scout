@@ -564,18 +564,10 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
     elif request.app.state.config.TTS_ENGINE == "whisperspeech":
         try:
+            import torch
+
             if getattr(request.app.state, "whisperspeech_pipe", None) is None:
-                try:
-                    from whisperspeech.pipeline import Pipeline
-                    import torch
-                except ModuleNotFoundError as e:
-                    log.exception(e)
-                    missing = getattr(e, "name", "")
-                    if missing == "webdataset":
-                        detail = "Install `webdataset` to use WhisperSpeech"
-                    else:
-                        detail = "Install WhisperSpeech to use this engine"
-                    raise HTTPException(status_code=500, detail=detail)
+                from whisperspeech.pipeline import Pipeline
 
                 request.app.state.whisperspeech_pipe = Pipeline(
                     t2s_ref="whisperspeech/whisperspeech:t2s-v1.95-small-8lang.model",
@@ -596,13 +588,24 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 speaker = voice
 
             audio = pipe.generate(payload["input"], speaker=speaker)
-
+            if isinstance(audio, torch.Tensor):
+                audio = audio.detach().cpu().numpy()
             sf.write(file_path, audio, 24000)
 
             async with aiofiles.open(file_body_path, "w") as f:
                 await f.write(json.dumps(payload))
 
             return FileResponse(file_path)
+        except ModuleNotFoundError as e:
+            log.exception(e)
+            missing = getattr(e, "name", "")
+            if missing == "webdataset":
+                detail = "Install `webdataset` to use WhisperSpeech"
+            elif missing == "torch":
+                detail = "Install `torch` to use WhisperSpeech"
+            else:
+                detail = "Install WhisperSpeech to use this engine"
+            raise HTTPException(status_code=500, detail=detail)
         except HTTPException:
             raise
         except Exception as e:
