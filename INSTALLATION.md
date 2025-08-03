@@ -33,6 +33,12 @@ helm install ollama-webui ./ollama-webui-*.tgz --set ollama.resources.limits.nvi
 ```
 
 Check the `kubernetes/helm/values.yaml` file to know which parameters are available for customization
+### Installing Cuda Drivers
+
+```bash
+ dnf clean all
+ dnf -y install libcudnn8 libcudnn8-devel
+```
 
 ### Environment Variables
 
