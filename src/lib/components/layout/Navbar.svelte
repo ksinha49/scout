@@ -24,9 +24,8 @@
 	import MenuLines from '../icons/MenuLines.svelte';
 	import AdjustmentsHorizontal from '../icons/AdjustmentsHorizontal.svelte';
 	import Map from '../icons/Map.svelte';
-	import { stringify } from 'postcss';
-	import PencilSquare from '../icons/PencilSquare.svelte';
-	import Plus from '../icons/Plus.svelte';
+        import PencilSquare from '../icons/PencilSquare.svelte';
+        import Plus from '../icons/Plus.svelte';
 
 	const i18n = getContext('i18n');
 
