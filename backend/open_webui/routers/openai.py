@@ -95,44 +95,83 @@ def _use_env_proxies(url: str) -> bool:
 ##########################################
 
 
-async def send_get_request(url, key=None, user: UserModel = None):
+async def send_get_request(
+    url, key=None, user: UserModel = None, retries: int = 3, backoff_factor: float = 0.5
+):
     timeout = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST)
-    use_proxies = _use_env_proxies(url)    # AMERITAS-ENH-3 
-    
+    use_proxies = _use_env_proxies(url)    # AMERITAS-ENH-3
+
     # AMERITAS-ENH-3.1
     # Use the pre-configured ssl_ctx if IS_CERT_REQ is True, otherwise pass False to disable verification
     # Passing False directly disables verification, which is generally not recommended for production.
     # The default context is created above, and if IS_CERT_REQ is False, connector will be initialized with ssl=False.
     connector = aiohttp.TCPConnector(ssl=ssl_ctx if IS_CERT_REQ else False)
 
-    try:
-        async with aiohttp.ClientSession(
-            timeout=timeout, trust_env=use_proxies, connector=connector
-        ) as session:
-            async with session.get(
-                url,
-                headers={
-                    **({"Authorization": f"Bearer {key}"} if key else {}),
-                    **(
-                        {
-                            "X-Scout-User-Name": user.name,
-                            "X-Scout-User-Id": user.id,
-                            "X-Scout-User-Email": user.email,
-                            "X-Scout-User-Role": user.role,
+    for attempt in range(1, retries + 1):
+        try:
+            async with aiohttp.ClientSession(
+                timeout=timeout, trust_env=use_proxies, connector=connector
+            ) as session:
+                async with session.get(
+                    url,
+                    headers={
+                        **({"Authorization": f"Bearer {key}"} if key else {}),
+                        **(
+                            {
+                                "X-Scout-User-Name": user.name,
+                                "X-Scout-User-Id": user.id,
+                                "X-Scout-User-Email": user.email,
+                                "X-Scout-User-Role": user.role,
+                            }
+                            if ENABLE_FORWARD_USER_INFO_HEADERS and user
+                            else {},
+                        ),
+                    },
+                ) as response:
+                    if response.status >= 400:
+                        error_text = await response.text()
+                        log.error(
+                            f"HTTP error {response.status} when requesting {url}: {error_text}"
+                        )
+                        return {
+                            "error": "HTTP_ERROR",
+                            "status": response.status,
+                            "message": f"Upstream service returned status {response.status}.",
                         }
-                        if ENABLE_FORWARD_USER_INFO_HEADERS and user
-                        else {}
-                    ),
-                },
-            ) as response:
-                return await response.json()
-    except aiohttp.ClientConnectorCertificateError as e:
-        log.error(f"ClientConnectorCertificateError for {url}: {e}. This likely means the SSL certificate could not be verified. Check BEDROCK_SERVER_CERT path and content, or ensure the CA is trusted.")
-        return {"error": "SSL_CERTIFICATE_VERIFY_FAILED", "message": str(e)}
-    except Exception as e:
-        # Handle connection error here
-        log.error(f"Connection error to {url}: {e}")
-        return None
+                    return await response.json()
+        except aiohttp.ClientConnectorCertificateError as e:
+            log.error(
+                f"ClientConnectorCertificateError for {url}: {e}. This likely means the SSL certificate could not be verified. Check BEDROCK_SERVER_CERT path and content, or ensure the CA is trusted."
+            )
+            return {
+                "error": "SSL_CERTIFICATE_VERIFY_FAILED",
+                "message": "SSL certificate verification failed. Please verify the certificate configuration.",
+            }
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            log.warning(
+                f"Network error when requesting {url}: {e} (attempt {attempt}/{retries})"
+            )
+            if attempt == retries:
+                log.error(
+                    f"Failed to connect to {url} after {retries} attempts due to network error: {e}"
+                )
+                return {
+                    "error": "NETWORK_ERROR",
+                    "message": "Unable to reach the server. Please check your network connection and try again.",
+                }
+            await asyncio.sleep(backoff_factor * (2 ** (attempt - 1)))
+        except Exception as e:
+            log.error(f"Unexpected error when requesting {url}: {e}")
+            return {
+                "error": "UNKNOWN_ERROR",
+                "message": "An unexpected error occurred while processing the request.",
+            }
+
+    # In case all retries are exhausted without returning, provide a fallback error
+    return {
+        "error": "NETWORK_ERROR",
+        "message": "Unable to reach the server after multiple attempts.",
+    }
 
 
 async def cleanup_response(
