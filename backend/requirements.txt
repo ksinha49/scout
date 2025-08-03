@@ -92,6 +92,7 @@ fpdf2==2.8.2
 rank-bm25==0.2.2
 
 faster-whisper==1.1.1
+WhisperSpeech==0.8.9
 
 PyJWT[crypto]==2.10.1
 authlib==1.4.1
