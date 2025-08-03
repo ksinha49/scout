@@ -28,6 +28,7 @@ from requests.adapters import HTTPAdapter
 import mimetypes
 from urllib.parse import urlparse  # ENH CWE-327
 from urllib3.util.retry import Retry
+import soundfile as sf
 
 
 from fastapi import (
@@ -553,8 +554,6 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             )
 
     elif request.app.state.config.TTS_ENGINE == "whisperspeech":
-        import soundfile as sf
-
         try:
             if getattr(request.app.state, "whisperspeech_pipe", None) is None:
                 from whisperspeech.pipeline import Pipeline
@@ -589,7 +588,6 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             raise HTTPException(status_code=400, detail="Invalid JSON payload")
 
         import torch
-        import soundfile as sf
 
         load_speech_pipeline(request)
 
