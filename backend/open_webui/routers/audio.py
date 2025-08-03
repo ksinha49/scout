@@ -298,9 +298,10 @@ def load_speech_pipeline(request, device: int | None = None):
     from transformers import pipeline
     from datasets import load_dataset
     from datasets.config import HF_DATASETS_CACHE
+    import torch
 
     if device is None:
-        device = 0 if DEVICE_TYPE != "cpu" else -1
+        device = 0 if torch.cuda.is_available() else -1
 
     # Skip reloading if dataset previously failed to load
     if getattr(request.app.state, "speech_dataset_failed", False):
@@ -568,13 +569,12 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                         detail = "Install WhisperSpeech to use this engine"
                     raise HTTPException(status_code=500, detail=detail)
 
-                device = 0 if torch.cuda.is_available() else "cpu"
-
                 request.app.state.whisperspeech_pipe = Pipeline(
                     t2s_ref="whisperspeech/whisperspeech:t2s-v1.95-small-8lang.model",
                     s2a_ref=request.app.state.config.TTS_MODEL,
-                    device=device,
                 )
+                if torch.cuda.is_available():
+                    request.app.state.whisperspeech_pipe.to("cuda")
 
             pipe = request.app.state.whisperspeech_pipe
             audio = pipe.generate(payload["input"], speaker=payload.get("voice"))
