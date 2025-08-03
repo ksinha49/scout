@@ -26,3 +26,6 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
 
   
   
+## Deployment Configuration
+
+- `GUNICORN_TIMEOUT` – Gunicorn worker timeout in seconds (default: `120`).

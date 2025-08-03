@@ -266,4 +266,5 @@ gunicorn open_webui.main:app \
     --workers "$WORKERS" \
     --log-config "$LOG_CONFIG" \
     --access-logfile - \
+    --timeout "${GUNICORN_TIMEOUT:-120}" 
     --log-level "$LOG_LVL"

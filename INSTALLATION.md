@@ -33,3 +33,7 @@ helm install ollama-webui ./ollama-webui-*.tgz --set ollama.resources.limits.nvi
 ```
 
 Check the `kubernetes/helm/values.yaml` file to know which parameters are available for customization
+
+### Environment Variables
+
+- `GUNICORN_TIMEOUT`: Gunicorn worker timeout in seconds (default: `120`).
