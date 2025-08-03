@@ -3,8 +3,8 @@
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { KokoroTTS } from 'kokoro-js';
 
-	import { user, settings, config } from '$lib/stores';
-	import { getVoices as _getVoices } from '$lib/apis/audio';
+        import { user, settings, config } from '$lib/stores';
+        import { getVoices as _getVoices, getModels as _getModels } from '$lib/apis/audio';
 
 	import Switch from '$lib/components/common/Switch.svelte';
         import Spinner from '$lib/components/common/Spinner.svelte';
@@ -25,22 +25,24 @@
 	let TTSEngine = '';
 	let TTSEngineConfig = {};
 
-	let TTSModel = null;
-	let TTSModelProgress = null;
-	let TTSModelLoading = false;
+        let TTSModel = null;
+        let TTSModelProgress = null;
+        let TTSModelLoading = false;
 
-	let voices = [];
-	let voice = '';
+        let voices = [];
+        let voice = '';
+        let models = [];
+        let ttsModel = '';
 
 	// Audio speed control
 	let playbackRate = 1;
 	const speedOptions = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.5];
 
-	const getVoices = async () => {
-		if (TTSEngine === 'browser-kokoro') {
-			if (!TTSModel) {
-				await loadKokoro();
-			}
+        const getVoices = async () => {
+                if (TTSEngine === 'browser-kokoro') {
+                        if (!TTSModel) {
+                                await loadKokoro();
+                        }
 
 			voices = Object.entries(TTSModel.voices).map(([key, value]) => {
 				return {
@@ -64,13 +66,26 @@
 					toast.error(`${e}`);
 				});
 
-				if (res) {
-					console.log(res);
-					voices = res.voices;
-				}
-			}
-		}
-	};
+                                if (res) {
+                                        console.log(res);
+                                        voices = res.voices;
+                                }
+                        }
+                }
+        };
+
+        const getModels = async () => {
+                if ($config.audio.tts.engine === 'whisperspeech') {
+                        const res = await _getModels(localStorage.token).catch((e) => {
+                                toast.error(`${e}`);
+                        });
+
+                        if (res) {
+                                console.log(res);
+                                models = res.models;
+                        }
+                }
+        };
 
 	const toggleResponseAutoPlayback = async () => {
 		responseAutoPlayback = !responseAutoPlayback;
@@ -90,19 +105,21 @@
 
 		STTEngine = $settings?.audio?.stt?.engine ?? '';
 
-		TTSEngine = $settings?.audio?.tts?.engine ?? '';
-		TTSEngineConfig = $settings?.audio?.tts?.engineConfig ?? {};
+                TTSEngine = $settings?.audio?.tts?.engine ?? '';
+                TTSEngineConfig = $settings?.audio?.tts?.engineConfig ?? {};
 
-		if ($settings?.audio?.tts?.defaultVoice === $config.audio.tts.voice) {
-			voice = $settings?.audio?.tts?.voice ?? $config.audio.tts.voice ?? '';
-		} else {
-			voice = $config.audio.tts.voice ?? '';
-		}
+                if ($settings?.audio?.tts?.defaultVoice === $config.audio.tts.voice) {
+                        voice = $settings?.audio?.tts?.voice ?? $config.audio.tts.voice ?? '';
+                } else {
+                        voice = $config.audio.tts.voice ?? '';
+                }
 
-		nonLocalVoices = $settings.audio?.tts?.nonLocalVoices ?? false;
+                nonLocalVoices = $settings.audio?.tts?.nonLocalVoices ?? false;
+                ttsModel = $settings?.audio?.tts?.model ?? $config.audio.tts.model ?? '';
 
-		await getVoices();
-	});
+                await getVoices();
+                await getModels();
+        });
 
 	$: if (TTSEngine && TTSEngineConfig) {
 		onTTSEngineChange();
@@ -158,16 +175,17 @@
 				stt: {
 					engine: STTEngine !== '' ? STTEngine : undefined
 				},
-				tts: {
-					engine: TTSEngine !== '' ? TTSEngine : undefined,
-					engineConfig: TTSEngineConfig,
-					playbackRate: playbackRate,
-					voice: voice !== '' ? voice : undefined,
-					defaultVoice: $config?.audio?.tts?.voice ?? '',
-					nonLocalVoices: $config.audio.tts.engine === '' ? nonLocalVoices : undefined
-				}
-			}
-		});
+                                tts: {
+                                        engine: TTSEngine !== '' ? TTSEngine : undefined,
+                                        engineConfig: TTSEngineConfig,
+                                        playbackRate: playbackRate,
+                                        voice: voice !== '' ? voice : undefined,
+                                        model: ttsModel !== '' ? ttsModel : undefined,
+                                        defaultVoice: $config?.audio?.tts?.voice ?? '',
+                                        nonLocalVoices: $config.audio.tts.engine === '' ? nonLocalVoices : undefined
+                                }
+                        }
+                });
 		dispatch('save');
 	}}
 >
@@ -353,28 +371,71 @@
 					</div>
 				</div>
 			</div>
-		{:else if $config.audio.tts.engine !== ''}
-			<div>
-				<div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
-				<div class="flex w-full">
-					<div class="flex-1">
-						<input
-							list="voice-list"
-							class="w-full rounded-lg py-2 px-4 text-sm bg-white dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-							bind:value={voice}
-							placeholder="Select a voice"
-						/>
+                {:else if $config.audio.tts.engine !== ''}
+                        {#if $config.audio.tts.engine === 'whisperspeech'}
+                                <div class=" space-y-2">
+                                        <div>
+                                                <div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
+                                                <div class="flex w-full">
+                                                        <div class="flex-1">
+                                                                <input
+                                                                        list="voice-list"
+                                                                        class="w-full rounded-lg py-2 px-4 text-sm bg-white dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                        bind:value={voice}
+                                                                        placeholder="Select a voice"
+                                                                />
 
-						<datalist id="voice-list">
-							{#each voices as voice}
-								<option value={voice.id}>{voice.name}</option>
-							{/each}
-						</datalist>
-					</div>
-				</div>
-			</div>
-		{/if}
-	</div>
+                                                                <datalist id="voice-list">
+                                                                        {#each voices as voice}
+                                                                                <option value={voice.id}>{voice.name}</option>
+                                                                        {/each}
+                                                                </datalist>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                        <div>
+                                                <div class=" mb-2.5 text-sm font-medium">{$i18n.t('TTS Model')}</div>
+                                                <div class="flex w-full">
+                                                        <div class="flex-1">
+                                                                <input
+                                                                        list="tts-model-list"
+                                                                        class="w-full rounded-lg py-2 px-4 text-sm bg-white dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                        bind:value={ttsModel}
+                                                                        placeholder="Select a model"
+                                                                />
+
+                                                                <datalist id="tts-model-list">
+                                                                        {#each models as model}
+                                                                                <option value={model.id} />
+                                                                        {/each}
+                                                                </datalist>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                </div>
+                        {:else}
+                                <div>
+                                        <div class=" mb-2.5 text-sm font-medium">{$i18n.t('Set Voice')}</div>
+                                        <div class="flex w-full">
+                                                <div class="flex-1">
+                                                        <input
+                                                                list="voice-list"
+                                                                class="w-full rounded-lg py-2 px-4 text-sm bg-white dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                bind:value={voice}
+                                                                placeholder="Select a voice"
+                                                        />
+
+                                                        <datalist id="voice-list">
+                                                                {#each voices as voice}
+                                                                        <option value={voice.id}>{voice.name}</option>
+                                                                {/each}
+                                                        </datalist>
+                                                </div>
+                                        </div>
+                                </div>
+                        {/if}
+                {/if}
+        </div>
 
 	<div class="flex justify-end text-sm font-medium">
 		<button
