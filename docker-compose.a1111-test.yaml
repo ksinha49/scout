@@ -29,3 +29,4 @@ services:
       AUTOMATIC1111_BASE_URL: http://stable-diffusion-webui:7860
       IMAGE_SIZE: "64x64"
       IMAGE_STEPS: "3"
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT-120}
