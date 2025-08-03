@@ -37,3 +37,4 @@ Check the `kubernetes/helm/values.yaml` file to know which parameters are availa
 ### Environment Variables
 
 - `GUNICORN_TIMEOUT`: Gunicorn worker timeout in seconds (default: `120`).
+- `TTS_ENGINE`: Text-to-speech engine. Use `TTS_ENGINE=whisperspeech` to enable WhisperSpeech and install its extras (`webdataset`, `fastcore`, `fastprogress`, `torchaudio`, `speechbrain`, `vocos`).
