@@ -22,8 +22,10 @@ from pydub.silence import split_on_silence
 import aiohttp
 import aiofiles
 import requests
+from requests.adapters import HTTPAdapter
 import mimetypes
 from urllib.parse import urlparse     #ENH CWE-327
+from urllib3.util.retry import Retry
 
 
 from fastapi import (
@@ -889,7 +891,11 @@ def get_available_voices(request) -> dict:
 
 
 @lru_cache
-def get_elevenlabs_voices(api_key: str) -> dict:
+def get_elevenlabs_voices(
+    api_key: str,
+    retries: int | None = None,
+    backoff_factor: float | None = None,
+) -> dict:
     """
     Note, set the following in your .env file to use Elevenlabs:
     AUDIO_TTS_ENGINE=elevenlabs
@@ -898,9 +904,32 @@ def get_elevenlabs_voices(api_key: str) -> dict:
     AUDIO_TTS_MODEL=eleven_multilingual_v2
     """
 
+    retries = (
+        retries
+        if retries is not None
+        else int(os.getenv("ELEVENLABS_VOICES_RETRIES", 3))
+    )
+    backoff_factor = (
+        backoff_factor
+        if backoff_factor is not None
+        else float(os.getenv("ELEVENLABS_VOICES_BACKOFF", 0.5))
+    )
+
+    session = requests.Session()
+    retry_strategy = Retry(
+        total=retries,
+        connect=retries,
+        read=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=range(500, 600),
+        allowed_methods=["GET"],
+    )
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("https://", adapter)
+    session.mount("http://", adapter)
+
     try:
-        # TODO: Add retries
-        response = requests.get(
+        response = session.get(
             "https://api.elevenlabs.io/v1/voices",
             headers={
                 "xi-api-key": api_key,
@@ -915,8 +944,10 @@ def get_elevenlabs_voices(api_key: str) -> dict:
             voices[voice["voice_id"]] = voice["name"]
     except requests.RequestException as e:
         # Avoid @lru_cache with exception
-        log.error(f"Error fetching voices: {str(e)}")
-        raise RuntimeError(f"Error fetching voices: {str(e)}")
+        log.error(f"Error fetching voices after retries: {e}")
+        raise RuntimeError(f"Error fetching voices: {e}") from e
+    finally:
+        session.close()
 
     return voices
 
