@@ -577,7 +577,17 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                     request.app.state.whisperspeech_pipe.to("cuda")
 
             pipe = request.app.state.whisperspeech_pipe
-            audio = pipe.generate(payload["input"], speaker=payload.get("voice"))
+
+            voice = payload.get("voice")
+            if not voice or voice == "default":
+                speaker = None
+            else:
+                available_voices = get_available_voices(request)
+                if voice not in available_voices:
+                    raise HTTPException(status_code=400, detail="Invalid voice id")
+                speaker = voice
+
+            audio = pipe.generate(payload["input"], speaker=speaker)
 
             sf.write(file_path, audio, 24000)
 
