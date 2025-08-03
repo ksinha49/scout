@@ -2491,11 +2491,20 @@ AUDIO_TTS_ENGINE = PersistentConfig(
     os.getenv("AUDIO_TTS_ENGINE", ""),
 )
 
+# Default model for WhisperSpeech TTS engine
+DEFAULT_WHISPERSPEECH_TTS_MODEL = (
+    "collabora/whisperspeech:s2a-q4-base-en+pl.model"
+)
 
+default_tts_model = "tts-1"  # OpenAI default model
+if str(AUDIO_TTS_ENGINE.value).lower() == "whisperspeech":
+    default_tts_model = DEFAULT_WHISPERSPEECH_TTS_MODEL
+
+# Allow override via AUDIO_TTS_MODEL environment variable
 AUDIO_TTS_MODEL = PersistentConfig(
     "AUDIO_TTS_MODEL",
     "audio.tts.model",
-    os.getenv("AUDIO_TTS_MODEL", "tts-1"),  # OpenAI default model
+    os.getenv("AUDIO_TTS_MODEL", default_tts_model),
 )
 
 AUDIO_TTS_VOICE = PersistentConfig(
