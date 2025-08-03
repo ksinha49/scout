@@ -819,9 +819,13 @@ if app.state.config.TTS_ENGINE == "whisperspeech":
         app.state.config.TTS_MODEL = DEFAULT_WHISPERSPEECH_TTS_MODEL
     try:
         from whisperspeech.pipeline import Pipeline
+        import torch
+
+        device = 0 if torch.cuda.is_available() else "cpu"
 
         app.state.whisperspeech_pipe = Pipeline.from_pretrained(
-            s2a_ref=app.state.config.TTS_MODEL
+            s2a_ref=app.state.config.TTS_MODEL,
+            device=device,
         )
     except Exception as e:
         log.warning(f"Failed to preload WhisperSpeech pipeline: {e}")
