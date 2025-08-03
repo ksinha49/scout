@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import uuid
+import gzip
 from functools import lru_cache
 from pathlib import Path
 from pydub import AudioSegment
@@ -288,6 +289,7 @@ async def update_audio_config(
 def load_speech_pipeline(request):
     from transformers import pipeline
     from datasets import load_dataset
+    from datasets.config import HF_DATASETS_CACHE
 
     if request.app.state.speech_synthesiser is None:
         request.app.state.speech_synthesiser = pipeline(
@@ -295,9 +297,41 @@ def load_speech_pipeline(request):
         )
 
     if request.app.state.speech_speaker_embeddings_dataset is None:
-        request.app.state.speech_speaker_embeddings_dataset = load_dataset(
-            "Matthijs/cmu-arctic-xvectors", split="validation"
-        )
+        try:
+            request.app.state.speech_speaker_embeddings_dataset = load_dataset(
+                "Matthijs/cmu-arctic-xvectors",
+                split="validation",
+                download_mode="reuse_dataset_if_exists",
+            )
+        except UnicodeDecodeError as e:
+            log.warning(
+                "Unicode decode error when loading dataset, attempting to decompress: %s",
+                e,
+            )
+            try:
+                cache_dir = Path(HF_DATASETS_CACHE) / "Matthijs___cmu-arctic-xvectors"
+                if cache_dir.exists():
+                    for gz_file in cache_dir.rglob("*.gz"):
+                        with gzip.open(gz_file, "rb") as f_in:
+                            with open(gz_file.with_suffix(""), "wb") as f_out:
+                                f_out.write(f_in.read())
+                request.app.state.speech_speaker_embeddings_dataset = load_dataset(
+                    "Matthijs/cmu-arctic-xvectors",
+                    split="validation",
+                    download_mode="reuse_dataset_if_exists",
+                )
+            except Exception as decompress_error:
+                log.error("Failed to decompress dataset: %s", decompress_error)
+                raise HTTPException(
+                    status_code=500,
+                    detail="Unable to load speech speaker embeddings dataset",
+                )
+        except Exception as e:
+            log.exception("Unexpected error loading dataset: %s", e)
+            raise HTTPException(
+                status_code=500,
+                detail="Unable to load speech speaker embeddings dataset",
+            )
 
 
 @router.post("/speech")
