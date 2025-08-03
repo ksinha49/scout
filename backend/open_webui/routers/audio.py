@@ -556,7 +556,17 @@ async def speech(request: Request, user=Depends(get_verified_user)):
     elif request.app.state.config.TTS_ENGINE == "whisperspeech":
         try:
             if getattr(request.app.state, "whisperspeech_pipe", None) is None:
-                from whisperspeech.pipeline import Pipeline
+                try:
+                    from whisperspeech.pipeline import Pipeline
+                except ModuleNotFoundError as e:
+                    log.exception(e)
+                    raise HTTPException(
+                        status_code=500,
+                        detail=(
+                            "WhisperSpeech optional dependencies are missing. "
+                            "Install them (e.g., 'webdataset') to enable this engine."
+                        ),
+                    )
 
                 request.app.state.whisperspeech_pipe = Pipeline.from_pretrained(
                     s2a_ref=request.app.state.config.TTS_MODEL
@@ -571,6 +581,8 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 await f.write(json.dumps(payload))
 
             return FileResponse(file_path)
+        except HTTPException:
+            raise
         except Exception as e:
             log.exception(e)
             detail = f"External: {e}"

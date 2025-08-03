@@ -93,6 +93,13 @@ rank-bm25==0.2.2
 
 faster-whisper==1.1.1
 WhisperSpeech==0.8.9
+webdataset
+fastcore
+fastprogress
+torchaudio
+speechbrain
+vocos
+huggingface-hub
 
 PyJWT[crypto]==2.10.1
 authlib==1.4.1
