@@ -168,6 +168,7 @@ from open_webui.config import (
     AUDIO_TTS_VOICE,
     AUDIO_TTS_AZURE_SPEECH_REGION,
     AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT,
+    DEFAULT_WHISPERSPEECH_TTS_MODEL,
     PLAYWRIGHT_WS_URI,
     PLAYWRIGHT_TIMEOUT,
     FIRECRAWL_API_BASE_URL,
@@ -811,6 +812,19 @@ app.state.config.TTS_SPLIT_ON = AUDIO_TTS_SPLIT_ON
 
 app.state.config.TTS_AZURE_SPEECH_REGION = AUDIO_TTS_AZURE_SPEECH_REGION
 app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT = AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT
+
+app.state.whisperspeech_pipe = None
+if app.state.config.TTS_ENGINE == "whisperspeech":
+    if not app.state.config.TTS_MODEL:
+        app.state.config.TTS_MODEL = DEFAULT_WHISPERSPEECH_TTS_MODEL
+    try:
+        from whisperspeech.pipeline import Pipeline
+
+        app.state.whisperspeech_pipe = Pipeline.from_pretrained(
+            s2a_ref=app.state.config.TTS_MODEL
+        )
+    except Exception as e:
+        log.warning(f"Failed to preload WhisperSpeech pipeline: {e}")
 
 
 app.state.speech_synthesiser = None
