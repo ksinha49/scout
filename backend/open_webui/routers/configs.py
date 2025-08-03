@@ -2,13 +2,18 @@ from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from typing import Optional
+import logging
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.config import get_config, save_config
 from open_webui.config import BannerModel
+from open_webui.env import SRC_LOG_LEVELS
 
 
 router = APIRouter()
+
+log = logging.getLogger(__name__)
+log.setLevel(SRC_LOG_LEVELS["CONFIG"])
 
 
 ############################
@@ -23,6 +28,15 @@ class ImportConfigForm(BaseModel):
 @router.post("/import", response_model=dict)
 async def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user)):
     save_config(form_data.config)
+    log.info(
+        "Configuration imported",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "import_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return get_config()
 
 
@@ -60,6 +74,15 @@ async def set_direct_connections_config(
 ):
     request.app.state.config.ENABLE_DIRECT_CONNECTIONS = (
         form_data.ENABLE_DIRECT_CONNECTIONS
+    )
+    log.info(
+        "Direct connections config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_direct_connections_config",
+            "payload": form_data.model_dump(),
+        },
     )
     return {
         "ENABLE_DIRECT_CONNECTIONS": request.app.state.config.ENABLE_DIRECT_CONNECTIONS,
@@ -155,7 +178,15 @@ async def set_code_execution_config(
     request.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT = (
         form_data.CODE_INTERPRETER_JUPYTER_TIMEOUT
     )
-
+    log.info(
+        "Code execution config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_code_execution_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "ENABLE_CODE_EXECUTION": request.app.state.config.ENABLE_CODE_EXECUTION,
         "CODE_EXECUTION_ENGINE": request.app.state.config.CODE_EXECUTION_ENGINE,
@@ -197,6 +228,15 @@ async def set_models_config(
 ):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
     request.app.state.config.MODEL_ORDER_LIST = form_data.MODEL_ORDER_LIST
+    log.info(
+        "Models config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_models_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
         "MODEL_ORDER_LIST": request.app.state.config.MODEL_ORDER_LIST,
@@ -220,6 +260,15 @@ async def set_default_suggestions(
 ):
     data = form_data.model_dump()
     request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS = data["suggestions"]
+    log.info(
+        "Default suggestions updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_prompt_suggestions",
+            "payload": data,
+        },
+    )
     return request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS
 
 
@@ -240,6 +289,15 @@ async def set_banners(
 ):
     data = form_data.model_dump()
     request.app.state.config.BANNERS = data["banners"]
+    log.info(
+        "Banners updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_banners",
+            "payload": data,
+        },
+    )
     return request.app.state.config.BANNERS
 
 

@@ -270,7 +270,15 @@ async def update_audio_config(
         request.app.state.faster_whisper_model = set_faster_whisper_model(
             form_data.stt.WHISPER_MODEL, WHISPER_MODEL_AUTO_UPDATE
         )
-
+    log.info(
+        "Audio config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_audio_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "tts": {
             "OPENAI_API_BASE_URL": request.app.state.config.TTS_OPENAI_API_BASE_URL,

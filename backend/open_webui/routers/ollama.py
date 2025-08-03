@@ -304,7 +304,15 @@ async def update_config(
         for key, value in request.app.state.config.OLLAMA_API_CONFIGS.items()
         if key in keys
     }
-
+    log.info(
+        "Ollama config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_ollama_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "ENABLE_OLLAMA_API": request.app.state.config.ENABLE_OLLAMA_API,
         "OLLAMA_BASE_URLS": request.app.state.config.OLLAMA_BASE_URLS,

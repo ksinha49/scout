@@ -344,7 +344,15 @@ async def update_embedding_config(
             ),
             request.app.state.config.RAG_EMBEDDING_BATCH_SIZE,
         )
-
+        log.info(
+            "Embedding config updated",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "update_embedding_config",
+                "payload": form_data.model_dump(),
+            },
+        )
         return {
             "status": True,
             "embedding_engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
@@ -389,7 +397,15 @@ async def update_reranking_config(
         except Exception as e:
             log.error(f"Error loading reranking model: {e}")
             request.app.state.config.ENABLE_RAG_HYBRID_SEARCH = False
-
+        log.info(
+            "Reranking config updated",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "update_reranking_config",
+                "payload": form_data.model_dump(),
+            },
+        )
         return {
             "status": True,
             "reranking_model": request.app.state.config.RAG_RERANKING_MODEL,
@@ -696,7 +712,15 @@ async def update_rag_config(
         request.app.state.config.RAG_WEB_SEARCH_DOMAIN_FILTER_LIST = (
             form_data.web.search.domain_filter_list
         )
-
+    log.info(
+        "RAG config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_rag_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "status": True,
         "pdf_extract_images": request.app.state.config.PDF_EXTRACT_IMAGES,
@@ -801,7 +825,15 @@ async def update_query_settings(
     request.app.state.config.ENABLE_RAG_HYBRID_SEARCH = (
         form_data.hybrid if form_data.hybrid else False
     )
-
+    log.info(
+        "Query settings updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_query_settings",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "status": True,
         "template": request.app.state.config.RAG_TEMPLATE,
@@ -1721,11 +1753,38 @@ def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin
                 collection_name=form_data.collection_name,
                 metadata={"hash": hash},
             )
+            log.info(
+                "Vector DB entries deleted",
+                extra={
+                    "admin_activity": True,
+                    "admin_email": user.email,
+                    "action": "delete_vector_entries",
+                    "payload": form_data.model_dump(),
+                },
+            )
             return {"status": True}
         else:
+            log.info(
+                "Vector DB collection not found",
+                extra={
+                    "admin_activity": True,
+                    "admin_email": user.email,
+                    "action": "delete_vector_entries",
+                    "payload": form_data.model_dump(),
+                },
+            )
             return {"status": False}
     except Exception as e:
         log.exception(e)
+        log.info(
+            "Vector DB deletion error",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "delete_vector_entries",
+                "payload": form_data.model_dump(),
+            },
+        )
         return {"status": False}
 
 
@@ -1733,6 +1792,14 @@ def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin
 def reset_vector_db(user=Depends(get_admin_user)):
     VECTOR_DB_CLIENT.reset()
     Knowledges.delete_all_knowledge()
+    log.info(
+        "Vector DB reset",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "reset_vector_db",
+        },
+    )
 
 
 @router.post("/reset/uploads")
@@ -1753,9 +1820,26 @@ def reset_upload_dir(user=Depends(get_admin_user)) -> bool:
                     log.exception(f"Failed to delete {file_path}. Reason: {e}")
         else:
             log.warning(f"The directory {folder} does not exist")
+        log.info(
+            "Upload directory reset",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "reset_upload_dir",
+            },
+        )
+        return True
     except Exception as e:
         log.exception(f"Failed to process the directory {folder}. Reason: {e}")
-    return True
+        log.info(
+            "Upload directory reset failed",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "reset_upload_dir",
+            },
+        )
+        return False
 
 
 if ENV == "dev":

@@ -267,7 +267,15 @@ async def update_config(
         for key, value in request.app.state.config.OPENAI_API_CONFIGS.items()
         if key in keys
     }
-
+    log.info(
+        "OpenAI config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_openai_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "ENABLE_OPENAI_API": request.app.state.config.ENABLE_OPENAI_API,
         "OPENAI_API_BASE_URLS": request.app.state.config.OPENAI_API_BASE_URLS,

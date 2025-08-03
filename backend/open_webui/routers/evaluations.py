@@ -50,6 +50,15 @@ async def update_config(
         config.ENABLE_EVALUATION_ARENA_MODELS = form_data.ENABLE_EVALUATION_ARENA_MODELS
     if form_data.EVALUATION_ARENA_MODELS is not None:
         config.EVALUATION_ARENA_MODELS = form_data.EVALUATION_ARENA_MODELS
+    log.info(
+        "Evaluation config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_evaluation_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "ENABLE_EVALUATION_ARENA_MODELS": config.ENABLE_EVALUATION_ARENA_MODELS,
         "EVALUATION_ARENA_MODELS": config.EVALUATION_ARENA_MODELS,
