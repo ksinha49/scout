@@ -227,7 +227,15 @@ async def upload_pipeline(
 
         r.raise_for_status()
         data = r.json()
-
+        log.info(
+            "Pipeline uploaded",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "upload_pipeline",
+                "payload": {"urlIdx": urlIdx, "filename": file.filename},
+            },
+        )
         return {**data}
     except Exception as e:
         # Handle connection error here
@@ -278,7 +286,15 @@ async def add_pipeline(
 
         r.raise_for_status()
         data = r.json()
-
+        log.info(
+            "Pipeline added",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "add_pipeline",
+                "payload": form_data.model_dump(),
+            },
+        )
         return {**data}
     except Exception as e:
         # Handle connection error here
@@ -323,7 +339,15 @@ async def delete_pipeline(
 
         r.raise_for_status()
         data = r.json()
-
+        log.info(
+            "Pipeline deleted",
+            extra={
+                "admin_activity": True,
+                "admin_email": user.email,
+                "action": "delete_pipeline",
+                "payload": form_data.model_dump(),
+            },
+        )
         return {**data}
     except Exception as e:
         # Handle connection error here

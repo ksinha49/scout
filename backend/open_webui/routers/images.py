@@ -150,7 +150,15 @@ async def update_config(
     request.app.state.config.COMFYUI_WORKFLOW_NODES = (
         form_data.comfyui.COMFYUI_WORKFLOW_NODES
     )
-
+    log.info(
+        "Image config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_image_config",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {
         "enabled": request.app.state.config.ENABLE_IMAGE_GENERATION,
         "engine": request.app.state.config.IMAGE_GENERATION_ENGINE,
