@@ -783,6 +783,15 @@ async def update_admin_config(
     request.app.state.config.ENABLE_MESSAGE_RATING = form_data.ENABLE_MESSAGE_RATING
 
     request.app.state.config.ENABLE_USER_WEBHOOKS = form_data.ENABLE_USER_WEBHOOKS
+    log.info(
+        "Admin config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_settings",
+            "payload": form_data.model_dump(),
+        },
+    )
 
     return {
         "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,
@@ -870,6 +879,15 @@ async def update_ldap_server(
     request.app.state.config.LDAP_USE_TLS = form_data.use_tls
     request.app.state.config.LDAP_CA_CERT_FILE = form_data.certificate_path
     request.app.state.config.LDAP_CIPHERS = form_data.ciphers
+    log.info(
+        "LDAP server settings updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_settings",
+            "payload": form_data.model_dump(),
+        },
+    )
 
     return {
         "label": request.app.state.config.LDAP_SERVER_LABEL,
@@ -901,6 +919,15 @@ async def update_ldap_config(
     request: Request, form_data: LdapConfigForm, user=Depends(get_admin_user)
 ):
     request.app.state.config.ENABLE_LDAP = form_data.enable_ldap
+    log.info(
+        "LDAP config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_settings",
+            "payload": form_data.model_dump(),
+        },
+    )
     return {"ENABLE_LDAP": request.app.state.config.ENABLE_LDAP}
 
 
