@@ -59,10 +59,21 @@
 	let modelFileContent = `TEMPLATE """{{ .System }}\nUSER: {{ .Prompt }}\nASSISTANT: """\nPARAMETER num_ctx 4096\nPARAMETER stop "</s>"\nPARAMETER stop "USER:"\nPARAMETER stop "ASSISTANT:"`;
 	let modelFileDigest = '';
 
-	let uploadProgress = null;
-	let uploadMessage = '';
+        let uploadProgress = null;
+        let uploadMessage = '';
+        let uploadCompleted = 0;
+        let uploadTotal = 0;
+        let uploadEta: number | null = null;
 
-	let deleteModelTag = '';
+        let deleteModelTag = '';
+
+        const formatBytes = (bytes: number): string => {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        };
 
 	const updateModelsHandler = async () => {
 		for (const model of ollamaModels) {
@@ -256,77 +267,85 @@
 		modelTransferring = false;
 	};
 
-	const uploadModelHandler = async () => {
-		modelTransferring = true;
+        const uploadModelHandler = async () => {
+                modelTransferring = true;
 
-		let uploaded = false;
-		let fileResponse = null;
-		let name = '';
+                let uploaded = false;
+                let fileResponse = null;
+                let name = '';
 
-		if (modelUploadMode === 'file') {
-			const file = modelInputFile ? modelInputFile[0] : null;
+                uploadEta = null;
+                uploadProgress = null;
+                uploadCompleted = 0;
+                uploadTotal = 0;
 
-			if (file) {
-				uploadMessage = 'Uploading...';
+                if (modelUploadMode === 'file') {
+                        const file = modelInputFile ? modelInputFile[0] : null;
 
-				fileResponse = await uploadModel(localStorage.token, file, urlIdx).catch((error) => {
-					toast.error(`${error}`);
-					return null;
-				});
-			}
-		} else {
-			uploadProgress = 0;
-			fileResponse = await downloadModel(localStorage.token, modelFileUrl, urlIdx).catch(
-				(error) => {
-					toast.error(`${error}`);
-					return null;
-				}
-			);
-		}
+                        if (file) {
+                                uploadMessage = 'Uploading...';
 
-		if (fileResponse && fileResponse.ok) {
-			const reader = fileResponse.body
-				.pipeThrough(new TextDecoderStream())
-				.pipeThrough(splitStream('\n'))
-				.getReader();
+                                fileResponse = await uploadModel(localStorage.token, file, urlIdx).catch((error) => {
+                                        toast.error(`${error}`);
+                                        return null;
+                                });
+                        }
+                } else {
+                        uploadProgress = 0;
+                        fileResponse = await downloadModel(localStorage.token, modelFileUrl, urlIdx).catch(
+                                (error) => {
+                                        toast.error(`${error}`);
+                                        return null;
+                                }
+                        );
+                }
 
-			while (true) {
-				const { value, done } = await reader.read();
-				if (done) break;
+                if (fileResponse && fileResponse.ok) {
+                        const reader = fileResponse.body
+                                .pipeThrough(new TextDecoderStream())
+                                .pipeThrough(splitStream('\n'))
+                                .getReader();
 
-				try {
-					let lines = value.split('\n');
+                        while (true) {
+                                const { value, done } = await reader.read();
+                                if (done) break;
 
-					for (const line of lines) {
-						if (line !== '') {
-							let data = JSON.parse(line.replace(/^data: /, ''));
+                                try {
+                                        let lines = value.split('\n');
 
-							if (data.progress) {
-								if (uploadMessage) {
-									uploadMessage = '';
-								}
-								uploadProgress = data.progress;
-							}
+                                        for (const line of lines) {
+                                                if (line !== '') {
+                                                        let data = JSON.parse(line.replace(/^data: /, ''));
 
-							if (data.error) {
-								throw data.error;
-							}
+                                                        if (data.progress) {
+                                                                if (uploadMessage) {
+                                                                        uploadMessage = '';
+                                                                }
+                                                                uploadProgress = data.progress;
+                                                                uploadCompleted = data.completed ?? 0;
+                                                                uploadTotal = data.total ?? 0;
+                                                                uploadEta = data.eta ?? null;
+                                                        }
 
-							if (data.done) {
-								modelFileDigest = data.blob;
-								name = data.name;
-								uploaded = true;
-							}
-						}
-					}
-				} catch (error) {
-					console.log(error);
-				}
-			}
-		} else {
-			const error = await fileResponse?.json();
-			toast.error(error?.detail ?? error);
-		}
+                                                        if (data.error) {
+                                                                throw data.error;
+                                                        }
+
+                                                        if (data.done) {
+                                                                modelFileDigest = data.blob;
+                                                                name = data.name;
+                                                                uploaded = true;
+                                                        }
+                                                }
+                                        }
+                                } catch (error) {
+                                        console.log(error);
+                                }
+                        }
+                } else {
+                        const error = await fileResponse?.json();
+                        toast.error(error?.detail ?? error);
+                }
 
 		if (uploaded) {
 			const res = await createModel(
@@ -390,19 +409,23 @@
 			}
 		}
 
-		modelFileUrl = '';
+                modelFileUrl = '';
 
-		if (modelUploadInputElement) {
-			modelUploadInputElement.value = '';
-		}
-		modelInputFile = null;
-		modelTransferring = false;
-		uploadProgress = null;
+                if (modelUploadInputElement) {
+                        modelUploadInputElement.value = '';
+                }
+                modelInputFile = null;
+                modelTransferring = false;
+                uploadProgress = null;
+                uploadCompleted = 0;
+                uploadTotal = 0;
+                uploadEta = null;
+                uploadMessage = '';
 
-		models.set(
-			await getModels(
-				localStorage.token,
-				$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
+                models.set(
+                        await getModels(
+                                localStorage.token,
+                                $config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
 			)
 		);
 	};
@@ -1029,28 +1052,34 @@
 									{modelFileDigest}
 								</div>
 							</div>
-						{:else if uploadProgress !== null}
-							<div class="mt-2">
-								<div class=" mb-2 text-xs">{$i18n.t('Upload Progress')}</div>
+                                                {:else if uploadProgress !== null}
+                                                        <div class="mt-2">
+                                                                <div class=" mb-2 text-xs">{$i18n.t('Upload Progress')}</div>
 
-								<div class="w-full rounded-full dark:bg-gray-800">
-									<div
-										class="dark:bg-gray-600 bg-gray-500 text-xs font-medium text-gray-100 text-center p-0.5 leading-none rounded-full"
-										style="width: {Math.max(15, uploadProgress ?? 0)}%"
-									>
-										{uploadProgress ?? 0}%
-									</div>
-								</div>
-								<div class="mt-1 text-xs dark:text-gray-500" style="font-size: 0.5rem;">
-									{modelFileDigest}
-								</div>
-							</div>
-						{/if}
-					</form>
-				{/if}
-			</div>
-		</div>
-	</div>
+                                                                <div class="w-full rounded-full dark:bg-gray-800">
+                                                                        <div
+                                                                                class="dark:bg-gray-600 bg-gray-500 text-xs font-medium text-gray-100 text-center p-0.5 leading-none rounded-full"
+                                                                                style="width: {Math.max(15, uploadProgress ?? 0)}%"
+                                                                        >
+                                                                                {uploadProgress ?? 0}%
+                                                                        </div>
+                                                                </div>
+                                                                <div class="mt-1 text-xs dark:text-gray-500">
+                                                                        {formatBytes(uploadCompleted)} / {formatBytes(uploadTotal)}
+                                                                        {#if uploadEta !== null}
+                                                                                — {Math.ceil(uploadEta)}s {$i18n.t('remaining')}
+                                                                        {/if}
+                                                                </div>
+                                                                <div class="mt-1 text-xs dark:text-gray-500" style="font-size: 0.5rem;">
+                                                                        {modelFileDigest}
+                                                                </div>
+                                                        </div>
+                                                {/if}
+                                        </form>
+                                {/if}
+                        </div>
+                </div>
+        </div>
 {:else if ollamaModels === null}
 	<div class="flex justify-center items-center w-full h-full text-xs py-3">
 		{$i18n.t('Failed to fetch models')}

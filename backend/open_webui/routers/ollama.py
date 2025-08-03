@@ -1629,13 +1629,17 @@ async def upload_model(
 
     # --- P1: save file locally ---
     chunk_size = 1024 * 1024 * 2  # 2 MB chunks
+    bytes_streamed = 0
+    upload_start = time.time()
     with open(file_path, "wb") as out_f:
         while True:
             chunk = file.file.read(chunk_size)
-            # log.info(f"Chunk: {str(chunk)}") # DEBUG
             if not chunk:
                 break
             out_f.write(chunk)
+            bytes_streamed += len(chunk)
+
+    log.info(f"Streamed {bytes_streamed} bytes to server in {time.time() - upload_start} seconds")
 
     async def file_process_stream():
         nonlocal ollama_url
@@ -1648,13 +1652,22 @@ async def upload_model(
         try:
             with open(file_path, "rb") as f:
                 bytes_read = 0
+                start_time = time.time()
                 while chunk := f.read(chunk_size):
                     bytes_read += len(chunk)
                     progress = round(bytes_read / total_size * 100, 2)
+                    elapsed = time.time() - start_time
+                    speed = bytes_read / elapsed if elapsed > 0 else 0
+                    eta = (
+                        round((total_size - bytes_read) / speed, 2)
+                        if speed > 0
+                        else None
+                    )
                     data_msg = {
                         "progress": progress,
                         "total": total_size,
                         "completed": bytes_read,
+                        "eta": eta,
                     }
                     yield f"data: {json.dumps(data_msg)}\n\n"
 
