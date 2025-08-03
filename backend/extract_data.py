@@ -7,15 +7,18 @@ import logging
 from datetime import datetime
 
 
+STANDARD_LOG_FORMAT = (
+    "timestamp: %(asctime)s, name: %(name)s, levelname: %(levelname)s, message: %(message)s"
+)
+
+
 # Set up logging
 def setup_logging(log_file):
-    logging.basicConfig(
-        filename=log_file,
-        filemode="a",
-        format="%(asctime)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        level=logging.INFO
-    )
+    handler = logging.FileHandler(log_file, mode="a")
+    handler.setFormatter(logging.Formatter(STANDARD_LOG_FORMAT))
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.addHandler(handler)
 
 
 # Function to log messages
