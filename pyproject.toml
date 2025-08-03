@@ -31,7 +31,7 @@ dependencies = [
     "pymongo",
     "redis",
     "boto3==1.35.53",
-    "python-json-logger"
+    "python-json-logger",
 
     "argon2-cffi==23.1.0",
     "APScheduler==3.10.4",
@@ -97,6 +97,7 @@ dependencies = [
     "rank-bm25==0.2.2",
 
     "faster-whisper==1.1.1",
+    "WhisperSpeech",
 
     "PyJWT[crypto]==2.10.1",
     "authlib==1.4.1",
