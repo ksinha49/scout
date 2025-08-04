@@ -36,8 +36,9 @@
 
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
-	import FileItem from '../common/FileItem.svelte';
-	import Image from '../common/Image.svelte';
+import FileItem from '../common/FileItem.svelte';
+import Image from '../common/Image.svelte';
+import Spinner from '../common/Spinner.svelte';
 
 	import XMark from '../icons/XMark.svelte';
 	import Headphone from '../icons/Headphone.svelte';
@@ -1250,7 +1251,11 @@
                                                                                                                   }
                                                                                                           }}
                                                                                                   >
-                                                                                                         <Sparkles className="size-5" strokeWidth="1.75" />
+                                                                                                         {#if optimizingPrompt}
+                                                                                                                 <Spinner className="size-5" />
+                                                                                                         {:else}
+                                                                                                                 <Sparkles className="size-5" strokeWidth="1.75" />
+                                                                                                         {/if}
                                                                                                  </button>
                                                                                           </Tooltip>
 
