@@ -83,15 +83,20 @@ class FeedbackUserResponse(FeedbackResponse):
 @router.get("/feedbacks/all", response_model=list[FeedbackUserResponse])
 async def get_all_feedbacks(user=Depends(get_admin_user)):
     feedbacks = Feedbacks.get_all_feedbacks()
-    return [
-        FeedbackUserResponse(
-            **feedback.model_dump(),
-            user=FeedbackUserReponse(
-                **Users.get_user_by_id(feedback.user_id).model_dump()
-            ),
+    responses: list[FeedbackUserResponse] = []
+    for feedback in feedbacks:
+        feedback_user = Users.get_user_by_id(feedback.user_id)
+        if not feedback_user:
+            continue
+
+        responses.append(
+            FeedbackUserResponse(
+                **feedback.model_dump(),
+                user=FeedbackUserReponse(**feedback_user.model_dump()),
+            )
         )
-        for feedback in feedbacks
-    ]
+
+    return responses
 
 
 @router.delete("/feedbacks/all")
