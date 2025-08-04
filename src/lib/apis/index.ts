@@ -4,6 +4,8 @@ import { getOpenAIModelsDirect } from './openai';
 
 import { toast } from 'svelte-sonner';
 
+export { optimizePrompt } from './promptOptimizer';
+
 export const getModels = async (
 	token: string = '',
 	connections: object | null = null,
@@ -575,7 +577,7 @@ export const generateTags = async (
 		const response = res?.choices[0]?.message?.content ?? '';
 
 		// Step 2: Attempt to fix common JSON format issues like single quotes
-		const sanitizedResponse = response.replace(/['‘’`]/g, '"'); // Convert single quotes to double quotes for valid JSON
+		const sanitizedResponse = response.replace(/['Â‘Â’`]/g, '"'); // Convert single quotes to double quotes for valid JSON
 
 		// Step 3: Find the relevant JSON block within the response
 		const jsonStartIndex = sanitizedResponse.indexOf('{');
