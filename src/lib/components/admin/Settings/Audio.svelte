@@ -27,12 +27,13 @@
 	let TTS_OPENAI_API_BASE_URL = '';
 	let TTS_OPENAI_API_KEY = '';
 	let TTS_API_KEY = '';
-	let TTS_ENGINE = '';
-	let TTS_MODEL = '';
-	let TTS_VOICE = '';
-	let TTS_SPLIT_ON: TTS_RESPONSE_SPLIT = TTS_RESPONSE_SPLIT.PUNCTUATION;
-	let TTS_AZURE_SPEECH_REGION = '';
-	let TTS_AZURE_SPEECH_OUTPUT_FORMAT = '';
+        let TTS_ENGINE = '';
+        let TTS_MODEL = '';
+        let TTS_VOICE = '';
+        let TTS_SPLIT_ON: TTS_RESPONSE_SPLIT = TTS_RESPONSE_SPLIT.PUNCTUATION;
+        let TTS_OUTPUT_FORMAT = 'mp3';
+        let TTS_AZURE_SPEECH_REGION = '';
+        let TTS_AZURE_SPEECH_OUTPUT_FORMAT = '';
 
 	let STT_OPENAI_API_BASE_URL = '';
 	let STT_OPENAI_API_KEY = '';
@@ -95,13 +96,14 @@
 				OPENAI_API_BASE_URL: TTS_OPENAI_API_BASE_URL,
 				OPENAI_API_KEY: TTS_OPENAI_API_KEY,
 				API_KEY: TTS_API_KEY,
-				ENGINE: TTS_ENGINE,
-				MODEL: TTS_MODEL,
-				VOICE: TTS_VOICE,
-				SPLIT_ON: TTS_SPLIT_ON,
-				AZURE_SPEECH_REGION: TTS_AZURE_SPEECH_REGION,
-				AZURE_SPEECH_OUTPUT_FORMAT: TTS_AZURE_SPEECH_OUTPUT_FORMAT
-			},
+                                ENGINE: TTS_ENGINE,
+                                MODEL: TTS_MODEL,
+                                VOICE: TTS_VOICE,
+                                SPLIT_ON: TTS_SPLIT_ON,
+                                OUTPUT_FORMAT: TTS_OUTPUT_FORMAT,
+                                AZURE_SPEECH_REGION: TTS_AZURE_SPEECH_REGION,
+                                AZURE_SPEECH_OUTPUT_FORMAT: TTS_AZURE_SPEECH_OUTPUT_FORMAT
+                        },
 			stt: {
 				OPENAI_API_BASE_URL: STT_OPENAI_API_BASE_URL,
 				OPENAI_API_KEY: STT_OPENAI_API_KEY,
@@ -135,12 +137,13 @@
 
 			TTS_ENGINE = res.tts.ENGINE;
 			TTS_MODEL = res.tts.MODEL;
-			TTS_VOICE = res.tts.VOICE;
+                        TTS_VOICE = res.tts.VOICE;
 
-			TTS_SPLIT_ON = res.tts.SPLIT_ON || TTS_RESPONSE_SPLIT.PUNCTUATION;
+                        TTS_SPLIT_ON = res.tts.SPLIT_ON || TTS_RESPONSE_SPLIT.PUNCTUATION;
+                        TTS_OUTPUT_FORMAT = res.tts.OUTPUT_FORMAT || 'mp3';
 
-			TTS_AZURE_SPEECH_OUTPUT_FORMAT = res.tts.AZURE_SPEECH_OUTPUT_FORMAT;
-			TTS_AZURE_SPEECH_REGION = res.tts.AZURE_SPEECH_REGION;
+                        TTS_AZURE_SPEECH_OUTPUT_FORMAT = res.tts.AZURE_SPEECH_OUTPUT_FORMAT;
+                        TTS_AZURE_SPEECH_REGION = res.tts.AZURE_SPEECH_REGION;
 
 			STT_OPENAI_API_BASE_URL = res.stt.OPENAI_API_BASE_URL;
 			STT_OPENAI_API_KEY = res.stt.OPENAI_API_KEY;
@@ -410,9 +413,27 @@
 							/>
 						</div>
 					</div>
-				{/if}
+                                {/if}
 
-				<hr class="border-gray-100 dark:border-gray-850 my-2" />
+                                {#if TTS_ENGINE !== 'azure'}
+                                        <div class="w-full">
+                                                <div class=" mb-1.5 text-sm font-medium">{$i18n.t('Output format')}</div>
+                                                <div class="flex w-full">
+                                                        <div class="flex-1">
+                                                                <select
+                                                                        class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                                        bind:value={TTS_OUTPUT_FORMAT}
+                                                                >
+                                                                        <option value="mp3">mp3</option>
+                                                                        <option value="wav">wav</option>
+                                                                        <option value="flac">flac</option>
+                                                                </select>
+                                                        </div>
+                                                </div>
+                                        </div>
+                                {/if}
+
+                                <hr class="border-gray-100 dark:border-gray-850 my-2" />
 
 				{#if TTS_ENGINE === ''}
 					<div>

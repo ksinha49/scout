@@ -76,6 +76,20 @@ log.setLevel(SRC_LOG_LEVELS["AUDIO"])
 SPEECH_CACHE_DIR = CACHE_DIR / "audio" / "speech"
 SPEECH_CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
+SUPPORTED_TTS_FORMATS = {
+    "openai": {"mp3", "wav", "flac"},
+    "elevenlabs": {"mp3", "wav"},
+    "azure": {"mp3", "wav", "flac"},
+    "whisperspeech": {"wav"},
+    "transformers": {"wav", "flac"},
+}
+
+AZURE_OUTPUT_FORMAT_MAP = {
+    "mp3": "audio-24khz-160kbitrate-mono-mp3",
+    "wav": "riff-24khz-16bit-mono-pcm",
+    "flac": "flac-16khz-16bit-mono",
+}
+
 
 ##########################################
 #
@@ -201,6 +215,7 @@ class TTSConfigForm(BaseModel):
     MODEL: str
     VOICE: str
     SPLIT_ON: str
+    OUTPUT_FORMAT: str
     AZURE_SPEECH_REGION: str
     AZURE_SPEECH_OUTPUT_FORMAT: str
 
@@ -230,6 +245,7 @@ async def get_audio_config(request: Request, user=Depends(get_admin_user)):
             "MODEL": request.app.state.config.TTS_MODEL,
             "VOICE": request.app.state.config.TTS_VOICE,
             "SPLIT_ON": request.app.state.config.TTS_SPLIT_ON,
+            "OUTPUT_FORMAT": request.app.state.config.TTS_OUTPUT_FORMAT,
             "AZURE_SPEECH_REGION": request.app.state.config.TTS_AZURE_SPEECH_REGION,
             "AZURE_SPEECH_OUTPUT_FORMAT": request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT,
         },
@@ -255,6 +271,7 @@ async def update_audio_config(
     request.app.state.config.TTS_MODEL = form_data.tts.MODEL
     request.app.state.config.TTS_VOICE = form_data.tts.VOICE
     request.app.state.config.TTS_SPLIT_ON = form_data.tts.SPLIT_ON
+    request.app.state.config.TTS_OUTPUT_FORMAT = form_data.tts.OUTPUT_FORMAT
     request.app.state.config.TTS_AZURE_SPEECH_REGION = form_data.tts.AZURE_SPEECH_REGION
     request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT = (
         form_data.tts.AZURE_SPEECH_OUTPUT_FORMAT
@@ -289,6 +306,7 @@ async def update_audio_config(
             "MODEL": request.app.state.config.TTS_MODEL,
             "VOICE": request.app.state.config.TTS_VOICE,
             "SPLIT_ON": request.app.state.config.TTS_SPLIT_ON,
+            "OUTPUT_FORMAT": request.app.state.config.TTS_OUTPUT_FORMAT,
             "AZURE_SPEECH_REGION": request.app.state.config.TTS_AZURE_SPEECH_REGION,
             "AZURE_SPEECH_OUTPUT_FORMAT": request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT,
         },
@@ -375,15 +393,27 @@ def load_speech_pipeline(request, device: int | None = None):
 @router.post("/speech")
 async def speech(request: Request, user=Depends(get_verified_user)):
     body = await request.body()
-    name = hashlib.sha256(
+    engine = request.app.state.config.TTS_ENGINE
+    output_format = str(request.app.state.config.TTS_OUTPUT_FORMAT or "mp3").lower()
+    hash_basis = (
         body
-        + str(request.app.state.config.TTS_ENGINE).encode("utf-8")
+        + str(engine).encode("utf-8")
         + str(request.app.state.config.TTS_MODEL).encode("utf-8")
-    ).hexdigest()
-
-    extension = (
-        "wav" if request.app.state.config.TTS_ENGINE == "whisperspeech" else "mp3"
+        + output_format.encode("utf-8")
     )
+    name = hashlib.sha256(hash_basis).hexdigest()
+
+    supported = SUPPORTED_TTS_FORMATS.get(engine, {"mp3"})
+    if output_format not in supported:
+        log.warning(
+            "Format '%s' not supported for engine '%s', falling back to '%s'",
+            output_format,
+            engine,
+            next(iter(supported)),
+        )
+        output_format = next(iter(supported))
+
+    extension = output_format
     file_path = SPEECH_CACHE_DIR.joinpath(f"{name}.{extension}")
     file_body_path = SPEECH_CACHE_DIR.joinpath(f"{name}.json")
 
@@ -400,6 +430,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
     if request.app.state.config.TTS_ENGINE == "openai":
         payload["model"] = request.app.state.config.TTS_MODEL
+        payload["format"] = output_format
 
         try:
             timeout = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
@@ -465,6 +496,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
         try:
             timeout = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
+            accept = "audio/mpeg" if output_format == "mp3" else f"audio/{output_format}"
             async with aiohttp.ClientSession(
                 timeout=timeout, trust_env=True
             ) as session:
@@ -476,7 +508,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                         "voice_settings": {"stability": 0.5, "similarity_boost": 0.5},
                     },
                     headers={
-                        "Accept": "audio/mpeg",
+                        "Accept": accept,
                         "Content-Type": "application/json",
                         "xi-api-key": request.app.state.config.TTS_API_KEY,
                     },
@@ -520,7 +552,9 @@ async def speech(request: Request, user=Depends(get_verified_user)):
         region = request.app.state.config.TTS_AZURE_SPEECH_REGION
         language = request.app.state.config.TTS_VOICE
         locale = "-".join(request.app.state.config.TTS_VOICE.split("-")[:1])
-        output_format = request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT
+        azure_format = AZURE_OUTPUT_FORMAT_MAP.get(
+            output_format, request.app.state.config.TTS_AZURE_SPEECH_OUTPUT_FORMAT
+        )
 
         try:
             data = f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="{locale}">
@@ -535,7 +569,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                     headers={
                         "Ocp-Apim-Subscription-Key": request.app.state.config.TTS_API_KEY,
                         "Content-Type": "application/ssml+xml",
-                        "X-Microsoft-OutputFormat": output_format,
+                        "X-Microsoft-OutputFormat": azure_format,
                     },
                     data=data,
                 ) as r:
@@ -609,7 +643,9 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 if audio.ndim not in (1, 2):
                     raise ValueError("Audio array must be 1-D or 2-D")
 
-                sf.write(file_path, audio, 24000, format="WAV", subtype="PCM_16")
+                sf.write(
+                    file_path, audio, 24000, format=output_format.upper(), subtype="PCM_16"
+                )
             except Exception as e:
                 log.exception(e)
                 raise HTTPException(
