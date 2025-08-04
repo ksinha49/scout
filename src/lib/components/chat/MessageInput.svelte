@@ -29,7 +29,8 @@
 
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
-	import InputMenu from './MessageInput/InputMenu.svelte';
+        import InputMenu from './MessageInput/InputMenu.svelte';
+        import ToolsMenu from './MessageInput/ToolsMenu.svelte';
 	import VoiceRecording from './MessageInput/VoiceRecording.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
 	import Commands from './MessageInput/Commands.svelte';
@@ -42,13 +43,11 @@ import Spinner from '../common/Spinner.svelte';
 
 	import XMark from '../icons/XMark.svelte';
 	import Headphone from '../icons/Headphone.svelte';
-	import GlobeAlt from '../icons/GlobeAlt.svelte';
-	import PhotoSolid from '../icons/PhotoSolid.svelte';
-	import Photo from '../icons/Photo.svelte';
-        import CommandLine from '../icons/CommandLine.svelte';
+        import Photo from '../icons/Photo.svelte';
+        import WrenchSolid from '../icons/WrenchSolid.svelte';
         import Sparkles from '../icons/Sparkles.svelte';
-	import { KokoroWorker } from '$lib/workers/KokoroWorker';
-	import ToolServersModal from './ToolServersModal.svelte';
+        import { KokoroWorker } from '$lib/workers/KokoroWorker';
+        import ToolServersModal from './ToolServersModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -1062,10 +1061,9 @@ import Spinner from '../common/Spinner.svelte';
 
 								<div class=" flex justify-between mt-1.5 mb-2.5 mx-0.5 max-w-full">
 									<div class="ml-1 self-end gap-0.5 flex items-center flex-1 max-w-[80%]">
-										<InputMenu
-											bind:selectedToolIds
-											{screenCaptureHandler}
-											{inputFilesHandler}
+                                                                                <InputMenu
+                                                                                        {screenCaptureHandler}
+                                                                                        {inputFilesHandler}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
 											}}
@@ -1127,69 +1125,52 @@ import Spinner from '../common/Spinner.svelte';
 													/>
 												</svg>
 											</button>
-										</InputMenu>
+                                                                                </InputMenu>
 
-										<div class="flex gap-0.5 items-center overflow-x-auto scrollbar-none flex-1">
-											{#if $_user}
-												{#if $config?.features?.enable_web_search && ($_user.role === 'admin' || $_user?.permissions?.features?.web_search)}
-													<Tooltip content={$i18n.t('Search the internet')} placement="top">
-														<button
-															on:click|preventDefault={() => (webSearchEnabled = !webSearchEnabled)}
-															type="button"
-															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {webSearchEnabled ||
-															($settings?.webSearch ?? false) === 'always'
-																? 'bg-blue-100 dark:bg-blue-500/20 text-blue-500 dark:text-blue-400'
-																: 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}"
-														>
-															<GlobeAlt className="size-5" strokeWidth="1.75" />
-															<span
-																class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5"
-																>{$i18n.t('Web Search')}</span
-															>
-														</button>
-													</Tooltip>
-												{/if}
+                                                                                <ToolsMenu
+                                                                                        bind:selectedToolIds
+                                                                                        bind:webSearchEnabled
+                                                                                        bind:codeInterpreterEnabled
+                                                                                        bind:imageGenerationEnabled
+                                                                                        onClose={async () => {
+                                                                                                await tick();
 
-												{#if $config?.features?.enable_image_generation && ($_user.role === 'admin' || $_user?.permissions?.features?.image_generation)}
-													<Tooltip content={$i18n.t('Generate an image')} placement="top">
-														<button
-															on:click|preventDefault={() =>
-																(imageGenerationEnabled = !imageGenerationEnabled)}
-															type="button"
-															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {imageGenerationEnabled
-																? 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400'
-																: 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 '}"
-														>
-															<Photo className="size-5" strokeWidth="1.75" />
-															<span
-																class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5"
-																>{$i18n.t('Image')}</span
-															>
-														</button>
-													</Tooltip>
-												{/if}
+                                                                                                const chatInput = document.getElementById('chat-input');
+                                                                                                chatInput?.focus();
+                                                                                        }}
+                                                                                >
+                                                                                        <button
+                                                                                                class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
+                                                                                                type="button"
+                                                                                                aria-label="Tools"
+                                                                                        >
+                                                                                                <WrenchSolid className="size-5" />
+                                                                                        </button>
+                                                                                </ToolsMenu>
 
-												{#if $config?.features?.enable_code_interpreter && ($_user.role === 'admin' || $_user?.permissions?.features?.code_interpreter)}
-													<Tooltip content={$i18n.t('Execute code for analysis')} placement="top">
-														<button
-															on:click|preventDefault={() =>
-																(codeInterpreterEnabled = !codeInterpreterEnabled)}
-															type="button"
-															class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {codeInterpreterEnabled
-																? 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400'
-																: 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 '}"
-														>
-															<CommandLine className="size-5" strokeWidth="1.75" />
-															<span
-																class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5"
-																>{$i18n.t('Code Interpreter')}</span
-															>
-														</button>
-													</Tooltip>
-												{/if}
-											{/if}
-										</div>
-									</div>
+                                                                                <div class="flex gap-0.5 items-center overflow-x-auto scrollbar-none flex-1">
+                                                                                        {#if $_user}
+                                                                                                {#if $config?.features?.enable_image_generation && ($_user.role === 'admin' || $_user?.permissions?.features?.image_generation)}
+                                                                                                        <Tooltip content={$i18n.t('Generate an image')} placement="top">
+                                                                                                                <button
+                                                                                                                        on:click|preventDefault={() =>
+                                                                                                                               (imageGenerationEnabled = !imageGenerationEnabled)}
+                                                                                                                        type="button"
+                                                                                                                        class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {imageGenerationEnabled
+                                                                                                                               ? 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400'
+                                                                                                                               : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 '}"
+                                                                                                                >
+                                                                                                                        <Photo className="size-5" strokeWidth="1.75" />
+                                                                                                                        <span
+                                                                                                                               class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5"
+                                                                                                                               >{$i18n.t('Image')}</span
+                                                                                                                        >
+                                                                                                                </button>
+                                                                                                        </Tooltip>
+                                                                                                {/if}
+                                                                                        {/if}
+                                                                               </div>
+                                                                       </div>
 
 									<div class="self-end flex space-x-1 mr-1 shrink-0">
 										{#if toolServers.length > 0}
