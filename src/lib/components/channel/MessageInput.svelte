@@ -13,12 +13,14 @@
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import VoiceRecording from '../chat/MessageInput/VoiceRecording.svelte';
 	import InputMenu from './MessageInput/InputMenu.svelte';
-	import { uploadFile } from '$lib/apis/files';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
-	import FileItem from '../common/FileItem.svelte';
-	import Image from '../common/Image.svelte';
-	import { transcribeAudio } from '$lib/apis/audio';
-	import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
+import { uploadFile } from '$lib/apis/files';
+import { WEBUI_API_BASE_URL } from '$lib/constants';
+import FileItem from '../common/FileItem.svelte';
+import Image from '../common/Image.svelte';
+import { transcribeAudio } from '$lib/apis/audio';
+import { optimizePrompt } from '$lib/apis';
+import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
+import Sparkles from '../icons/Sparkles.svelte';
 
         export let placeholder = $i18n.t('Send a Message');
         
@@ -516,9 +518,25 @@
 								</InputMenu>
 							</div>
 
-							<div class="self-end flex space-x-1 mr-1">
-								{#if content === ''}
-									<Tooltip content={$i18n.t('Record voice')}>
+                                                        <div class="self-end flex space-x-1 mr-1">
+                                                                <Tooltip content={$i18n.t('Optimize prompt')}>
+                                                                        <button
+                                                                                class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
+                                                                                type="button"
+                                                                                on:click={async () => {
+                                                                                        try {
+                                                                                                content = await optimizePrompt(localStorage.token, content);
+                                                                                        } catch (error) {
+                                                                                                console.error(error);
+                                                                                        }
+                                                                                }}
+                                                                        >
+                                                                                <Sparkles className="size-5" strokeWidth="1.75" />
+                                                                        </button>
+                                                                </Tooltip>
+
+                                                                {#if content === ''}
+                                                                        <Tooltip content={$i18n.t('Record voice')}>
 										<button
 											id="voice-input-button"
 											class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
