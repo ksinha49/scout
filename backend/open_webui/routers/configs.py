@@ -212,6 +212,7 @@ async def set_code_execution_config(
 class ModelsConfigForm(BaseModel):
     DEFAULT_MODELS: Optional[str]
     MODEL_ORDER_LIST: Optional[list[str]]
+    MODEL_FALLBACK_PRIORITIES: Optional[str]
 
 
 @router.get("/models", response_model=ModelsConfigForm)
@@ -219,6 +220,7 @@ async def get_models_config(request: Request, user=Depends(get_admin_user)):
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
         "MODEL_ORDER_LIST": request.app.state.config.MODEL_ORDER_LIST,
+        "MODEL_FALLBACK_PRIORITIES": request.app.state.config.MODEL_FALLBACK_PRIORITIES,
     }
 
 
@@ -228,6 +230,9 @@ async def set_models_config(
 ):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
     request.app.state.config.MODEL_ORDER_LIST = form_data.MODEL_ORDER_LIST
+    request.app.state.config.MODEL_FALLBACK_PRIORITIES = (
+        form_data.MODEL_FALLBACK_PRIORITIES
+    )
     log.info(
         "Models config updated",
         extra={
@@ -240,6 +245,7 @@ async def set_models_config(
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
         "MODEL_ORDER_LIST": request.app.state.config.MODEL_ORDER_LIST,
+        "MODEL_FALLBACK_PRIORITIES": request.app.state.config.MODEL_FALLBACK_PRIORITIES,
     }
 
 
