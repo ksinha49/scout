@@ -88,8 +88,9 @@
 
 	let showToolServers = false;
 
-	let loaded = false;
-	let recording = false;
+        let loaded = false;
+        let recording = false;
+        let optimizingPrompt = false;
 
 	let isComposing = false;
 
@@ -1236,16 +1237,21 @@
                                                                                                   <button
                                                                                                           class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
                                                                                                           type="button"
+                                                                                                          disabled={optimizingPrompt}
                                                                                                           on:click={async () => {
                                                                                                                   try {
+                                                                                                                          optimizingPrompt = true;
                                                                                                                           prompt = await optimizePrompt(localStorage.token, prompt);
                                                                                                                   } catch (error) {
                                                                                                                           console.error(error);
+                                                                                                                          toast.error(error);
+                                                                                                                  } finally {
+                                                                                                                          optimizingPrompt = false;
                                                                                                                   }
                                                                                                           }}
                                                                                                   >
-                                                                                                          <Sparkles className="size-5" strokeWidth="1.75" />
-                                                                                                  </button>
+                                                                                                         <Sparkles className="size-5" strokeWidth="1.75" />
+                                                                                                 </button>
                                                                                           </Tooltip>
 
                                                                                           <Tooltip content={$i18n.t('Record voice')}>

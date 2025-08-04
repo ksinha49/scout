@@ -26,10 +26,11 @@ import Sparkles from '../icons/Sparkles.svelte';
         
         export let id = null;
 
-	let draggedOver = false;
+        let draggedOver = false;
 
-	let recording = false;
-	let content = '';
+        let recording = false;
+        let optimizingPrompt = false;
+        let content = '';
 	let files = [];
 
 	let filesInputElement;
@@ -523,17 +524,22 @@ import Sparkles from '../icons/Sparkles.svelte';
                                                                         <button
                                                                                 class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
                                                                                 type="button"
+                                                                                disabled={optimizingPrompt}
                                                                                 on:click={async () => {
                                                                                         try {
+                                                                                                optimizingPrompt = true;
                                                                                                 content = await optimizePrompt(localStorage.token, content);
                                                                                         } catch (error) {
                                                                                                 console.error(error);
+                                                                                                toast.error(error);
+                                                                                        } finally {
+                                                                                                optimizingPrompt = false;
                                                                                         }
                                                                                 }}
                                                                         >
                                                                                 <Sparkles className="size-5" strokeWidth="1.75" />
                                                                         </button>
-                                                                </Tooltip>
+                                                               </Tooltip>
 
                                                                 {#if content === ''}
                                                                         <Tooltip content={$i18n.t('Record voice')}>
