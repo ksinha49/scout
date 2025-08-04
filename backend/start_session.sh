@@ -12,6 +12,7 @@ PATH=$PATH:/usr/local/bin/
 
 # Get the directory of the currently running script
 BACKEND_PATH=$(dirname "$(realpath "$0")")
+mkdir -p "$BACKEND_PATH/logs"
 
 # Define the name of the tmux session
 SESSION_NAME="Ameritasgpt-session"
@@ -23,6 +24,10 @@ START_SCRIPT="$BACKEND_PATH/start.sh"
 if /bin/tmux has-session -t $SESSION_NAME 2>/dev/null; then
   echo "The tmux session '$SESSION_NAME' is already running."
 else
+  if [ ! -x "$START_SCRIPT" ]; then
+    echo "Error: start script '$START_SCRIPT' is not executable." >&2
+    exit 1
+  fi
   echo [$(date '+%Y-%m-%d %H:%M:%S')] "Starting a new tmux session: $SESSION_NAME"
   
   # Create a new tmux session and run the start script
