@@ -24,7 +24,7 @@
 	import { blobToFile, compressImage, createMessagesList, findWordIndices } from '$lib/utils';
 	import { transcribeAudio } from '$lib/apis/audio';
 	import { uploadFile } from '$lib/apis/files';
-	import { generateAutoCompletion } from '$lib/apis';
+        import { generateAutoCompletion, optimizePrompt } from '$lib/apis';
 	import { deleteFileById } from '$lib/apis/files';
 
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
@@ -44,7 +44,8 @@
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
 	import PhotoSolid from '../icons/PhotoSolid.svelte';
 	import Photo from '../icons/Photo.svelte';
-	import CommandLine from '../icons/CommandLine.svelte';
+        import CommandLine from '../icons/CommandLine.svelte';
+        import Sparkles from '../icons/Sparkles.svelte';
 	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import ToolServersModal from './ToolServersModal.svelte';
 
@@ -1231,9 +1232,25 @@
 										{/if}
 
 										{#if !history?.currentId || history.messages[history.currentId]?.done == true}
-											<Tooltip content={$i18n.t('Record voice')}>
-												<button
-													id="voice-input-button"
+                                                                                          <Tooltip content={$i18n.t('Optimize prompt')}>
+                                                                                                  <button
+                                                                                                          class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
+                                                                                                          type="button"
+                                                                                                          on:click={async () => {
+                                                                                                                  try {
+                                                                                                                          prompt = await optimizePrompt(localStorage.token, prompt);
+                                                                                                                  } catch (error) {
+                                                                                                                          console.error(error);
+                                                                                                                  }
+                                                                                                          }}
+                                                                                                  >
+                                                                                                          <Sparkles className="size-5" strokeWidth="1.75" />
+                                                                                                  </button>
+                                                                                          </Tooltip>
+
+                                                                                          <Tooltip content={$i18n.t('Record voice')}>
+                                                                                                  <button
+                                                                                                          id="voice-input-button"
 													class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
 													type="button"
 													on:click={async () => {
