@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Chave API OpenAI é necessária.",
 	"OpenAI API settings updated": "Configurações OpenAI atualizadas",
 	"OpenAI URL/Key required.": "URL/Chave OpenAI necessária.",
+        "Optimize prompt": "",
 	"or": "ou",
 	"Organize your users": "Organizar seus usuários",
 	"Other": "Outro",

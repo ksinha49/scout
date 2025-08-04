@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API 키가 필요합니다.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "OpenAI URL/키가 필요합니다.",
+        "Optimize prompt": "",
 	"or": "또는",
 	"Organize your users": "사용자를 ",
 	"Other": "기타",

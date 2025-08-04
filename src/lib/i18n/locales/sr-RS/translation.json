@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Потребан је OpenAI API кључ.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "Потребан је OpenAI URL/кључ.",
+        "Optimize prompt": "",
 	"or": "или",
 	"Organize your users": "Организујте ваше кориснике",
 	"Other": "Остало",

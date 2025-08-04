@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API kulcs szükséges.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "OpenAI URL/kulcs szükséges.",
+        "Optimize prompt": "",
 	"or": "vagy",
 	"Organize your users": "",
 	"Other": "Egyéb",

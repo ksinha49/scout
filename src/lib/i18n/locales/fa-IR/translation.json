@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "مقدار کلید OpenAI API مورد نیاز است.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "URL/Key OpenAI مورد نیاز است.",
+        "Optimize prompt": "",
 	"or": "یا",
 	"Organize your users": "",
 	"Other": "دیگر",

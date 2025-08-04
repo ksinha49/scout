@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "API-nøkkel for OpenAI kreves.",
 	"OpenAI API settings updated": "API-innstillinger for OpenAI er oppdatert",
 	"OpenAI URL/Key required.": "URL/nøkkel for OpenAI kreves.",
+        "Optimize prompt": "",
 	"or": "eller",
 	"Organize your users": "Organisere brukerne dine",
 	"Other": "Annet",

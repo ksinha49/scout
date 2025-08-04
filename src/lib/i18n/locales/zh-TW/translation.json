@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "需要 OpenAI API 金鑰。",
 	"OpenAI API settings updated": "OpenAI API 設定已更新",
 	"OpenAI URL/Key required.": "需要 OpenAI URL 或金鑰。",
+        "Optimize prompt": "",
 	"or": "或",
 	"Organize your users": "組織您的使用者",
 	"Other": "其他",

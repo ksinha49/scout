@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Este necesară cheia API OpenAI.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "Este necesar URL-ul/Cheia OpenAI.",
+        "Optimize prompt": "",
 	"or": "sau",
 	"Organize your users": "",
 	"Other": "Altele",
