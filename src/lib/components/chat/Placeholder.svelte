@@ -138,9 +138,9 @@
 					</div>
 				</div>
 
-				<div class=" text-3xl @sm:text-4xl line-clamp-1" in:fade={{ duration: 100 }}>
-						{$i18n.t('Hello, {{name}}', { name: $user.name })}
-				</div>
+                                <div class=" text-3xl @sm:text-4xl line-clamp-1 text-[#4285F4] dark:text-[#4285F4]" in:fade={{ duration: 100 }}>
+                                                {$i18n.t('Hello, {{name}}', { name: $user.name })}
+                                </div>
 			</div>
 
 			<div class="flex mt-1 mb-2">
