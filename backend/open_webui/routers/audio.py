@@ -572,12 +572,12 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             if getattr(request.app.state, "whisperspeech_pipe", None) is None:
                 from whisperspeech.pipeline import Pipeline
 
+                device = "cuda" if torch.cuda.is_available() else None
                 request.app.state.whisperspeech_pipe = Pipeline(
                     t2s_ref="whisperspeech/whisperspeech:t2s-v1.95-small-8lang.model",
                     s2a_ref=request.app.state.config.TTS_MODEL,
+                    device=device,
                 )
-                if torch.cuda.is_available():
-                    request.app.state.whisperspeech_pipe.to("cuda")
 
             pipe = request.app.state.whisperspeech_pipe
 
