@@ -90,6 +90,57 @@ async def set_direct_connections_config(
 
 
 ############################
+# PromptOptimizerConfig
+############################
+
+
+class PromptOptimizerConfigForm(BaseModel):
+    ENABLE_PROMPT_OPTIMIZER: bool
+    PROMPT_OPTIMIZER_MODEL: str
+    PROMPT_OPTIMIZER_SYSTEM_PROMPT: str
+
+
+@router.get("/prompt_optimizer", response_model=PromptOptimizerConfigForm)
+async def get_prompt_optimizer_config(
+    request: Request, user=Depends(get_admin_user)
+):
+    return {
+        "ENABLE_PROMPT_OPTIMIZER": request.app.state.config.ENABLE_PROMPT_OPTIMIZER,
+        "PROMPT_OPTIMIZER_MODEL": request.app.state.config.PROMPT_OPTIMIZER_MODEL,
+        "PROMPT_OPTIMIZER_SYSTEM_PROMPT": request.app.state.config.PROMPT_OPTIMIZER_SYSTEM_PROMPT,
+    }
+
+
+@router.post("/prompt_optimizer", response_model=PromptOptimizerConfigForm)
+async def set_prompt_optimizer_config(
+    request: Request, form_data: PromptOptimizerConfigForm, user=Depends(get_admin_user)
+):
+    request.app.state.config.ENABLE_PROMPT_OPTIMIZER = (
+        form_data.ENABLE_PROMPT_OPTIMIZER
+    )
+    request.app.state.config.PROMPT_OPTIMIZER_MODEL = (
+        form_data.PROMPT_OPTIMIZER_MODEL
+    )
+    request.app.state.config.PROMPT_OPTIMIZER_SYSTEM_PROMPT = (
+        form_data.PROMPT_OPTIMIZER_SYSTEM_PROMPT
+    )
+    log.info(
+        "Prompt optimizer config updated",
+        extra={
+            "admin_activity": True,
+            "admin_email": user.email,
+            "action": "update_prompt_optimizer_config",
+            "payload": form_data.model_dump(),
+        },
+    )
+    return {
+        "ENABLE_PROMPT_OPTIMIZER": request.app.state.config.ENABLE_PROMPT_OPTIMIZER,
+        "PROMPT_OPTIMIZER_MODEL": request.app.state.config.PROMPT_OPTIMIZER_MODEL,
+        "PROMPT_OPTIMIZER_SYSTEM_PROMPT": request.app.state.config.PROMPT_OPTIMIZER_SYSTEM_PROMPT,
+    }
+
+
+############################
 # CodeInterpreterConfig
 ############################
 class CodeInterpreterConfigForm(BaseModel):
