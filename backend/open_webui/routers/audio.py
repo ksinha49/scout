@@ -29,6 +29,7 @@ import mimetypes
 from urllib.parse import urlparse  # ENH CWE-327
 from urllib3.util.retry import Retry
 import soundfile as sf
+import numpy as np
 
 
 from fastapi import (
@@ -591,9 +592,30 @@ async def speech(request: Request, user=Depends(get_verified_user)):
                 speaker = voice
 
             audio = pipe.generate(payload["input"], speaker=speaker)
-            if isinstance(audio, torch.Tensor):
-                audio = audio.detach().cpu().numpy()
-            sf.write(file_path, audio, 24000, format="WAV")
+            try:
+                if isinstance(audio, torch.Tensor):
+                    audio = audio.detach().cpu().float().numpy()
+                elif isinstance(audio, np.ndarray):
+                    audio = audio.astype(np.float32)
+                elif isinstance(audio, (list, tuple)):
+                    audio = np.asarray(audio, dtype=np.float32)
+                elif isinstance(audio, dict) and "audio" in audio:
+                    audio = np.asarray(audio["audio"], dtype=np.float32)
+                elif isinstance(audio, str) and os.path.exists(audio):
+                    audio, _ = sf.read(audio, dtype="float32")
+                else:
+                    raise ValueError("Unsupported audio output format")
+
+                if audio.ndim not in (1, 2):
+                    raise ValueError("Audio array must be 1-D or 2-D")
+
+                sf.write(file_path, audio, 24000, format="WAV", subtype="PCM_16")
+            except Exception as e:
+                log.exception(e)
+                raise HTTPException(
+                    status_code=500,
+                    detail="Unsupported audio output format",
+                )
 
             async with aiofiles.open(file_body_path, "w") as f:
                 await f.write(json.dumps(payload))
