@@ -41,9 +41,11 @@ import FileItem from '../common/FileItem.svelte';
 import Image from '../common/Image.svelte';
 import Spinner from '../common/Spinner.svelte';
 
-	import XMark from '../icons/XMark.svelte';
-	import Headphone from '../icons/Headphone.svelte';
+        import XMark from '../icons/XMark.svelte';
+        import Headphone from '../icons/Headphone.svelte';
         import Photo from '../icons/Photo.svelte';
+        import GlobeAlt from '../icons/GlobeAlt.svelte';
+        import CommandLine from '../icons/CommandLine.svelte';
         import WrenchSolid from '../icons/WrenchSolid.svelte';
         import Sparkles from '../icons/Sparkles.svelte';
         import { KokoroWorker } from '$lib/workers/KokoroWorker';
@@ -72,11 +74,48 @@ import Spinner from '../common/Spinner.svelte';
 
 	export let toolServers = [];
 
-	export let selectedToolIds = [];
+        export let selectedToolIds = [];
 
-	export let imageGenerationEnabled = false;
-	export let webSearchEnabled = false;
-	export let codeInterpreterEnabled = false;
+        export let imageGenerationEnabled = false;
+        export let webSearchEnabled = false;
+        export let codeInterpreterEnabled = false;
+
+        $: activeTools = [
+                ...selectedToolIds.map((id) => {
+                        const tool = $tools ? $tools.find((t) => t.id === id) : { id, name: id };
+                        return { ...tool, type: 'dynamic', removable: true };
+                }),
+                ...(imageGenerationEnabled
+                        ? [
+                                  {
+                                          id: 'image-generation',
+                                          name: $i18n.t('Image'),
+                                          type: 'image',
+                                          removable: true
+                                  }
+                          ]
+                        : []),
+                ...(webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
+                        ? [
+                                  {
+                                          id: 'web-search',
+                                          name: $i18n.t('Web Search'),
+                                          type: 'web',
+                                          removable: ($settings?.webSearch ?? false) !== 'always'
+                                  }
+                          ]
+                        : []),
+                ...(codeInterpreterEnabled
+                        ? [
+                                  {
+                                          id: 'code-interpreter',
+                                          name: $i18n.t('Code Interpreter'),
+                                          type: 'code',
+                                          removable: true
+                                  }
+                          ]
+                        : [])
+        ];
 
 	$: onChange({
 		prompt,
@@ -389,15 +428,15 @@ import Spinner from '../common/Spinner.svelte';
 					{/if}
 				</div>
 
-				<div class="w-full relative">
-					{#if atSelectedModel !== undefined || selectedToolIds.length > 0 || webSearchEnabled || ($settings?.webSearch ?? false) === 'always' || imageGenerationEnabled || codeInterpreterEnabled}
-						<div
-							class="px-3 pb-0.5 pt-1.5 text-left w-full flex flex-col absolute bottom-0 left-0 right-0 bg-linear-to-t from-white dark:from-gray-900 z-10"
-						>
-							{#if selectedToolIds.length > 0}
-								<div class="flex items-center justify-between w-full">
-									<div class="flex items-center gap-2.5 text-sm dark:text-gray-500">
-										<div class="pl-1">
+                                <div class="w-full relative">
+                                        {#if atSelectedModel !== undefined || activeTools.length > 0}
+                                                <div
+                                                        class="px-3 pb-0.5 pt-1.5 text-left w-full flex flex-col absolute bottom-0 left-0 right-0 bg-linear-to-t from-white dark:from-gray-900 z-10"
+                                                >
+                                                        {#if activeTools.length > 0}
+                                                                <div class="flex items-center justify-between w-full">
+                                                                        <div class="flex items-center gap-2.5 text-sm dark:text-gray-500">
+                                                                                <div class="pl-1">
 											<span class="relative flex size-2">
 												<span
 													class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"
@@ -405,28 +444,26 @@ import Spinner from '../common/Spinner.svelte';
 												<span class="relative inline-flex rounded-full size-2 bg-yellow-500" />
 											</span>
 										</div>
-										<div class="  text-ellipsis line-clamp-1 flex">
-											{#each selectedToolIds.map((id) => {
-												return $tools ? $tools.find((t) => t.id === id) : { id: id, name: id };
-											}) as tool, toolIdx (toolIdx)}
-												<Tooltip
-													content={tool?.meta?.description ?? ''}
-													className=" {toolIdx !== 0 ? 'pl-0.5' : ''} shrink-0"
-													placement="top"
-												>
-													{tool.name}
-												</Tooltip>
+                                                                                <div class="  text-ellipsis line-clamp-1 flex">
+                                                                                        {#each activeTools as tool, toolIdx (tool.id)}
+                                                                                                <Tooltip
+                                                                                                        content={tool?.meta?.description ?? ''}
+                                                                                                        className=" {toolIdx !== 0 ? 'pl-0.5' : ''} shrink-0"
+                                                                                                        placement="top"
+                                                                                                >
+                                                                                                        {tool.name}
+                                                                                                </Tooltip>
 
-												{#if toolIdx !== selectedToolIds.length - 1}
-													<span>, </span>
-												{/if}
-											{/each}
-										</div>
-									</div>
-								</div>
-							{/if}
+                                                                                                {#if toolIdx !== activeTools.length - 1}
+                                                                                                        <span>, </span>
+                                                                                                {/if}
+                                                                                        {/each}
+                                                                                </div>
+                                                                        </div>
+                                                                </div>
+                                                        {/if}
 
-							{#if atSelectedModel !== undefined}
+                                                        {#if atSelectedModel !== undefined}
 								<div class="flex items-center justify-between w-full">
 									<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
 										<img
@@ -1149,26 +1186,42 @@ import Spinner from '../common/Spinner.svelte';
                                                                                 </ToolsMenu>
 
                                                                                 <div class="flex gap-0.5 items-center overflow-x-auto scrollbar-none flex-1">
-                                                                                        {#if $_user}
-                                                                                                {#if $config?.features?.enable_image_generation && ($_user.role === 'admin' || $_user?.permissions?.features?.image_generation)}
-                                                                                                        <Tooltip content={$i18n.t('Generate an image')} placement="top">
+                                                                                        {#each activeTools as tool (tool.id)}
+                                                                                                <div
+                                                                                                        class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400"
+                                                                                                >
+                                                                                                        {#if tool.type === 'web'}
+                                                                                                                <GlobeAlt className="size-5" />
+                                                                                                        {:else if tool.type === 'code'}
+                                                                                                                <CommandLine className="size-5" />
+                                                                                                        {:else if tool.type === 'image'}
+                                                                                                                <Photo className="size-5" strokeWidth="1.75" />
+                                                                                                        {:else}
+                                                                                                                <WrenchSolid className="size-5" />
+                                                                                                        {/if}
+                                                                                                        <span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5">{tool.name}</span>
+                                                                                                        {#if tool.removable}
                                                                                                                 <button
-                                                                                                                        on:click|preventDefault={() =>
-                                                                                                                               (imageGenerationEnabled = !imageGenerationEnabled)}
+                                                                                                                        class="translate-y-[1px] -mr-1"
                                                                                                                         type="button"
-                                                                                                                        class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {imageGenerationEnabled
-                                                                                                                               ? 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400'
-                                                                                                                               : 'bg-transparent text-gray-600 dark:text-gray-300 border-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 '}"
+                                                                                                                        aria-label={$i18n.t('Remove')}
+                                                                                                                        on:click={() => {
+                                                                                                                                if (tool.type === 'web') {
+                                                                                                                                        webSearchEnabled = false;
+                                                                                                                                } else if (tool.type === 'code') {
+                                                                                                                                        codeInterpreterEnabled = false;
+                                                                                                                                } else if (tool.type === 'image') {
+                                                                                                                                        imageGenerationEnabled = false;
+                                                                                                                                } else {
+                                                                                                                                        selectedToolIds = selectedToolIds.filter((id) => id !== tool.id);
+                                                                                                                                }
+                                                                                                                        }}
                                                                                                                 >
-                                                                                                                        <Photo className="size-5" strokeWidth="1.75" />
-                                                                                                                        <span
-                                                                                                                               class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5"
-                                                                                                                               >{$i18n.t('Image')}</span
-                                                                                                                        >
+                                                                                                                        <XMark className="size-4" />
                                                                                                                 </button>
-                                                                                                        </Tooltip>
-                                                                                                {/if}
-                                                                                        {/if}
+                                                                                                        {/if}
+                                                                                                </div>
+                                                                                        {/each}
                                                                                </div>
                                                                        </div>
 
