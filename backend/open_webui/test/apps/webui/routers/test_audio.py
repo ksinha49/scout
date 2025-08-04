@@ -80,9 +80,10 @@ class TestAudioRouter:
         assert response.status_code == 500
         assert response.json()["detail"] == "Install `webdataset` to use WhisperSpeech"
 
-    def test_whisperspeech_tensor_output_saved(self, tmp_path):
+    def test_whisperspeech_audio_saved_and_playable(self, tmp_path):
         import numpy as np
         import torch
+        import soundfile as sf
 
         class DummyPipe:
             def generate(self, text, speaker=None):
@@ -93,20 +94,16 @@ class TestAudioRouter:
 
         self.app.state.whisperspeech_pipe = DummyPipe()
 
-        written = {}
-
-        def fake_write(path, data, samplerate):
-            written["data"] = data
-            Path(path).write_bytes(b"")
-
         with mock_user(self.app):
-            with (
-                patch("open_webui.routers.audio.SPEECH_CACHE_DIR", tmp_path),
-                patch("soundfile.write", side_effect=fake_write),
-            ):
+            with patch("open_webui.routers.audio.SPEECH_CACHE_DIR", tmp_path):
                 response = self.client.post(
                     "/api/v1/audio/speech", json={"input": "hello"}
                 )
 
         assert response.status_code == 200
-        assert isinstance(written["data"], np.ndarray)
+
+        wav_files = list(tmp_path.glob("*.wav"))
+        assert len(wav_files) == 1
+        data, samplerate = sf.read(wav_files[0])
+        assert samplerate == 24000
+        assert np.allclose(data, np.array([0.1, -0.2]), atol=1e-4)
