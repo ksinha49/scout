@@ -73,7 +73,7 @@
                     {#each Object.keys(tools) as toolId}
                         <DropdownMenu.Item
                             class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-                            on:select={async (e) => {
+                            on:click={async (e) => {
                                 e.preventDefault();
                                 tools[toolId].enabled = !tools[toolId].enabled;
                                 await tick();
@@ -106,7 +106,7 @@
             {#if $config?.features?.enable_web_search && ($user.role === 'admin' || $user?.permissions?.features?.web_search)}
                 <DropdownMenu.Item
                     class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-                    on:select={(e) => {
+                    on:click={(e) => {
                         e.preventDefault();
                         webSearchEnabled = !webSearchEnabled;
                     }}
@@ -124,7 +124,7 @@
             {#if $config?.features?.enable_code_interpreter && ($user.role === 'admin' || $user?.permissions?.features?.code_interpreter)}
                 <DropdownMenu.Item
                     class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-                    on:select={(e) => {
+                    on:click={(e) => {
                         e.preventDefault();
                         codeInterpreterEnabled = !codeInterpreterEnabled;
                     }}
@@ -142,7 +142,7 @@
             {#if $config?.features?.enable_image_generation && ($user.role === 'admin' || $user?.permissions?.features?.image_generation)}
                 <DropdownMenu.Item
                     class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-                    on:select={(e) => {
+                    on:click={(e) => {
                         e.preventDefault();
                         imageGenerationEnabled = !imageGenerationEnabled;
                     }}

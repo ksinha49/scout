@@ -34,6 +34,10 @@ describe('ToolsMenu', () => {
         await fireEvent.click(getByText('Web Search'));
         expect(component.$$.ctx[component.$$.props['webSearchEnabled']]).toBe(true);
 
+        // Reopen menu in case it closed after the previous selection
+        await fireEvent.click(getByText('open'));
+        await tick();
+
         await fireEvent.click(getByText('Test Tool'));
         const selectedToolIds = component.$$.ctx[component.$$.props['selectedToolIds']];
         expect(selectedToolIds).toContain('test-tool');
