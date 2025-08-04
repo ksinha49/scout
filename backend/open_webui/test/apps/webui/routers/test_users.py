@@ -46,6 +46,16 @@ class TestUsers(AbstractPostgresTest):
             role="user",
         )
 
+    def test_insert_duplicate_user_returns_existing(self):
+        user = self.users.insert_new_user(
+            id="3",
+            name="user 1 duplicate",
+            email="USER1@ameritas.com",
+            profile_image_url="/user1dup.png",
+            role="user",
+        )
+        assert user.id == "1"
+
     def test_users(self):
         # Get all users
         with mock_webui_user(id="3"):

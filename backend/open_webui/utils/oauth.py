@@ -376,7 +376,7 @@ class OAuthManager:
                 role = self.get_user_role(None, user_data)
 
                 user = Auths.insert_new_auth(
-                    email=email,
+                    email=email.lower(),
                     password=get_password_hash(
                         str(uuid.uuid4())
                     ),  # Random password, not used

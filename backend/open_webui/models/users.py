@@ -9,7 +9,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, String, Text
+from sqlalchemy import BigInteger, Column, String, Text, or_
 
 ####################
 # User DB Schema
@@ -21,7 +21,7 @@ class User(Base):
 
     id = Column(String, primary_key=True)
     name = Column(String)
-    email = Column(String)
+    email = Column(String, unique=True)
     role = Column(String)
     profile_image_url = Column(Text)
 
@@ -104,28 +104,45 @@ class UsersTable:
         role: str = "pending",
         oauth_sub: Optional[str] = None,
     ) -> Optional[UserModel]:
+        email = email.lower()
         with get_db() as db:
-            user = UserModel(
-                **{
-                    "id": id,
-                    "name": name,
-                    "email": email,
-                    "role": role,
-                    "profile_image_url": profile_image_url,
-                    "last_active_at": int(time.time()),
-                    "created_at": int(time.time()),
-                    "updated_at": int(time.time()),
-                    "oauth_sub": oauth_sub,
-                }
-            )
-            result = User(**user.model_dump())
-            db.add(result)
-            db.commit()
-            db.refresh(result)
-            if result:
-                return user
+            if oauth_sub:
+                existing_user = (
+                    db.query(User)
+                    .filter(or_(User.email == email, User.oauth_sub == oauth_sub))
+                    .first()
+                )
             else:
-                return None
+                existing_user = db.query(User).filter_by(email=email).first()
+
+            if existing_user:
+                updated = False
+                if existing_user.email != email:
+                    existing_user.email = email
+                    updated = True
+                if oauth_sub and existing_user.oauth_sub != oauth_sub:
+                    existing_user.oauth_sub = oauth_sub
+                    updated = True
+                if updated:
+                    db.commit()
+                    db.refresh(existing_user)
+                return UserModel.model_validate(existing_user)
+
+            user = User(
+                id=id,
+                name=name,
+                email=email,
+                role=role,
+                profile_image_url=profile_image_url,
+                last_active_at=int(time.time()),
+                created_at=int(time.time()),
+                updated_at=int(time.time()),
+                oauth_sub=oauth_sub,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return UserModel.model_validate(user)
 
     def get_user_by_id(self, id: str) -> Optional[UserModel]:
         try:
@@ -145,6 +162,7 @@ class UsersTable:
 
     def get_user_by_email(self, email: str) -> Optional[UserModel]:
         try:
+            email = email.lower()
             with get_db() as db:
                 user = db.query(User).filter_by(email=email).first()
                 return UserModel.model_validate(user)
@@ -262,6 +280,8 @@ class UsersTable:
     def update_user_by_id(self, id: str, updated: dict) -> Optional[UserModel]:
         try:
             with get_db() as db:
+                if "email" in updated and updated["email"]:
+                    updated["email"] = updated["email"].lower()
                 db.query(User).filter_by(id=id).update(updated)
                 db.commit()
 
