@@ -380,7 +380,10 @@ async def speech(request: Request, user=Depends(get_verified_user)):
         + str(request.app.state.config.TTS_MODEL).encode("utf-8")
     ).hexdigest()
 
-    file_path = SPEECH_CACHE_DIR.joinpath(f"{name}.mp3")
+    extension = (
+        "wav" if request.app.state.config.TTS_ENGINE == "whisperspeech" else "mp3"
+    )
+    file_path = SPEECH_CACHE_DIR.joinpath(f"{name}.{extension}")
     file_body_path = SPEECH_CACHE_DIR.joinpath(f"{name}.json")
 
     # Check if the file already exists in the cache
@@ -590,7 +593,7 @@ async def speech(request: Request, user=Depends(get_verified_user)):
             audio = pipe.generate(payload["input"], speaker=speaker)
             if isinstance(audio, torch.Tensor):
                 audio = audio.detach().cpu().numpy()
-            sf.write(file_path, audio, 24000)
+            sf.write(file_path, audio, 24000, format="WAV")
 
             async with aiofiles.open(file_body_path, "w") as f:
                 await f.write(json.dumps(payload))
