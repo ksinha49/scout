@@ -1233,7 +1233,7 @@ import Spinner from '../common/Spinner.svelte';
 											</Tooltip>
 										{/if}
 
-										{#if !history?.currentId || history.messages[history.currentId]?.done == true}
+                                                                                {#if (!history?.currentId || history.messages[history.currentId]?.done == true) && $config?.features?.enable_prompt_optimizer}
                                                                                           <Tooltip content={$i18n.t('Optimize prompt')}>
                                                                                                   <button
                                                                                                           class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
@@ -1258,6 +1258,7 @@ import Spinner from '../common/Spinner.svelte';
                                                                                                          {/if}
                                                                                                  </button>
                                                                                           </Tooltip>
+                                                                                {/if}
 
                                                                                           <Tooltip content={$i18n.t('Record voice')}>
                                                                                                   <button

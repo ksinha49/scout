@@ -14,12 +14,14 @@
 	import Models from './Settings/Models.svelte';
 	import Connections from './Settings/Connections.svelte';
 	import Documents from './Settings/Documents.svelte';
-	import WebSearch from './Settings/WebSearch.svelte';
+import WebSearch from './Settings/WebSearch.svelte';
 
-	import ChartBar from '../icons/ChartBar.svelte';
-	import DocumentChartBar from '../icons/DocumentChartBar.svelte';
-	import Evaluations from './Settings/Evaluations.svelte';
-	import CodeExecution from './Settings/CodeExecution.svelte';
+import ChartBar from '../icons/ChartBar.svelte';
+import DocumentChartBar from '../icons/DocumentChartBar.svelte';
+import Evaluations from './Settings/Evaluations.svelte';
+import CodeExecution from './Settings/CodeExecution.svelte';
+import PromptOptimizer from './Settings/PromptOptimizer.svelte';
+import Sparkles from '../icons/Sparkles.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -189,11 +191,11 @@
 			<div class=" self-center">{$i18n.t('Web Search')}</div>
 		</button>
 
-		<button
-			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
-			'code-execution'
-				? ''
-				: ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+                <button
+                        class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+                        'code-execution'
+                                ? ''
+                                : ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
 			on:click={() => {
 				selectedTab = 'code-execution';
 			}}
@@ -212,8 +214,23 @@
 					/>
 				</svg>
 			</div>
-			<div class=" self-center">{$i18n.t('Code Execution')}</div>
-		</button>
+                        <div class=" self-center">{$i18n.t('Code Execution')}</div>
+                </button>
+
+                <button
+                        class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
+                        'prompt-optimizer'
+                                ? ''
+                                : ' text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'}"
+                        on:click={() => {
+                                selectedTab = 'prompt-optimizer';
+                        }}
+                >
+                        <div class=" self-center mr-2">
+                                <Sparkles className="size-4" strokeWidth="1.75" />
+                        </div>
+                        <div class=" self-center">{$i18n.t('Prompt Optimization')}</div>
+                </button>
 
 		<button
 			class="px-0.5 py-1 min-w-fit rounded-lg flex-1 md:flex-none flex text-left transition {selectedTab ===
@@ -391,20 +408,29 @@
 					await config.set(await getBackendConfig());
 				}}
 			/>
-		{:else if selectedTab === 'code-execution'}
-			<CodeExecution
-				saveHandler={async () => {
-					toast.success($i18n.t('Settings saved successfully!'));
+                {:else if selectedTab === 'code-execution'}
+                        <CodeExecution
+                                saveHandler={async () => {
+                                        toast.success($i18n.t('Settings saved successfully!'));
 
-					await tick();
-					await config.set(await getBackendConfig());
-				}}
-			/>
-		{:else if selectedTab === 'interface'}
-			<Interface
-				on:save={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
+                                        await tick();
+                                        await config.set(await getBackendConfig());
+                                }}
+                        />
+                {:else if selectedTab === 'prompt-optimizer'}
+                        <PromptOptimizer
+                                saveHandler={async () => {
+                                        toast.success($i18n.t('Settings saved successfully!'));
+
+                                        await tick();
+                                        await config.set(await getBackendConfig());
+                                }}
+                        />
+                {:else if selectedTab === 'interface'}
+                        <Interface
+                                on:save={() => {
+                                        toast.success($i18n.t('Settings saved successfully!'));
+                                }}
 			/>
 		{:else if selectedTab === 'audio'}
 			<Audio

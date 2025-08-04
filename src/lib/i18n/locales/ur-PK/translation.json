@@ -1214,5 +1214,9 @@
 	"Your entire contribution will go directly to the plugin developer; Open WebUI does not take any percentage. However, the chosen funding platform might have its own fees.": "آپ کی پوری شراکت براہ راست پلگ ان ڈیولپر کو جائے گی؛ اوپن ویب یو آئی کوئی فیصد نہیں لیتی تاہم، منتخب کردہ فنڈنگ پلیٹ فارم کی اپنی فیس ہو سکتی ہیں",
 	"Youtube": "یوٹیوب",
 	"Youtube Language": "",
-	"Youtube Proxy URL": ""
+	"Youtube Proxy URL": "",
+        "Prompt Optimization": "",
+        "Enable Prompt Optimization": "",
+        "Prompt Optimization Model": "",
+        "Prompt Optimization Prompt Template": ""
 }

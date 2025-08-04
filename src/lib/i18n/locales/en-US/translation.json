@@ -1215,5 +1215,9 @@
 	"Youtube": "",
 	"Youtube Language": "",
 	"Youtube Proxy URL": "",
-	"© 2025 Ameritas Mutual Holding Company": ""
+	"© 2025 Ameritas Mutual Holding Company": "",
+        "Prompt Optimization": "",
+        "Enable Prompt Optimization": "",
+        "Prompt Optimization Model": "",
+        "Prompt Optimization Prompt Template": ""
 }
