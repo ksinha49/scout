@@ -1212,5 +1212,9 @@
 	"Your account status is currently pending activation.": "El compte està actualment pendent d'activació",
 	"Youtube": "Youtube",
 	"Youtube Language": "Idioma de YouTube",
-	"Youtube Proxy URL": ""
+	"Youtube Proxy URL": "",
+        "Prompt Optimization": "",
+        "Enable Prompt Optimization": "",
+        "Prompt Optimization Model": "",
+        "Prompt Optimization Prompt Template": ""
 }

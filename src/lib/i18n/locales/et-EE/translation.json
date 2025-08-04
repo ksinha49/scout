@@ -1214,5 +1214,9 @@
 	"Your entire contribution will go directly to the plugin developer; Open WebUI does not take any percentage. However, the chosen funding platform might have its own fees.": "Kogu teie toetus läheb otse pistikprogrammi arendajale; Open WebUI ei võta mingit protsenti. Kuid valitud rahastamisplatvormil võivad olla oma tasud.",
 	"Youtube": "Youtube",
 	"Youtube Language": "Youtube keel",
-	"Youtube Proxy URL": "Youtube puhverserveri URL"
+	"Youtube Proxy URL": "Youtube puhverserveri URL",
+        "Prompt Optimization": "",
+        "Enable Prompt Optimization": "",
+        "Prompt Optimization Model": "",
+        "Prompt Optimization Prompt Template": ""
 }

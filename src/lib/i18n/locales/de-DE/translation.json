@@ -1214,5 +1214,9 @@
 	"Your entire contribution will go directly to the plugin developer; Open WebUI does not take any percentage. However, the chosen funding platform might have its own fees.": "Ihr gesamter Beitrag geht direkt an den Plugin-Entwickler; Open WebUI behält keinen Prozentsatz ein. Die gewählte Finanzierungsplattform kann jedoch eigene Gebühren haben.",
 	"Youtube": "YouTube",
 	"Youtube Language": "YouTube Sprache",
-	"Youtube Proxy URL": ""
+	"Youtube Proxy URL": "",
+        "Prompt Optimization": "",
+        "Enable Prompt Optimization": "",
+        "Prompt Optimization Model": "",
+        "Prompt Optimization Prompt Template": ""
 }
