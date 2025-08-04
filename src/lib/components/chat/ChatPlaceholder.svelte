@@ -82,7 +82,7 @@
 			class=" mt-2 mb-4 text-3xl text-gray-800 dark:text-gray-100 font-medium text-left flex items-center gap-4 font-primary"
 		>
 			<div>
-                                <div class=" capitalize line-clamp-1 text-[#4285F4] dark:text-[#4285F4]" in:fade={{ duration: 200 }}>
+                                <div class=" capitalize line-clamp-1 text-[#4285F4] dark:text-[#4285F4] font-google" in:fade={{ duration: 200 }}>
                                         {$i18n.t('Hello, {{name}}', { name: $user.name })}
                                 </div>
 

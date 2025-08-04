@@ -138,7 +138,7 @@
 					</div>
 				</div>
 
-                                <div class=" text-3xl @sm:text-4xl line-clamp-1 text-[#4285F4] dark:text-[#4285F4]" in:fade={{ duration: 100 }}>
+                                <div class=" text-3xl @sm:text-4xl line-clamp-1 text-[#4285F4] dark:text-[#4285F4] font-google" in:fade={{ duration: 100 }}>
                                                 {$i18n.t('Hello, {{name}}', { name: $user.name })}
                                 </div>
 			</div>
