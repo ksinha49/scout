@@ -1,15 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
-from pathlib import Path
-from functools import lru_cache
-
-from transformers import AutoModelForCausalLM, AutoTokenizer
-import torch
-
 from open_webui.utils.auth import get_verified_user
 from open_webui.exceptionutil import getErrorMsg
 from open_webui.constants import ERROR_MESSAGES
+from open_webui.utils.chat import generate_chat_completion
 
 router = APIRouter()
 
@@ -38,13 +33,17 @@ async def optimize_prompt(
     ]
 
     try:
-        tokenizer, model = _get_model()
-        inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to(
-            model.device
+        response = await generate_chat_completion(
+            request,
+            {"model": "llama3.1:8b", "messages": messages},
+            user,
+            bypass_filter=True,
         )
-        with torch.no_grad():
-            output_ids = model.generate(**inputs, max_new_tokens=256)
-        optimized = tokenizer.decode(output_ids[0], skip_special_tokens=True).strip()
+        optimized = (
+            response["choices"][0]["message"]["content"].strip()
+            if response
+            else ""
+        )
 
         if not optimized:
             raise HTTPException(
@@ -61,23 +60,3 @@ async def optimize_prompt(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=ERROR_MESSAGES.DEFAULT(getErrorMsg(e)),
         )
-
-
-@lru_cache()
-def _get_model():
-    model_id = "microsoft/Phi-3-mini-4k-instruct"
-    cache_dir = Path(__file__).resolve().parents[3] / "data" / "cache"
-    cache_dir.mkdir(parents=True, exist_ok=True)
-
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_id, cache_dir=cache_dir, trust_remote_code=True
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id, cache_dir=cache_dir, trust_remote_code=True
-        )
-        if torch.cuda.is_available():
-            model = model.to("cuda")
-        return tokenizer, model
-    except Exception as e:
-        raise RuntimeError(f"Failed to load model '{model_id}': {e}") from e
