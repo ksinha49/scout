@@ -114,25 +114,29 @@ class AuthsTable:
         role: str = "pending",
         oauth_sub: Optional[str] = None,
     ) -> Optional[UserModel]:
+        email = email.lower()
+        id = str(uuid.uuid4())
+
+        user = Users.insert_new_user(
+            id, name, email, profile_image_url, role, oauth_sub
+        )
+        if not user:
+            log.warning("Failed to create new user.")
+            return None
+        if user.id != id:
+            return user
+
         with get_db() as db:
             log.info("Inserting new authentication record.")
-
-            id = str(uuid.uuid4())
-
             auth = AuthModel(
                 **{"id": id, "email": email, "password": password, "active": True}
             )
             result = Auth(**auth.model_dump())
             db.add(result)
-
-            user = Users.insert_new_user(
-                id, name, email, profile_image_url, role, oauth_sub
-            )
-
             db.commit()
             db.refresh(result)
 
-            if result and user:
+            if result:
                 log.info("New authentication and user record created successfully.")
                 return user
             else:
@@ -144,6 +148,7 @@ class AuthsTable:
         #log.info(f"authenticate_user_by_trusted_header: {email}")
         log.info(f"Authenticating user with email.")
         try:
+            email = email.lower()
             with get_db() as db:
                 auth = db.query(Auth).filter_by(email=email, active=True).first()
                 if auth:
@@ -186,6 +191,7 @@ class AuthsTable:
         #log.info(f"Authenticating user by trusted header with email: {masked_email}")
         log.info(f"Authenticating user by trusted header with email.")
         try:
+            email = email.lower()
             with get_db() as db:
                 auth = db.query(Auth).filter_by(email=email, active=True).first()
                 if auth:
