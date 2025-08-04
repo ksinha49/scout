@@ -166,8 +166,10 @@ async def get_channel_messages(
     messages = []
     for message in message_list:
         if message.user_id not in users:
-            user = Users.get_user_by_id(message.user_id)
-            users[message.user_id] = user
+            message_user = Users.get_user_by_id(message.user_id)
+            if not message_user:
+                continue
+            users[message.user_id] = message_user
 
         replies = Messages.get_replies_by_message_id(message.id)
         latest_reply_at = replies[0].created_at if replies else None
@@ -275,29 +277,29 @@ async def post_new_message(
                 parent_message = Messages.get_message_by_id(message.parent_id)
 
                 if parent_message:
-                    await sio.emit(
-                        "channel-events",
-                        {
-                            "channel_id": channel.id,
-                            "message_id": parent_message.id,
-                            "data": {
-                                "type": "message:reply",
-                                "data": MessageUserResponse(
-                                    **{
-                                        **parent_message.model_dump(),
-                                        "user": UserNameResponse(
-                                            **Users.get_user_by_id(
-                                                parent_message.user_id
-                                            ).model_dump()
-                                        ),
-                                    }
-                                ).model_dump(),
+                    parent_user = Users.get_user_by_id(parent_message.user_id)
+                    if parent_user:
+                        await sio.emit(
+                            "channel-events",
+                            {
+                                "channel_id": channel.id,
+                                "message_id": parent_message.id,
+                                "data": {
+                                    "type": "message:reply",
+                                    "data": MessageUserResponse(
+                                        **{
+                                            **parent_message.model_dump(),
+                                            "user": UserNameResponse(
+                                                **parent_user.model_dump()
+                                            ),
+                                        }
+                                    ).model_dump(),
+                                },
+                                "user": UserNameResponse(**user.model_dump()).model_dump(),
+                                "channel": channel.model_dump(),
                             },
-                            "user": UserNameResponse(**user.model_dump()).model_dump(),
-                            "channel": channel.model_dump(),
-                        },
-                        to=f"channel:{channel.id}",
-                    )
+                            to=f"channel:{channel.id}",
+                        )
 
             active_user_ids = get_user_ids_from_room(f"channel:{channel.id}")
 
@@ -351,12 +353,14 @@ async def get_channel_message(
             status_code=status.HTTP_400_BAD_REQUEST, detail=ERROR_MESSAGES.DEFAULT()
         )
 
+    message_user = Users.get_user_by_id(message.user_id)
+    if not message_user:
+        return None
+
     return MessageUserResponse(
         **{
             **message.model_dump(),
-            "user": UserNameResponse(
-                **Users.get_user_by_id(message.user_id).model_dump()
-            ),
+            "user": UserNameResponse(**message_user.model_dump()),
         }
     )
 
@@ -395,8 +399,10 @@ async def get_channel_thread_messages(
     messages = []
     for message in message_list:
         if message.user_id not in users:
-            user = Users.get_user_by_id(message.user_id)
-            users[message.user_id] = user
+            message_user = Users.get_user_by_id(message.user_id)
+            if not message_user:
+                continue
+            users[message.user_id] = message_user
 
         messages.append(
             MessageUserResponse(
@@ -524,6 +530,13 @@ async def add_reaction_to_message(
         Messages.add_reaction_to_message(message_id, user.id, form_data.name)
         message = Messages.get_message_by_id(message_id)
 
+        message_user = Users.get_user_by_id(message.user_id)
+        user_payload = (
+            UserNameResponse(**message_user.model_dump()).model_dump()
+            if message_user
+            else None
+        )
+
         await sio.emit(
             "channel-events",
             {
@@ -533,9 +546,7 @@ async def add_reaction_to_message(
                     "type": "message:reaction:add",
                     "data": {
                         **message.model_dump(),
-                        "user": UserNameResponse(
-                            **Users.get_user_by_id(message.user_id).model_dump()
-                        ).model_dump(),
+                        "user": user_payload,
                         "name": form_data.name,
                     },
                 },
@@ -592,6 +603,12 @@ async def remove_reaction_by_id_and_user_id_and_name(
         )
 
         message = Messages.get_message_by_id(message_id)
+        message_user = Users.get_user_by_id(message.user_id)
+        user_payload = (
+            UserNameResponse(**message_user.model_dump()).model_dump()
+            if message_user
+            else None
+        )
 
         await sio.emit(
             "channel-events",
@@ -602,9 +619,7 @@ async def remove_reaction_by_id_and_user_id_and_name(
                     "type": "message:reaction:remove",
                     "data": {
                         **message.model_dump(),
-                        "user": UserNameResponse(
-                            **Users.get_user_by_id(message.user_id).model_dump()
-                        ).model_dump(),
+                        "user": user_payload,
                         "name": form_data.name,
                     },
                 },
@@ -680,29 +695,29 @@ async def delete_message_by_id(
             parent_message = Messages.get_message_by_id(message.parent_id)
 
             if parent_message:
-                await sio.emit(
-                    "channel-events",
-                    {
-                        "channel_id": channel.id,
-                        "message_id": parent_message.id,
-                        "data": {
-                            "type": "message:reply",
-                            "data": MessageUserResponse(
-                                **{
-                                    **parent_message.model_dump(),
-                                    "user": UserNameResponse(
-                                        **Users.get_user_by_id(
-                                            parent_message.user_id
-                                        ).model_dump()
-                                    ),
-                                }
-                            ).model_dump(),
+                parent_user = Users.get_user_by_id(parent_message.user_id)
+                if parent_user:
+                    await sio.emit(
+                        "channel-events",
+                        {
+                            "channel_id": channel.id,
+                            "message_id": parent_message.id,
+                            "data": {
+                                "type": "message:reply",
+                                "data": MessageUserResponse(
+                                    **{
+                                        **parent_message.model_dump(),
+                                        "user": UserNameResponse(
+                                            **parent_user.model_dump()
+                                        ),
+                                    }
+                                ).model_dump(),
+                            },
+                            "user": UserNameResponse(**user.model_dump()).model_dump(),
+                            "channel": channel.model_dump(),
                         },
-                        "user": UserNameResponse(**user.model_dump()).model_dump(),
-                        "channel": channel.model_dump(),
-                    },
-                    to=f"channel:{channel.id}",
-                )
+                        to=f"channel:{channel.id}",
+                    )
 
         return True
     except Exception as e:
