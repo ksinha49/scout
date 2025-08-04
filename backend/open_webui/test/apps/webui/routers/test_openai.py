@@ -1,8 +1,11 @@
+import asyncio
 import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+
+import aiohttp
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -15,12 +18,21 @@ from test.util.mock_user import mock_user
 
 
 class DummyResponse:
-    def __init__(self):
-        self.status = 200
+    def __init__(self, status: int = 200):
+        self.status = status
         self.headers = {"Content-Type": "application/json"}
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
 
     async def json(self):
         return {"id": "1", "choices": []}
+
+    async def text(self):
+        return json.dumps({"id": "1", "choices": []})
 
     def raise_for_status(self):
         pass
@@ -132,3 +144,63 @@ def test_missing_default_models_error():
         == "No models are available. Please check your configuration or network connection."
     )
     assert mock_get_all_models.calls == 2
+
+
+class ClosedOnceSession:
+    call_count = 0
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    def get(self, url, headers=None):
+        ClosedOnceSession.call_count += 1
+        if ClosedOnceSession.call_count == 1:
+            raise RuntimeError("Session is closed")
+        return DummyResponse()
+
+
+class AlwaysClosedSession:
+    call_count = 0
+
+    def __init__(self, *args, **kwargs):
+        pass
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        pass
+
+    def get(self, url, headers=None):
+        AlwaysClosedSession.call_count += 1
+        raise aiohttp.ClientConnectionError("connection closed")
+
+
+def test_send_get_request_recovers_from_closed_session():
+    from open_webui.routers.openai import send_get_request
+
+    with patch(
+        "open_webui.routers.openai.aiohttp.ClientSession", ClosedOnceSession
+    ):
+        result = asyncio.run(send_get_request("http://test", retries=2))
+
+    assert result == {"id": "1", "choices": []}
+    assert ClosedOnceSession.call_count == 2
+
+
+def test_send_get_request_fails_after_session_error():
+    from open_webui.routers.openai import send_get_request
+
+    with patch(
+        "open_webui.routers.openai.aiohttp.ClientSession", AlwaysClosedSession
+    ):
+        result = asyncio.run(send_get_request("http://test", retries=2))
+
+    assert result["error"] == "SESSION_ERROR"
+    assert AlwaysClosedSession.call_count == 2

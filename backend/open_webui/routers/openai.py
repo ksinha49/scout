@@ -131,7 +131,7 @@ async def send_get_request(
                     if response.status >= 400:
                         error_text = await response.text()
                         log.error(
-                            f"HTTP error {response.status} when requesting {url}: {error_text}"
+                            f"API error {response.status} when requesting {url}: {error_text}"
                         )
                         return {
                             "error": "HTTP_ERROR",
@@ -147,6 +147,20 @@ async def send_get_request(
                 "error": "SSL_CERTIFICATE_VERIFY_FAILED",
                 "message": "SSL certificate verification failed. Please verify the certificate configuration.",
             }
+        except (RuntimeError, aiohttp.ClientConnectionError) as e:
+            log.warning(
+                f"Session error when requesting {url}: {e} (attempt {attempt}/{retries})"
+            )
+            if attempt == retries:
+                log.error(
+                    f"Session failure when requesting {url} after {retries} attempts: {e}"
+                )
+                return {
+                    "error": "SESSION_ERROR",
+                    "message": "Client session was closed or invalid. Please try again.",
+                }
+            await asyncio.sleep(backoff_factor * (2 ** (attempt - 1)))
+            continue
         except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             log.warning(
                 f"Network error when requesting {url}: {e} (attempt {attempt}/{retries})"
