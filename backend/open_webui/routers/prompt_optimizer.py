@@ -26,16 +26,22 @@ async def optimize_prompt(
             detail=ERROR_MESSAGES.EMPTY_CONTENT,
         )
 
-    template = (
+    system_prompt = (
         "You are an expert prompt engineer. Rewrite the request below as a numbered list "
         "of concise, actionable steps. Each step should begin with a number and a verb. "
-        "Return only the list of steps.\n\nRequest:\n"
-        f"{payload.prompt.strip()}"
+        "Return only the list of steps."
     )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": payload.prompt.strip()},
+    ]
 
     try:
         tokenizer, model = _get_model()
-        inputs = tokenizer(template, return_tensors="pt").to(model.device)
+        inputs = tokenizer.apply_chat_template(messages, return_tensors="pt").to(
+            model.device
+        )
         with torch.no_grad():
             output_ids = model.generate(**inputs, max_new_tokens=256)
         optimized = tokenizer.decode(output_ids[0], skip_special_tokens=True).strip()
@@ -59,13 +65,17 @@ async def optimize_prompt(
 
 @lru_cache()
 def _get_model():
-    model_id = "mistralai/Mistral-7B-Instruct-v0.2"
+    model_id = "microsoft/Phi-3-mini-4k-instruct"
     cache_dir = Path(__file__).resolve().parents[3] / "data" / "cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_id, cache_dir=cache_dir)
-        model = AutoModelForCausalLM.from_pretrained(model_id, cache_dir=cache_dir)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_id, cache_dir=cache_dir, trust_remote_code=True
+        )
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id, cache_dir=cache_dir, trust_remote_code=True
+        )
         if torch.cuda.is_available():
             model = model.to("cuda")
         return tokenizer, model
