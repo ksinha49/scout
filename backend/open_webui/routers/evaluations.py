@@ -65,7 +65,7 @@ async def update_config(
     }
 
 
-class FeedbackUserReponse(BaseModel):
+class FeedbackUserResponseData(BaseModel):
     id: str
     name: str
     email: str
@@ -77,7 +77,7 @@ class FeedbackUserReponse(BaseModel):
 
 
 class FeedbackUserResponse(FeedbackResponse):
-    user: Optional[FeedbackUserReponse] = None
+    user: Optional[FeedbackUserResponseData] = None
 
 
 @router.get("/feedbacks/all", response_model=list[FeedbackUserResponse])
@@ -92,7 +92,7 @@ async def get_all_feedbacks(user=Depends(get_admin_user)):
         responses.append(
             FeedbackUserResponse(
                 **feedback.model_dump(),
-                user=FeedbackUserReponse(**feedback_user.model_dump()),
+                user=FeedbackUserResponseData(**feedback_user.model_dump()),
             )
         )
 
