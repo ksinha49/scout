@@ -499,11 +499,11 @@ import Sparkles from '../icons/Sparkles.svelte';
 										filesInputElement.click();
 									}}
 								>
-									<button
-										class="bg-transparent hover:bg-white/80 text-gray-800 dark:text-white dark:hover:bg-gray-800 transition rounded-full p-1.5 outline-hidden focus:outline-hidden"
-										type="button"
-										aria-label="More"
-									>
+                                                                        <button
+                                                                                class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
+                                                                                type="button"
+                                                                                aria-label="More"
+                                                                        >
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
 											viewBox="0 0 20 20"
