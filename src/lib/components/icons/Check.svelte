@@ -1,6 +1,6 @@
 <script lang="ts">
-	export let className = 'w-4 h-4';
-	export let strokeWidth = '1.5';
+        export let className = 'shrink-0 size-4 text-gray-900 dark:text-white';
+        export let strokeWidth = '2.5';
 </script>
 
 <svg

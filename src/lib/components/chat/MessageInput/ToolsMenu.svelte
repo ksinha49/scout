@@ -95,7 +95,7 @@
                                 <div class="truncate">{tools[toolId].name}</div>
                             </Tooltip>
                             {#if tools[toolId].enabled}
-                                <Check className="shrink-0" />
+                                <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
                             {/if}
                         </DropdownMenu.Item>
                     {/each}
@@ -116,7 +116,7 @@
                         <div>{$i18n.t('Web Search')}</div>
                     </div>
                     {#if webSearchEnabled}
-                        <Check className="shrink-0" />
+                        <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
                     {/if}
                 </DropdownMenu.Item>
             {/if}
@@ -134,7 +134,7 @@
                         <div>{$i18n.t('Code Interpreter')}</div>
                     </div>
                     {#if codeInterpreterEnabled}
-                        <Check className="shrink-0" />
+                        <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
                     {/if}
                 </DropdownMenu.Item>
             {/if}
@@ -152,7 +152,7 @@
                         <div>{$i18n.t('Image')}</div>
                     </div>
                     {#if imageGenerationEnabled}
-                        <Check className="shrink-0" />
+                        <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
                     {/if}
                 </DropdownMenu.Item>
             {/if}
