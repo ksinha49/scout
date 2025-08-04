@@ -927,6 +927,12 @@ DEFAULT_MODELS = PersistentConfig(
     "DEFAULT_MODELS", "ui.default_models", os.environ.get("DEFAULT_MODELS", None)
 )
 
+MODEL_FALLBACK_PRIORITIES = PersistentConfig(
+    "MODEL_FALLBACK_PRIORITIES",
+    "ui.model_fallback_priorities",
+    os.environ.get("MODEL_FALLBACK_PRIORITIES", None),
+)
+
 DEFAULT_PROMPT_SUGGESTIONS = PersistentConfig(
     "DEFAULT_PROMPT_SUGGESTIONS",
     "ui.prompt_suggestions",
