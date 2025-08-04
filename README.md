@@ -40,3 +40,5 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
     ```bash
     pip install -r backend/requirements.txt webdataset fastcore fastprogress torchaudio speechbrain vocos huggingface-hub
     ```
+
+- `AUDIO_TTS_OUTPUT_FORMAT` – Desired audio format for synthesized speech (`mp3`, `wav`, or `flac`). Scout checks if the selected engine supports the requested format and falls back to a supported option when necessary.

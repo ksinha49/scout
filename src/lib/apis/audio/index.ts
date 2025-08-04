@@ -27,14 +27,30 @@ export const getAudioConfig = async (token: string) => {
 	return res;
 };
 
-type OpenAIConfigForm = {
-	url: string;
-	key: string;
-	model: string;
-	speaker: string;
+type AudioConfigUpdate = {
+        tts: {
+                OPENAI_API_BASE_URL: string;
+                OPENAI_API_KEY: string;
+                API_KEY: string;
+                ENGINE: string;
+                MODEL: string;
+                VOICE: string;
+                SPLIT_ON: string;
+                OUTPUT_FORMAT: string;
+                AZURE_SPEECH_REGION: string;
+                AZURE_SPEECH_OUTPUT_FORMAT: string;
+        };
+        stt: {
+                OPENAI_API_BASE_URL: string;
+                OPENAI_API_KEY: string;
+                ENGINE: string;
+                MODEL: string;
+                WHISPER_MODEL: string;
+                DEEPGRAM_API_KEY: string;
+        };
 };
 
-export const updateAudioConfig = async (token: string, payload: OpenAIConfigForm) => {
+export const updateAudioConfig = async (token: string, payload: AudioConfigUpdate) => {
 	let error = null;
 
 	const res = await fetch(`${AUDIO_API_BASE_URL}/config/update`, {
