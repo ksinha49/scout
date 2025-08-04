@@ -23,8 +23,8 @@ async def optimize_prompt(
 
     system_prompt = (
         "You are an expert prompt engineer. Rewrite the request below as a numbered list "
-        "of concise, actionable steps. Each step should begin with a number and a verb. "
-        "Return only the list of steps."
+        "of concise, actionable steps, each starting with a number and a verb. "
+        "Respond with only this rewritten list and no additional text."
     )
 
     messages = [
