@@ -1479,6 +1479,37 @@ Responses from models: {{responses}}"""
 
 
 ####################################
+# Prompt Optimizer
+####################################
+
+DEFAULT_PROMPT_OPTIMIZER_SYSTEM_PROMPT = (
+    "You are an expert prompt engineer. Rewrite the request below as a numbered list "
+    "of concise, actionable steps, each starting with a number and a verb. "
+    "Respond with only this rewritten list and no additional text."
+)
+
+ENABLE_PROMPT_OPTIMIZER = PersistentConfig(
+    "ENABLE_PROMPT_OPTIMIZER",
+    "prompt_optimizer.enable",
+    os.environ.get("ENABLE_PROMPT_OPTIMIZER", "False").lower() == "true",
+)
+
+PROMPT_OPTIMIZER_MODEL = PersistentConfig(
+    "PROMPT_OPTIMIZER_MODEL",
+    "prompt_optimizer.model",
+    os.environ.get("PROMPT_OPTIMIZER_MODEL", "llama3.1:8b"),
+)
+
+PROMPT_OPTIMIZER_SYSTEM_PROMPT = PersistentConfig(
+    "PROMPT_OPTIMIZER_SYSTEM_PROMPT",
+    "prompt_optimizer.system_prompt",
+    os.environ.get(
+        "PROMPT_OPTIMIZER_SYSTEM_PROMPT",
+        DEFAULT_PROMPT_OPTIMIZER_SYSTEM_PROMPT,
+    ),
+)
+
+####################################
 # Code Interpreter
 ####################################
 

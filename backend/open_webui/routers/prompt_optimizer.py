@@ -19,17 +19,18 @@ class PromptPayload(BaseModel):
 async def optimize_prompt(
     request: Request, payload: PromptPayload, user=Depends(get_verified_user)
 ):
+    if not request.app.state.config.ENABLE_PROMPT_OPTIMIZER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Prompt optimizer is disabled",
+        )
     if not payload.prompt or not payload.prompt.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.EMPTY_CONTENT,
         )
-
-    system_prompt = (
-        "You are an expert prompt engineer. Rewrite the request below as a numbered list "
-        "of concise, actionable steps, each starting with a number and a verb. "
-        "Respond with only this rewritten list and no additional text."
-    )
+    system_prompt = request.app.state.config.PROMPT_OPTIMIZER_SYSTEM_PROMPT
+    model = request.app.state.config.PROMPT_OPTIMIZER_MODEL
 
     messages = [
         {"role": "system", "content": system_prompt},
@@ -39,7 +40,7 @@ async def optimize_prompt(
     try:
         response = await generate_chat_completion(
             request,
-            {"model": "llama3.1:8b", "messages": messages},
+            {"model": model, "messages": messages},
             user,
             bypass_filter=True,
         )
