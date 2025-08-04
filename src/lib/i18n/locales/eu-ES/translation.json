@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API gakoa beharrezkoa da.",
 	"OpenAI API settings updated": "OpenAI API ezarpenak eguneratu dira",
 	"OpenAI URL/Key required.": "OpenAI URL/Gakoa beharrezkoa da.",
+        "Optimize prompt": "",
 	"or": "edo",
 	"Organize your users": "Antolatu zure erabiltzaileak",
 	"Other": "Bestelakoa",

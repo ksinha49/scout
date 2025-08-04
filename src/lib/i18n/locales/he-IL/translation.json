@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "נדרש מפתח API של OpenAI.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "נדרשת כתובת URL/מפתח של OpenAI.",
+        "Optimize prompt": "",
 	"or": "או",
 	"Organize your users": "",
 	"Other": "אחר",

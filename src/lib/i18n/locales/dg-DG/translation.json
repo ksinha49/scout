@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI Bark Key is required.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "",
+        "Optimize prompt": "",
 	"or": "or",
 	"Organize your users": "",
 	"Other": "",

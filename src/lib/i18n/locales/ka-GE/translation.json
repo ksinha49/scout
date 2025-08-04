@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API გასაღები აუცილებელია.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "OpenAI URL/Key აუცილებელია.",
+        "Optimize prompt": "",
 	"or": "ან",
 	"Organize your users": "",
 	"Other": "სხვა",

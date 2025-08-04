@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Tá Eochair API OpenAI ag teastáil.",
 	"OpenAI API settings updated": "Nuashonraíodh socruithe OpenAI API",
 	"OpenAI URL/Key required.": "Teastaíonn URL/eochair OpenAI.",
+        "Optimize prompt": "",
 	"or": "nó",
 	"Organize your users": "Eagraigh do chuid úsáideoirí",
 	"Other": "Eile",

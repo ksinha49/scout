@@ -788,6 +788,7 @@
 	"OpenAI API Key is required.": "OpenAI API.مطلوب مفتاح ",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "URL/مفتاح OpenAI.مطلوب عنوان ",
+        "Optimize prompt": "",
 	"or": "أو",
 	"Organize your users": "",
 	"Other": "آخر",

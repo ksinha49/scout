@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API-sleutel is verplicht",
 	"OpenAI API settings updated": "OpenAI API-sleutel bijgewerkt",
 	"OpenAI URL/Key required.": "OpenAI URL/Sleutel vereist.",
+        "Optimize prompt": "",
 	"or": "of",
 	"Organize your users": "Orden je gebruikers",
 	"Other": "Andere",

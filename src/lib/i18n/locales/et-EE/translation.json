@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API võti on nõutav.",
 	"OpenAI API settings updated": "OpenAI API seaded uuendatud",
 	"OpenAI URL/Key required.": "OpenAI URL/võti on nõutav.",
+        "Optimize prompt": "",
 	"or": "või",
 	"Organize your users": "Korraldage oma kasutajad",
 	"Other": "Muu",

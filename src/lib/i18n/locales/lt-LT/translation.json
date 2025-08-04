@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API raktas būtinas.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "OpenAI API nuoroda ir raktas būtini",
+        "Optimize prompt": "",
 	"or": "arba",
 	"Organize your users": "",
 	"Other": "Kita",

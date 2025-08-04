@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API কোড আবশ্যক",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "OpenAI URL/Key আবশ্যক",
+        "Optimize prompt": "",
 	"or": "অথবা",
 	"Organize your users": "",
 	"Other": "অন্যান্য",

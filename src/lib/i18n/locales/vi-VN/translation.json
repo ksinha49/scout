@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Bắt buộc nhập API OpenAI Key.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "Yêu cầu URL/Key API OpenAI.",
+        "Optimize prompt": "",
 	"or": "hoặc",
 	"Organize your users": "",
 	"Other": "Khác",

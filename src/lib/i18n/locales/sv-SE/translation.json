@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API-nyckel krävs.",
 	"OpenAI API settings updated": "",
 	"OpenAI URL/Key required.": "OpenAI-URL/nyckel krävs.",
+        "Optimize prompt": "",
 	"or": "eller",
 	"Organize your users": "",
 	"Other": "Andra",

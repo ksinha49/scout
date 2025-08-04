@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "OpenAI API Anahtarı gereklidir.",
 	"OpenAI API settings updated": "OpenAI API ayarları güncellendi",
 	"OpenAI URL/Key required.": "OpenAI URL/Anahtar gereklidir.",
+        "Optimize prompt": "",
 	"or": "veya",
 	"Organize your users": "Kullanıcılarınızı düzenleyin",
 	"Other": "Diğer",

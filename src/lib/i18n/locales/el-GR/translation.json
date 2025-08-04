@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Απαιτείται το Κλειδί API OpenAI.",
 	"OpenAI API settings updated": "Οι ρυθμίσεις API OpenAI ενημερώθηκαν",
 	"OpenAI URL/Key required.": "Απαιτείται URL/Kλειδί OpenAI.",
+        "Optimize prompt": "",
 	"or": "ή",
 	"Organize your users": "Οργανώστε τους χρήστες σας",
 	"Other": "Άλλο",

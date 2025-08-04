@@ -789,6 +789,7 @@
 	"OpenAI API Key is required.": "Потрібен ключ OpenAI API.",
 	"OpenAI API settings updated": "Налаштування OpenAI API оновлено",
 	"OpenAI URL/Key required.": "Потрібен OpenAI URL/ключ.",
+        "Optimize prompt": "",
 	"or": "або",
 	"Organize your users": "Організуйте своїх користувачів",
 	"Other": "Інше",

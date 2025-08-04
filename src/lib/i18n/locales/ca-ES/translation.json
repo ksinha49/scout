@@ -788,6 +788,7 @@
 	"OpenAI API Key is required.": "Es requereix la clau API d'OpenAI.",
 	"OpenAI API settings updated": "Configuració de l'API d'OpenAI actualitzada",
 	"OpenAI URL/Key required.": "URL/Clau d'OpenAI requerides.",
+        "Optimize prompt": "",
 	"or": "o",
 	"Organize your users": "Organitza els teus usuaris",
 	"Other": "Altres",
