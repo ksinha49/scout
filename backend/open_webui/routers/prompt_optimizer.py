@@ -1,12 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
+import logging
 
 from open_webui.utils.auth import get_verified_user
 from open_webui.exceptionutil import getErrorMsg
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.utils.chat import generate_chat_completion
+from open_webui.env import SRC_LOG_LEVELS
 
 router = APIRouter()
+log = logging.getLogger(__name__)
+log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
 class PromptPayload(BaseModel):
     prompt: str
@@ -39,24 +43,27 @@ async def optimize_prompt(
             user,
             bypass_filter=True,
         )
-        optimized = (
-            response["choices"][0]["message"]["content"].strip()
-            if response
-            else ""
-        )
-
-        if not optimized:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=ERROR_MESSAGES.DEFAULT("Empty response from model"),
-            )
-
-        return {"optimized": optimized}
-
-    except HTTPException:
-        raise
+    except HTTPException as e:
+        log.exception("Upstream error during prompt optimization")
+        detail = e.detail if isinstance(e.detail, str) else getErrorMsg(e)
+        raise HTTPException(status_code=e.status_code, detail=detail)
     except Exception as e:
+        log.exception("Failed to generate prompt optimization")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ERROR_MESSAGES.DEFAULT(getErrorMsg(e)),
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=getErrorMsg(e),
         )
+
+    optimized = (
+        response["choices"][0]["message"]["content"].strip()
+        if response
+        else ""
+    )
+
+    if not optimized:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Empty response from model",
+        )
+
+    return {"optimized": optimized}
