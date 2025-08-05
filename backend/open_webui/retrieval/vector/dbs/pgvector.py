@@ -203,6 +203,7 @@ class PgvectorClient:
         collection_name: str,
         vectors: List[List[float]],
         limit: Optional[int] = None,
+        expr: Optional[str] = None,
     ) -> Optional[SearchResult]:
         try:
             if not vectors:
