@@ -5,6 +5,15 @@ import requests
 from open_webui.retrieval.web.main import SearchResult, get_filtered_results
 from open_webui.env import SRC_LOG_LEVELS
 
+
+class GooglePSEError(Exception):
+    """Custom exception for Google Programmable Search Engine errors."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+
 log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
@@ -43,8 +52,22 @@ def search_google_pse(
             "num": num_results_this_page,
             "start": start_index,
         }
-        response = requests.request("GET", url, headers=headers, params=params)
-        response.raise_for_status()
+        try:
+            response = requests.request("GET", url, headers=headers, params=params)
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            error_message = ""
+            if err.response is not None:
+                try:
+                    error_message = (
+                        err.response.json().get("error", {}).get("message", "")
+                    )
+                except Exception:
+                    pass
+            if not error_message:
+                error_message = str(err)
+            raise GooglePSEError(error_message) from err
+
         json_response = response.json()
         results = json_response.get("items", [])
         if results:  # check if results are returned. If not, no more pages to fetch.

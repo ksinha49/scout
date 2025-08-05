@@ -36,7 +36,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
 import tiktoken
-from threading import BoundedSemaphore 
+from threading import BoundedSemaphore
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
@@ -62,7 +62,7 @@ from open_webui.retrieval.web.kagi import search_kagi
 from open_webui.retrieval.web.mojeek import search_mojeek
 from open_webui.retrieval.web.bocha import search_bocha
 from open_webui.retrieval.web.duckduckgo import search_duckduckgo
-from open_webui.retrieval.web.google_pse import search_google_pse
+from open_webui.retrieval.web.google_pse import search_google_pse, GooglePSEError
 from open_webui.retrieval.web.jina_search import search_jina
 from open_webui.retrieval.web.searchapi import search_searchapi
 from open_webui.retrieval.web.serpapi import search_serpapi
@@ -121,6 +121,7 @@ MOD: AMER-HOTFIX-1: Addressing vectordb Load performance issue
 with batch processing
 """
 
+
 def get_dynamic_batch_size(max_size=1000, min_size=10):
     """
     Determines the batch size based on current CPU and memory usage.
@@ -143,9 +144,13 @@ def get_dynamic_batch_size(max_size=1000, min_size=10):
         return max(max_size // 2, min_size)
     else:
         return min_size
+
+
 """
 MOD: AMER-HOTFIX-1: End of Mod
-"""       
+"""
+
+
 def get_ef(
     engine: str,
     embedding_model: str,
@@ -199,6 +204,7 @@ def get_rf(
                 raise Exception(ERROR_MESSAGES.DEFAULT("CrossEncoder error"))
     return rf
 
+
 ##########################################
 #
 # Concurrency control for vector DB insertion
@@ -208,9 +214,12 @@ def get_rf(
 # Limit concurrent vector DB insertions to 5 at a time.
 CONCURRENT_INSERTION_SEMAPHORE = BoundedSemaphore(value=5)
 
+
 def _safe_insert(collection_name: str, batch: list):
     with CONCURRENT_INSERTION_SEMAPHORE:
         VECTOR_DB_CLIENT.insert(collection_name=collection_name, items=batch)
+
+
 ##########################################
 #
 # API routes
@@ -916,7 +925,7 @@ def save_docs_to_vector_db(
         else:
             raise ValueError(ERROR_MESSAGES.DEFAULT("Invalid text splitter"))
 
-        #docs = text_splitter.split_documents(docs)
+        # docs = text_splitter.split_documents(docs)
         # ENH MOD : Process each original document separately.
         split_docs = []
         for doc in docs:
@@ -935,7 +944,7 @@ def save_docs_to_vector_db(
                 content = chunk.page_content.strip()
                 # If the chunk already begins with the header, remove it to avoid duplication.
                 if header and content.startswith(header):
-                    content = content[len(header):].strip()
+                    content = content[len(header) :].strip()
                 # Prepend the header if defined.
                 if header:
                     chunk.page_content = header + content
@@ -943,9 +952,11 @@ def save_docs_to_vector_db(
                     chunk.page_content = content
                 split_docs.append(chunk)
                 # Log debug output to verify the chunk's header inclusion.
-                log.debug(f"Processed chunk (first 200 chars): {chunk.page_content[:200]}")
+                log.debug(
+                    f"Processed chunk (first 200 chars): {chunk.page_content[:200]}"
+                )
         docs = split_docs
-        
+
     if len(docs) == 0:
         raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
 
@@ -1028,13 +1039,14 @@ def save_docs_to_vector_db(
         batch_size = get_dynamic_batch_size()
         log.info(f"Using dynamic batch size: {batch_size}")
 
-
-
         # ENH ASYNC-IMPROVEMENT   Batch insert synchronously
-        batches = [items[i: i + batch_size] for i in range(0, len(items), batch_size)]
+        batches = [items[i : i + batch_size] for i in range(0, len(items), batch_size)]
         max_workers = min(4, len(batches)) if batches else 1
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(_safe_insert, collection_name, batch) for batch in batches]
+            futures = [
+                executor.submit(_safe_insert, collection_name, batch)
+                for batch in batches
+            ]
             for future in as_completed(futures):
                 future.result()
 
@@ -1564,6 +1576,12 @@ async def process_web_search(
         web_results = search_web(
             request, request.app.state.config.RAG_WEB_SEARCH_ENGINE, form_data.query
         )
+    except GooglePSEError as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid Google PSE credentials",
+        )
     except Exception as e:
         log.exception(e)
 
@@ -1912,7 +1930,9 @@ def process_files_batch(
             log.error(f"process_files_batch: Error processing file {file.id}: {str(e)}")
             # MOD TAG CWE-209 Generation of Error Message Containing Sensitive Information
             errors.append(
-                BatchProcessFilesResult(file_id=file.id, status="failed", error=getErrorMsg(e))
+                BatchProcessFilesResult(
+                    file_id=file.id, status="failed", error=getErrorMsg(e)
+                )
             )
 
     # Save all documents in one batch
@@ -1940,7 +1960,9 @@ def process_files_batch(
             for result in results:
                 result.status = "failed"
                 errors.append(
-                    BatchProcessFilesResult(file_id=result.file_id, error=getErrorMsg(e))
+                    BatchProcessFilesResult(
+                        file_id=result.file_id, error=getErrorMsg(e)
+                    )
                 )
 
     return BatchProcessFilesResponse(results=results, errors=errors)
