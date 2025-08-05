@@ -19,6 +19,7 @@ from typing import Optional, Union
 import asyncio
 import requests
 import hashlib
+import json
 from concurrent.futures import ThreadPoolExecutor
 from werkzeug.utils import secure_filename  ## MOD: CWE-22: For sanitizing paths
 import re ## MOD: CWE-22: Expression check
@@ -89,11 +90,18 @@ def _filter_search_result(result: SearchResult, query_filter: Dict[str, Any]) ->
     )
 
 
+def dict_to_filter_expr(filter_dict: Dict[str, Any]) -> str:
+    return " && ".join(
+        f'metadata["{k}"] == {json.dumps(v)}' for k, v in filter_dict.items()
+    )
+
+
 class VectorSearchRetriever(BaseRetriever):
     collection_name: Any
     embedding_function: Any
     top_k: int
     query_filter: Optional[Dict[str, Any]] = None
+    filter_expr: Optional[str] = None
 
     def _get_relevant_documents(
         self,
@@ -107,6 +115,7 @@ class VectorSearchRetriever(BaseRetriever):
                 vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
                 limit=self.top_k,
                 **({"filter": self.query_filter} if self.query_filter else {}),
+                **({"expr": self.filter_expr} if self.filter_expr else {}),
             )
         except TypeError:
             result = VECTOR_DB_CLIENT.search(
@@ -138,6 +147,7 @@ def query_doc(
     k: int,
     user: UserModel = None,
     query_filter: Optional[Dict[str, Any]] = None,
+    filter_expr: Optional[str] = None,
 ):
     try:
         try:
@@ -146,6 +156,7 @@ def query_doc(
                 vectors=[query_embedding],
                 limit=k,
                 **({"filter": query_filter} if query_filter else {}),
+                **({"expr": filter_expr} if filter_expr else {}),
             )
         except TypeError:
             result = VECTOR_DB_CLIENT.search(
@@ -197,6 +208,7 @@ def query_doc_with_hybrid_search(
     k_reranker: int,
     r: float,
     query_filter: Optional[Dict[str, Any]] = None,
+    filter_expr: Optional[str] = None,
 ) -> dict:
     try:
         bm25_retriever = BM25Retriever.from_texts(
@@ -210,6 +222,7 @@ def query_doc_with_hybrid_search(
             embedding_function=embedding_function,
             top_k=k,
             query_filter=query_filter,
+            filter_expr=filter_expr,
         )
 
         ensemble_retriever = EnsembleRetriever(
@@ -358,6 +371,7 @@ def query_collection(
         for info in collection_infos:
             collection_name = info.get("name")
             query_filter = info.get("filter")
+            filter_expr = info.get("filter_expr")
             if collection_name:
                 try:
                     result = query_doc(
@@ -365,6 +379,7 @@ def query_collection(
                         k=k,
                         query_embedding=query_embedding,
                         query_filter=query_filter,
+                        filter_expr=filter_expr,
                     )
                     if result is not None:
                         results.append(result.model_dump())
@@ -419,6 +434,7 @@ def query_collection_with_hybrid_search(
                 k_reranker=k_reranker,
                 r=r,
                 query_filter=info.get("filter"),
+                filter_expr=info.get("filter_expr"),
             )
             return result, None
         except Exception as e:
@@ -589,24 +605,38 @@ def get_sources_from_files(
                     for file_id in file_ids:
                         file_object = Files.get_file_by_id(file_id)
                         if file_object:
+                            filter_dict = {"file_id": file_id}
                             collection_infos.append(
                                 {
                                     "name": f"user-{file_object.user_id}",
-                                    "filter": {"file_id": file_id},
+                                    "filter": filter_dict,
+                                    "filter_expr": dict_to_filter_expr(filter_dict),
                                 }
                             )
             elif file.get("collection_name"):
-                collection_infos.append({"name": file["collection_name"]})
+                if file.get("session_id"):
+                    filter_dict = {"session_id": file["session_id"]}
+                    collection_infos.append(
+                        {
+                            "name": file["collection_name"],
+                            "filter": filter_dict,
+                            "filter_expr": dict_to_filter_expr(filter_dict),
+                        }
+                    )
+                else:
+                    collection_infos.append({"name": file["collection_name"]})
             elif file.get("id"):
                 if file.get("legacy"):
                     collection_infos.append({"name": f"{file['id']}"})
                 else:
                     file_object = Files.get_file_by_id(file.get("id"))
                     if file_object:
+                        filter_dict = {"file_id": file["id"]}
                         collection_infos.append(
                             {
                                 "name": f"user-{file_object.user_id}",
-                                "filter": {"file_id": file["id"]},
+                                "filter": filter_dict,
+                                "filter_expr": dict_to_filter_expr(filter_dict),
                             }
                         )
 
@@ -615,6 +645,7 @@ def get_sources_from_files(
                 ident = (
                     info.get("name"),
                     tuple(sorted(info.get("filter", {}).items())),
+                    info.get("filter_expr"),
                 )
                 if ident in extracted_collections:
                     continue
