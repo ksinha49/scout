@@ -51,16 +51,49 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
-from typing import Any
+from typing import Any, Optional, Dict
+
+from open_webui.retrieval.vector.main import GetResult, SearchResult
 
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
+
+
+def _filter_search_result(result: SearchResult, query_filter: Dict[str, Any]) -> SearchResult:
+    if result is None or not query_filter:
+        return result
+    ids = result.ids[0] if result.ids else []
+    metadatas = result.metadatas[0] if result.metadatas else []
+    documents = result.documents[0] if result.documents else []
+    distances = result.distances[0] if result.distances else []
+
+    filtered_ids = []
+    filtered_metadatas = []
+    filtered_documents = []
+    filtered_distances = []
+
+    for idx in range(len(ids)):
+        metadata = metadatas[idx] if idx < len(metadatas) else {}
+        if all(metadata.get(k) == v for k, v in query_filter.items()):
+            filtered_ids.append(ids[idx])
+            filtered_metadatas.append(metadata)
+            filtered_documents.append(documents[idx] if idx < len(documents) else "")
+            if distances:
+                filtered_distances.append(distances[idx])
+
+    return SearchResult(
+        ids=[filtered_ids],
+        metadatas=[filtered_metadatas],
+        documents=[filtered_documents],
+        distances=[filtered_distances] if distances else None,
+    )
 
 
 class VectorSearchRetriever(BaseRetriever):
     collection_name: Any
     embedding_function: Any
     top_k: int
+    query_filter: Optional[Dict[str, Any]] = None
 
     def _get_relevant_documents(
         self,
@@ -68,11 +101,21 @@ class VectorSearchRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> list[Document]:
-        result = VECTOR_DB_CLIENT.search(
-            collection_name=self.collection_name,
-            vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
-            limit=self.top_k,
-        )
+        try:
+            result = VECTOR_DB_CLIENT.search(
+                collection_name=self.collection_name,
+                vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
+                limit=self.top_k,
+                **({"filter": self.query_filter} if self.query_filter else {}),
+            )
+        except TypeError:
+            result = VECTOR_DB_CLIENT.search(
+                collection_name=self.collection_name,
+                vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
+                limit=self.top_k,
+            )
+            if self.query_filter:
+                result = _filter_search_result(result, self.query_filter)
 
         ids = result.ids[0]
         metadatas = result.metadatas[0]
@@ -90,14 +133,28 @@ class VectorSearchRetriever(BaseRetriever):
 
 
 def query_doc(
-    collection_name: str, query_embedding: list[float], k: int, user: UserModel = None
+    collection_name: str,
+    query_embedding: list[float],
+    k: int,
+    user: UserModel = None,
+    query_filter: Optional[Dict[str, Any]] = None,
 ):
     try:
-        result = VECTOR_DB_CLIENT.search(
-            collection_name=collection_name,
-            vectors=[query_embedding],
-            limit=k,
-        )
+        try:
+            result = VECTOR_DB_CLIENT.search(
+                collection_name=collection_name,
+                vectors=[query_embedding],
+                limit=k,
+                **({"filter": query_filter} if query_filter else {}),
+            )
+        except TypeError:
+            result = VECTOR_DB_CLIENT.search(
+                collection_name=collection_name,
+                vectors=[query_embedding],
+                limit=k,
+            )
+            if query_filter:
+                result = _filter_search_result(result, query_filter)
 
         if result:
             log.debug(f"query_doc:result {result.ids} {result.metadatas}")
@@ -108,9 +165,18 @@ def query_doc(
         raise e
 
 
-def get_doc(collection_name: str, user: UserModel = None):
+def get_doc(
+    collection_name: str,
+    user: UserModel = None,
+    query_filter: Optional[Dict[str, Any]] = None,
+):
     try:
-        result = VECTOR_DB_CLIENT.get(collection_name=collection_name)
+        if query_filter:
+            result = VECTOR_DB_CLIENT.query(
+                collection_name=collection_name, filter=query_filter
+            )
+        else:
+            result = VECTOR_DB_CLIENT.get(collection_name=collection_name)
 
         if result:
             log.debug(f"query_doc:result {result.ids} {result.metadatas}")
@@ -130,6 +196,7 @@ def query_doc_with_hybrid_search(
     reranking_function,
     k_reranker: int,
     r: float,
+    query_filter: Optional[Dict[str, Any]] = None,
 ) -> dict:
     try:
         bm25_retriever = BM25Retriever.from_texts(
@@ -142,6 +209,7 @@ def query_doc_with_hybrid_search(
             collection_name=collection_name,
             embedding_function=embedding_function,
             top_k=k,
+            query_filter=query_filter,
         )
 
         ensemble_retriever = EnsembleRetriever(
@@ -163,6 +231,17 @@ def query_doc_with_hybrid_search(
         distances = [d.metadata.get("score") for d in result]
         documents = [d.page_content for d in result]
         metadatas = [d.metadata for d in result]
+
+        if query_filter:
+            filtered = [
+                (dist, doc, meta)
+                for dist, doc, meta in zip(distances, documents, metadatas)
+                if all(meta.get(k) == v for k, v in query_filter.items())
+            ]
+            if filtered:
+                distances, documents, metadatas = map(list, zip(*filtered))
+            else:
+                distances, documents, metadatas = [], [], []
 
         # retrieve only min(k, k_reranker) items, sort and cut by distance if k < k_reranker
         if k < k_reranker:
@@ -248,25 +327,27 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
     }
 
 
-def get_all_items_from_collections(collection_names: list[str]) -> dict:
+def get_all_items_from_collections(collection_infos: list[Dict[str, Any]]) -> dict:
     results = []
 
-    for collection_name in collection_names:
+    for info in collection_infos:
+        collection_name = info.get("name")
+        query_filter = info.get("filter")
         if collection_name:
             try:
-                result = get_doc(collection_name=collection_name)
+                result = get_doc(
+                    collection_name=collection_name, query_filter=query_filter
+                )
                 if result is not None:
                     results.append(result.model_dump())
             except Exception as e:
                 log.exception(f"Error when querying the collection: {e}")
-        else:
-            pass
 
     return merge_get_results(results)
 
 
 def query_collection(
-    collection_names: list[str],
+    collection_infos: list[Dict[str, Any]],
     queries: list[str],
     embedding_function,
     k: int,
@@ -274,26 +355,27 @@ def query_collection(
     results = []
     for query in queries:
         query_embedding = embedding_function(query, prefix=RAG_EMBEDDING_QUERY_PREFIX)
-        for collection_name in collection_names:
+        for info in collection_infos:
+            collection_name = info.get("name")
+            query_filter = info.get("filter")
             if collection_name:
                 try:
                     result = query_doc(
                         collection_name=collection_name,
                         k=k,
                         query_embedding=query_embedding,
+                        query_filter=query_filter,
                     )
                     if result is not None:
                         results.append(result.model_dump())
                 except Exception as e:
                     log.exception(f"Error when querying the collection: {e}")
-            else:
-                pass
 
     return merge_and_sort_query_results(results, k=k)
 
 
 def query_collection_with_hybrid_search(
-    collection_names: list[str],
+    collection_infos: list[Dict[str, Any]],
     queries: list[str],
     embedding_function,
     k: int,
@@ -305,31 +387,38 @@ def query_collection_with_hybrid_search(
     error = False
     # Fetch collection data once per collection sequentially
     # Avoid fetching the same data multiple times later
-    collection_results = {}
-    for collection_name in collection_names:
+    collection_results = []
+    for info in collection_infos:
         try:
-            collection_results[collection_name] = VECTOR_DB_CLIENT.get(
-                collection_name=collection_name
+            collection_results.append(
+                get_doc(
+                    collection_name=info.get("name"),
+                    query_filter=info.get("filter"),
+                )
             )
         except Exception as e:
-            log.exception(f"Failed to fetch collection {collection_name}: {e}")
-            collection_results[collection_name] = None
+            log.exception(
+                f"Failed to fetch collection {info.get('name')}: {e}"
+            )
+            collection_results.append(None)
 
     log.info(
-        f"Starting hybrid search for {len(queries)} queries in {len(collection_names)} collections..."
+        f"Starting hybrid search for {len(queries)} queries in {len(collection_infos)} collections..."
     )
 
-    def process_query(collection_name, query):
+    def process_query(index, query):
+        info = collection_infos[index]
         try:
             result = query_doc_with_hybrid_search(
-                collection_name=collection_name,
-                collection_result=collection_results[collection_name],
+                collection_name=info.get("name"),
+                collection_result=collection_results[index],
                 query=query,
                 embedding_function=embedding_function,
                 k=k,
                 reranking_function=reranking_function,
                 k_reranker=k_reranker,
                 r=r,
+                query_filter=info.get("filter"),
             )
             return result, None
         except Exception as e:
@@ -337,13 +426,13 @@ def query_collection_with_hybrid_search(
             return None, e
 
     tasks = [
-        (collection_name, query)
-        for collection_name in collection_names
+        (idx, query)
+        for idx in range(len(collection_infos))
         for query in queries
     ]
 
     with ThreadPoolExecutor() as executor:
-        future_results = [executor.submit(process_query, cn, q) for cn, q in tasks]
+        future_results = [executor.submit(process_query, idx, q) for idx, q in tasks]
         task_results = [future.result() for future in future_results]
 
     for result, err in task_results:
@@ -421,7 +510,7 @@ def get_sources_from_files(
         f"files: {files} {queries} {embedding_function} {reranking_function} {full_context}"
     )
 
-    extracted_collections = []
+    extracted_collections = set()
     relevant_contexts = []
 
     for file in files:
@@ -489,29 +578,56 @@ def get_sources_from_files(
                         [file.get("file").get("data", {}).get("metadata", {})]
                     ],
                 }
-        else:
-            collection_names = []
+            else:
+                collection_infos = []
             if file.get("type") == "collection":
                 if file.get("legacy"):
-                    collection_names = file.get("collection_names", [])
+                    for cn in file.get("collection_names", []):
+                        collection_infos.append({"name": cn})
                 else:
-                    collection_names.append(file["id"])
+                    file_ids = file.get("data", {}).get("file_ids", [])
+                    for file_id in file_ids:
+                        file_object = Files.get_file_by_id(file_id)
+                        if file_object:
+                            collection_infos.append(
+                                {
+                                    "name": f"user-{file_object.user_id}",
+                                    "filter": {"file_id": file_id},
+                                }
+                            )
             elif file.get("collection_name"):
-                collection_names.append(file["collection_name"])
+                collection_infos.append({"name": file["collection_name"]})
             elif file.get("id"):
                 if file.get("legacy"):
-                    collection_names.append(f"{file['id']}")
+                    collection_infos.append({"name": f"{file['id']}"})
                 else:
-                    collection_names.append(f"file-{file['id']}")
+                    file_object = Files.get_file_by_id(file.get("id"))
+                    if file_object:
+                        collection_infos.append(
+                            {
+                                "name": f"user-{file_object.user_id}",
+                                "filter": {"file_id": file["id"]},
+                            }
+                        )
 
-            collection_names = set(collection_names).difference(extracted_collections)
-            if not collection_names:
+            deduped_infos = []
+            for info in collection_infos:
+                ident = (
+                    info.get("name"),
+                    tuple(sorted(info.get("filter", {}).items())),
+                )
+                if ident in extracted_collections:
+                    continue
+                extracted_collections.add(ident)
+                deduped_infos.append(info)
+
+            if not deduped_infos:
                 log.debug(f"skipping {file} as it has already been extracted")
                 continue
 
             if full_context:
                 try:
-                    context = get_all_items_from_collections(collection_names)
+                    context = get_all_items_from_collections(deduped_infos)
                 except Exception as e:
                     log.exception(e)
 
@@ -524,7 +640,7 @@ def get_sources_from_files(
                         if hybrid_search:
                             try:
                                 context = query_collection_with_hybrid_search(
-                                    collection_names=collection_names,
+                                    collection_infos=deduped_infos,
                                     queries=queries,
                                     embedding_function=embedding_function,
                                     k=k,
@@ -534,21 +650,19 @@ def get_sources_from_files(
                                 )
                             except Exception as e:
                                 log.debug(
-                                    "Error when using hybrid search, using"
-                                    " non hybrid search as fallback."
+                                    "Error when using hybrid search, using",
+                                    " non hybrid search as fallback.",
                                 )
 
                         if (not hybrid_search) or (context is None):
                             context = query_collection(
-                                collection_names=collection_names,
+                                collection_infos=deduped_infos,
                                 queries=queries,
                                 embedding_function=embedding_function,
                                 k=k,
                             )
                 except Exception as e:
                     log.exception(e)
-
-            extracted_collections.extend(collection_names)
 
         if context:
             if "data" in file:
