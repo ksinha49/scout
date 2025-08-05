@@ -30,10 +30,11 @@
 			</div>
 			<button
 				class="self-center"
-				on:click={() => {
-					localStorage.version = $config.version;
-					show = false;
-				}}
+                                on:click={() => {
+                                        localStorage.version = $config.version;
+                                        localStorage.securityMdShownDate = new Date().toISOString().slice(0, 10);
+                                        show = false;
+                                }}
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -77,10 +78,11 @@
 		</div>
 		<div class="flex justify-end pt-3 text-sm font-medium">
 			<button
-				on:click={() => {
-					localStorage.version = $config.version;
-					show = false;
-				}}
+                                on:click={() => {
+                                        localStorage.version = $config.version;
+                                        localStorage.securityMdShownDate = new Date().toISOString().slice(0, 10);
+                                        show = false;
+                                }}
 				class=" px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-gray-100 transition rounded-lg"
 			>
 				<span class="relative">{$i18n.t("Continue")}</span>
