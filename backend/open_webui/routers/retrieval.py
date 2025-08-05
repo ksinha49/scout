@@ -1288,7 +1288,7 @@ def process_youtube_video(
     try:
         collection_name = form_data.collection_name
         if not collection_name:
-            collection_name = calculate_sha256_string(form_data.url)[:63]
+            collection_name = f"user-{user.id}"
 
         loader = YoutubeLoader(
             form_data.url,
@@ -1332,7 +1332,7 @@ def process_web(
     try:
         collection_name = form_data.collection_name
         if not collection_name:
-            collection_name = calculate_sha256_string(form_data.url)[:63]
+            collection_name = f"user-{user.id}"
 
         loader = get_web_loader(
             form_data.url,
@@ -1592,10 +1592,8 @@ async def process_web_search(
 
     try:
         collection_name = form_data.collection_name
-        if collection_name == "" or collection_name is None:
-            collection_name = f"web-search-{calculate_sha256_string(form_data.query)}"[
-                :63
-            ]
+        if not collection_name:
+            collection_name = f"user-{user.id}"
 
         urls = [result.link for result in web_results]
         loader = get_web_loader(
