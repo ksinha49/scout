@@ -9,16 +9,21 @@
 
 	import Modal from './common/Modal.svelte';
 
-	const i18n = getContext('i18n');
+        const i18n = getContext('i18n');
 
-	export let show = false;
+        export let show = false;
 
-	let securitymd = null;
+        let securitymd = null;
 
-	onMount(async () => {
-		const res = await getSecuritymd();
-		securitymd = res;
-	});
+        function markShown() {
+                localStorage.version = $config.version;
+                localStorage.securityMdShownDate = new Date().toISOString().slice(0, 10);
+        }
+
+        onMount(async () => {
+                const res = await getSecuritymd();
+                securitymd = res;
+        });
 </script>
 
 <Modal bind:show>
@@ -28,14 +33,13 @@
 				{$i18n.t('Ameritas AI Application Security Policy')}				
 				<Confetti x={[-1, -0.25]} y={[0, 0.5]} />
 			</div>
-			<button
-				class="self-center"
+                        <button
+                                class="self-center"
                                 on:click={() => {
-                                        localStorage.version = $config.version;
-                                        localStorage.securityMdShownDate = new Date().toISOString().slice(0, 10);
+                                        markShown();
                                         show = false;
                                 }}
-			>
+                        >
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					viewBox="0 0 20 20"
@@ -77,14 +81,13 @@
 			</div>
 		</div>
 		<div class="flex justify-end pt-3 text-sm font-medium">
-			<button
+                        <button
                                 on:click={() => {
-                                        localStorage.version = $config.version;
-                                        localStorage.securityMdShownDate = new Date().toISOString().slice(0, 10);
+                                        markShown();
                                         show = false;
                                 }}
-				class=" px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-gray-100 transition rounded-lg"
-			>
+                                class=" px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-gray-100 transition rounded-lg"
+                        >
 				<span class="relative">{$i18n.t("Continue")}</span>
 			</button>
 		</div>
