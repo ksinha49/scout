@@ -1538,7 +1538,12 @@ async def get_opensearch_xml():
 
 @app.get("/health")
 async def healthcheck():
-    return {"status": True, "google_pse": getattr(app.state, "GOOGLE_PSE_STATUS", False)}
+    return {"status": True}
+
+
+@app.get("/health/pse")
+async def google_pse_healthcheck():
+    return {"status": getattr(app.state, "GOOGLE_PSE_STATUS", False)}
 
 
 @app.get("/health/db")
