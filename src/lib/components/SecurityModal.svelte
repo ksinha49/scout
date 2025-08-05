@@ -5,7 +5,8 @@
 	import { WEBUI_NAME, config } from '$lib/stores';
 
 	import { WEBUI_VERSION } from '$lib/constants';
-	import { getSecuritymd } from '$lib/apis';
+        import { getSecuritymd } from '$lib/apis';
+        import { getTodayDate } from '$lib/utils/date';
 
 	import Modal from './common/Modal.svelte';
 
@@ -17,7 +18,7 @@
 
         function markShown() {
                 localStorage.version = $config.version;
-                localStorage.securityMdShownDate = new Date().toISOString().slice(0, 10);
+                localStorage.securityMdShownDate = getTodayDate();
         }
 
         onMount(async () => {
