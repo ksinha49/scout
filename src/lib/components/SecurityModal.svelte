@@ -17,8 +17,17 @@
         let securitymd = null;
 
         function markShown() {
-                localStorage.version = $config.version;
-                localStorage.securityMdShownDate = getTodayDate();
+                try {
+                        localStorage.version = $config.version;
+                        localStorage.securityMdShownDate = getTodayDate();
+                } catch (error) {
+                        console.error('Unable to access localStorage', error);
+                        try {
+                                sessionStorage.setItem('securityMdShownDate', getTodayDate());
+                        } catch {
+                                /* ignore */
+                        }
+                }
         }
 
         onMount(async () => {

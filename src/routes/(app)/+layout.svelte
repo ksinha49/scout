@@ -55,7 +55,8 @@
 	let DB = null;
 	let localDBChats = [];
 
-	let version;
+        let version;
+        let securityMdShown = false;
 
 	onMount(async () => {
 		if ($user === undefined) {
@@ -195,11 +196,27 @@
 			});
                         
                         if ($user.role === 'admin' || $user.role === 'user') {
-                                const lastShown = localStorage.getItem('securityMdShownDate');
+                                let lastShown: string | null = null;
                                 const today = getTodayDate();
+                                try {
+                                        lastShown = localStorage.getItem('securityMdShownDate');
+                                } catch (error) {
+                                        console.error('Unable to access localStorage', error);
+                                        try {
+                                                lastShown = sessionStorage.getItem('securityMdShownDate');
+                                        } catch {
+                                                lastShown = securityMdShown ? today : null;
+                                        }
+                                }
 
                                 if (lastShown !== today) {
                                         showSecuritymd.set(true);
+                                        securityMdShown = true;
+                                        try {
+                                                sessionStorage.setItem('securityMdShownDate', today);
+                                        } catch {
+                                                /* ignore */
+                                        }
                                 }
                         }
                          
@@ -213,20 +230,25 @@
 				temporaryChatEnabled.set(true);
 			}
 
-			// Check for version updates
-			if ($user.role === 'admin') {
-				// Check if the user has dismissed the update toast in the last 24 hours
-				if (localStorage.dismissedUpdateToast) {
-					const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
-					const now = new Date();
+                        // Check for version updates
+                        if ($user.role === 'admin') {
+                                // Check if the user has dismissed the update toast in the last 24 hours
+                                try {
+                                        if (localStorage.dismissedUpdateToast) {
+                                                const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
+                                                const now = new Date();
 
-					if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
-						checkForVersionUpdates();
-					}
-				} else {
-					checkForVersionUpdates();
-				}
-			}
+                                                if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
+                                                        checkForVersionUpdates();
+                                                }
+                                        } else {
+                                                checkForVersionUpdates();
+                                        }
+                                } catch (error) {
+                                        console.error('Unable to access localStorage', error);
+                                        checkForVersionUpdates();
+                                }
+                        }
 			await tick();
 		}
 
@@ -251,10 +273,14 @@
 	<div class=" absolute bottom-8 right-8 z-50" in:fade={{ duration: 100 }}>
 		<UpdateInfoToast
 			{version}
-			on:close={() => {
-				localStorage.setItem('dismissedUpdateToast', Date.now().toString());
-				version = null;
-			}}
+                        on:close={() => {
+                                try {
+                                        localStorage.setItem('dismissedUpdateToast', Date.now().toString());
+                                } catch (error) {
+                                        console.error('Unable to access localStorage', error);
+                                }
+                                version = null;
+                        }}
 		/>
 	</div>
 {/if}
