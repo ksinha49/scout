@@ -1,11 +1,11 @@
 import { render, fireEvent } from '@testing-library/svelte';
-import { setContext, tick } from 'svelte';
-import ToolsMenu from './ToolsMenu.svelte';
+import { tick } from 'svelte';
+import { describe, test, expect, beforeEach } from 'vitest';
+import ToolsMenu from './ToolsMenuTestWrapper.svelte';
 import { config, user, tools as toolsStore } from '$lib/stores';
 
 describe('ToolsMenu', () => {
     beforeEach(() => {
-        setContext('i18n', { t: (s: string) => s });
         config.set({
             features: {
                 enable_web_search: true,
@@ -26,7 +26,17 @@ describe('ToolsMenu', () => {
                 imageGenerationEnabled: false,
                 onClose: () => {}
             },
-            slots: { default: '<button>open</button>' }
+            context: new Map([
+                [
+                    'i18n',
+                    {
+                        subscribe: (run: Function) => {
+                            run({ t: (s: string) => s });
+                            return () => {};
+                        }
+                    }
+                ]
+            ])
         });
 
         await fireEvent.click(getByText('open'));
@@ -38,6 +48,8 @@ describe('ToolsMenu', () => {
         await fireEvent.click(getByText('open'));
         await tick();
 
+        await fireEvent.click(getByText('Tools'));
+        await tick();
         await fireEvent.click(getByText('Test Tool'));
         const selectedToolIds = component.$$.ctx[component.$$.props['selectedToolIds']];
         expect(selectedToolIds).toContain('test-tool');
