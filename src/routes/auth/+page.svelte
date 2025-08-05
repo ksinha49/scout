@@ -161,8 +161,12 @@ Modification Log:
                 }
                 await checkOauthCallback();
 
-                const provider = Object.keys($config?.oauth?.providers ?? {})[0];
-                if (provider) {
+                const providerParam = querystringValue('provider');
+                const providers = providerParam
+                        ? [providerParam]
+                        : Object.keys($config?.oauth?.providers ?? {});
+
+                for (const provider of providers) {
                         try {
                                 const resp = await fetch(
                                         `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
