@@ -9,6 +9,7 @@ from open_webui.env import SRC_LOG_LEVELS
 
 from open_webui.models.files import FileMetadataResponse
 from open_webui.models.users import Users, UserResponse
+from open_webui.retrieval.vector.connector import VECTOR_DB_CLIENT
 
 
 from pydantic import BaseModel, ConfigDict
@@ -203,6 +204,11 @@ class KnowledgeTable:
             with get_db() as db:
                 db.query(Knowledge).filter_by(id=id).delete()
                 db.commit()
+                try:
+                    VECTOR_DB_CLIENT.delete_collection(collection_name=id)
+                except Exception as e:
+                    log.debug(e)
+                    pass
                 return True
         except Exception:
             return False
