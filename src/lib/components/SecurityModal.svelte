@@ -1,12 +1,11 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
-	import { Confetti } from 'svelte-confetti';
+        import { onMount, getContext, createEventDispatcher } from 'svelte';
+        import { Confetti } from 'svelte-confetti';
 
-	import { WEBUI_NAME, config } from '$lib/stores';
+        import { WEBUI_NAME } from '$lib/stores';
 
-	import { WEBUI_VERSION } from '$lib/constants';
+        import { WEBUI_VERSION } from '$lib/constants';
         import { getSecuritymd } from '$lib/apis';
-        import { getTodayDate } from '$lib/utils/date';
 
 	import Modal from './common/Modal.svelte';
 
@@ -15,19 +14,10 @@
         export let show = false;
 
         let securitymd = null;
+        const dispatch = createEventDispatcher();
 
         function markShown() {
-                try {
-                        localStorage.version = $config.version;
-                        localStorage.securityMdShownDate = getTodayDate();
-                } catch (error) {
-                        console.error('Unable to access localStorage', error);
-                        try {
-                                sessionStorage.setItem('securityMdShownDate', getTodayDate());
-                        } catch {
-                                /* ignore */
-                        }
-                }
+                dispatch('dismiss');
         }
 
         onMount(async () => {
