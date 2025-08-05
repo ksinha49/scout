@@ -19,8 +19,9 @@
 	import { getBanners } from '$lib/apis/configs';
 	import { getUserSettings } from '$lib/apis/users';
 
-	import { WEBUI_VERSION } from '$lib/constants';
-	import { compareVersion } from '$lib/utils';
+        import { WEBUI_VERSION } from '$lib/constants';
+        import { compareVersion } from '$lib/utils';
+        import { getTodayDate } from '$lib/utils/date';
 
 	import {
 		config,
@@ -195,7 +196,7 @@
                         
                         if ($user.role === 'admin' || $user.role === 'user') {
                                 const lastShown = localStorage.getItem('securityMdShownDate');
-                                const today = new Date().toISOString().slice(0, 10);
+                                const today = getTodayDate();
 
                                 if (lastShown !== today) {
                                         showSecuritymd.set(true);
