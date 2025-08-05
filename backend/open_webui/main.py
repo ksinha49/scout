@@ -64,6 +64,7 @@ from open_webui.socket.main import (
     app as socket_app,
     periodic_usage_pool_cleanup,
 )
+from open_webui.tasks import periodic_file_cleanup
 from open_webui.routers import (
     audio,
     images,
@@ -489,6 +490,7 @@ async def lifespan(app: FastAPI):
         get_license_data(app, LICENSE_KEY)
 
     asyncio.create_task(periodic_usage_pool_cleanup())
+    asyncio.create_task(periodic_file_cleanup())
     verify_google_pse(app)
     yield
 
