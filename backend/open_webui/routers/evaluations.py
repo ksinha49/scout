@@ -80,6 +80,10 @@ class FeedbackUserResponse(FeedbackResponse):
     user: Optional[FeedbackUserResponseData] = None
 
 
+class FeedbackWithUser(FeedbackModel):
+    user: Optional[UserModel] = None
+
+
 @router.get("/feedbacks/all", response_model=list[FeedbackUserResponse])
 async def get_all_feedbacks(user=Depends(get_admin_user)):
     feedbacks = Feedbacks.get_all_feedbacks()
@@ -105,15 +109,19 @@ async def delete_all_feedbacks(user=Depends(get_admin_user)):
     return success
 
 
-@router.get("/feedbacks/all/export", response_model=list[FeedbackModel])
+@router.get("/feedbacks/all/export", response_model=list[FeedbackWithUser])
 async def export_all_feedbacks(user=Depends(get_admin_user)):
     feedbacks = Feedbacks.get_all_feedbacks()
-    return [
-        FeedbackModel(
-            **feedback.model_dump(), user=Users.get_user_by_id(feedback.user_id)
-        )
-        for feedback in feedbacks
-    ]
+    responses: list[FeedbackWithUser] = []
+    for feedback in feedbacks:
+        feedback_dict = feedback.model_dump()
+        feedback_user = Users.get_user_by_id(feedback.user_id)
+        if feedback_user:
+            feedback_dict["user"] = feedback_user
+
+        responses.append(FeedbackWithUser(**feedback_dict))
+
+    return responses
 
 
 @router.get("/feedbacks/user", response_model=list[FeedbackUserResponse])
