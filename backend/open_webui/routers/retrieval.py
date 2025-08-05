@@ -1894,7 +1894,9 @@ def process_files_batch(
     """
     results: List[BatchProcessFilesResult] = []
     errors: List[BatchProcessFilesResult] = []
-    collection_name = form_data.collection_name
+    collection_name = (
+        form_data.collection_name if form_data.collection_name else f"user-{user.id}"
+    )
 
     # Prepare all documents first
     all_docs: List[Document] = []
