@@ -146,7 +146,11 @@ class ElasticsearchClient:
 
     # Status: works
     def search(
-        self, collection_name: str, vectors: list[list[float]], limit: int
+        self,
+        collection_name: str,
+        vectors: list[list[float]],
+        limit: int,
+        expr: Optional[str] = None,
     ) -> Optional[SearchResult]:
         query = {
             "size": limit,

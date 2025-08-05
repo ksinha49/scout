@@ -148,7 +148,11 @@ class MilvusClient:
         )
 
     def search(
-        self, collection_name: str, vectors: list[list[float | int]], limit: int
+        self,
+        collection_name: str,
+        vectors: list[list[float | int]],
+        limit: int,
+        expr: Optional[str] = None,
     ) -> Optional[SearchResult]:
         # Search for the nearest neighbor items based on the vectors and return 'limit' number of results.
         collection_name = collection_name.replace("-", "_")
@@ -157,6 +161,7 @@ class MilvusClient:
             data=vectors,
             limit=limit,
             output_fields=["data", "metadata"],
+            expr=expr,
         )
 
         return self._result_to_search_result(result)

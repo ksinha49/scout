@@ -64,7 +64,11 @@ class ChromaClient:
         return self.client.delete_collection(name=collection_name)
 
     def search(
-        self, collection_name: str, vectors: list[list[float | int]], limit: int
+        self,
+        collection_name: str,
+        vectors: list[list[float | int]],
+        limit: int,
+        expr: Optional[str] = None,
     ) -> Optional[SearchResult]:
         # Search for the nearest neighbor items based on the vectors and return 'limit' number of results.
         try:
