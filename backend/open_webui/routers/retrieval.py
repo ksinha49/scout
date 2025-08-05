@@ -232,6 +232,7 @@ router = APIRouter()
 
 class CollectionNameForm(BaseModel):
     collection_name: Optional[str] = None
+    session_id: Optional[str] = None
 
 
 class ProcessUrlForm(CollectionNameForm):
@@ -961,19 +962,17 @@ def save_docs_to_vector_db(
         raise ValueError(ERROR_MESSAGES.EMPTY_CONTENT)
 
     texts = [doc.page_content for doc in docs]
-    metadatas = [
-        {
-            **doc.metadata,
-            **(metadata if metadata else {}),
-            "embedding_config": json.dumps(
-                {
-                    "engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
-                    "model": request.app.state.config.RAG_EMBEDDING_MODEL,
-                }
-            ),
-        }
-        for doc in docs
-    ]
+    metadatas = []
+    for doc in docs:
+        combined_meta = {**doc.metadata, **(metadata if metadata else {})}
+        combined_meta = {k: v for k, v in combined_meta.items() if v is not None}
+        combined_meta["embedding_config"] = json.dumps(
+            {
+                "engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
+                "model": request.app.state.config.RAG_EMBEDDING_MODEL,
+            }
+        )
+        metadatas.append(combined_meta)
 
     # ChromaDB does not like datetime formats
     # for meta-data so convert them to string.
@@ -1063,6 +1062,7 @@ class ProcessFileForm(BaseModel):
     file_id: str
     content: Optional[str] = None
     collection_name: Optional[str] = None
+    session_id: Optional[str] = None
 
 
 @router.post("/process/file")
@@ -1099,6 +1099,11 @@ def process_file(
                         "created_by": file.user_id,
                         "file_id": file.id,
                         "source": file.filename,
+                        **(
+                            {"session_id": form_data.session_id}
+                            if form_data.session_id
+                            else {}
+                        ),
                     },
                 )
             ]
@@ -1116,7 +1121,14 @@ def process_file(
                 docs = [
                     Document(
                         page_content=result.documents[0][idx],
-                        metadata=result.metadatas[0][idx],
+                        metadata={
+                            **result.metadatas[0][idx],
+                            **(
+                                {"session_id": form_data.session_id}
+                                if form_data.session_id
+                                else {}
+                            ),
+                        },
                     )
                     for idx, id in enumerate(result.ids[0])
                 ]
@@ -1130,6 +1142,11 @@ def process_file(
                             "created_by": file.user_id,
                             "file_id": file.id,
                             "source": file.filename,
+                            **(
+                                {"session_id": form_data.session_id}
+                                if form_data.session_id
+                                else {}
+                            ),
                         },
                     )
                 ]
@@ -1162,6 +1179,11 @@ def process_file(
                             "created_by": file.user_id,
                             "file_id": file.id,
                             "source": file.filename,
+                            **(
+                                {"session_id": form_data.session_id}
+                                if form_data.session_id
+                                else {}
+                            ),
                         },
                     )
                     for doc in docs
@@ -1176,6 +1198,11 @@ def process_file(
                             "created_by": file.user_id,
                             "file_id": file.id,
                             "source": file.filename,
+                            **(
+                                {"session_id": form_data.session_id}
+                                if form_data.session_id
+                                else {}
+                            ),
                         },
                     )
                 ]
@@ -1200,6 +1227,11 @@ def process_file(
                         "file_id": file.id,
                         "name": file.filename,
                         "hash": hash,
+                        **(
+                            {"session_id": form_data.session_id}
+                            if form_data.session_id
+                            else {}
+                        ),
                     },
                     add=(True if form_data.collection_name else False),
                     user=user,
@@ -1248,6 +1280,7 @@ class ProcessTextForm(BaseModel):
     name: str
     content: str
     collection_name: Optional[str] = None
+    session_id: Optional[str] = None
 
 
 @router.post("/process/text")
@@ -1261,7 +1294,15 @@ def process_text(
     docs = [
         Document(
             page_content=form_data.content,
-            metadata={"name": form_data.name, "created_by": user.id},
+            metadata={
+                "name": form_data.name,
+                "created_by": user.id,
+                **(
+                    {"session_id": form_data.session_id}
+                    if form_data.session_id
+                    else {}
+                ),
+            },
         )
     ]
     text_content = form_data.content
@@ -1297,6 +1338,9 @@ def process_youtube_video(
         )
 
         docs = loader.load()
+        if form_data.session_id:
+            for doc in docs:
+                doc.metadata["session_id"] = form_data.session_id
         content = " ".join([doc.page_content for doc in docs])
         log.debug(f"text_content: {content}")
 
@@ -1314,6 +1358,11 @@ def process_youtube_video(
                 },
                 "meta": {
                     "name": form_data.url,
+                    **(
+                        {"session_id": form_data.session_id}
+                        if form_data.session_id
+                        else {}
+                    ),
                 },
             },
         }
@@ -1340,6 +1389,9 @@ def process_web(
             requests_per_second=request.app.state.config.RAG_WEB_SEARCH_CONCURRENT_REQUESTS,
         )
         docs = loader.load()
+        if form_data.session_id:
+            for doc in docs:
+                doc.metadata["session_id"] = form_data.session_id
         content = " ".join([doc.page_content for doc in docs])
 
         log.debug(f"text_content: {content}")
@@ -1362,6 +1414,11 @@ def process_web(
                 "meta": {
                     "name": form_data.url,
                     "source": form_data.url,
+                    **(
+                        {"session_id": form_data.session_id}
+                        if form_data.session_id
+                        else {}
+                    ),
                 },
             },
         }
@@ -1603,6 +1660,9 @@ async def process_web_search(
             trust_env=request.app.state.config.RAG_WEB_SEARCH_TRUST_ENV,
         )
         docs = await loader.aload()
+        if form_data.session_id:
+            for doc in docs:
+                doc.metadata["session_id"] = form_data.session_id
 
         if request.app.state.config.BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL:
             return {
@@ -1870,6 +1930,7 @@ if ENV == "dev":
 class BatchProcessFilesForm(BaseModel):
     files: List[FileModel]
     collection_name: str
+    session_id: Optional[str] = None
 
 
 class BatchProcessFilesResult(BaseModel):
@@ -1913,6 +1974,11 @@ def process_files_batch(
                         "created_by": file.user_id,
                         "file_id": file.id,
                         "source": file.filename,
+                        **(
+                            {"session_id": form_data.session_id}
+                            if form_data.session_id
+                            else {}
+                        ),
                     },
                 )
             ]

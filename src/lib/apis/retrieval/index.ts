@@ -316,9 +316,10 @@ export interface SearchDocument {
 }
 
 export const processFile = async (
-	token: string,
-	file_id: string,
-	collection_name: string | null = null
+        token: string,
+        file_id: string,
+        collection_name: string | null = null,
+        session_id?: string
 ) => {
 	let error = null;
 
@@ -329,11 +330,12 @@ export const processFile = async (
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			file_id: file_id,
-			collection_name: collection_name ? collection_name : undefined
-		})
-	})
+                body: JSON.stringify({
+                        file_id: file_id,
+                        collection_name: collection_name ? collection_name : undefined,
+                        ...(session_id ? { session_id } : {})
+                })
+        })
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
@@ -351,7 +353,11 @@ export const processFile = async (
 	return res;
 };
 
-export const processYoutubeVideo = async (token: string, url: string) => {
+export const processYoutubeVideo = async (
+        token: string,
+        url: string,
+        session_id?: string
+) => {
 	let error = null;
 
 	const res = await fetch(`${RETRIEVAL_API_BASE_URL}/process/youtube`, {
@@ -361,10 +367,11 @@ export const processYoutubeVideo = async (token: string, url: string) => {
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			url: url
-		})
-	})
+                body: JSON.stringify({
+                        url: url,
+                        ...(session_id ? { session_id } : {})
+                })
+        })
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
@@ -382,7 +389,12 @@ export const processYoutubeVideo = async (token: string, url: string) => {
 	return res;
 };
 
-export const processWeb = async (token: string, collection_name: string, url: string) => {
+export const processWeb = async (
+        token: string,
+        collection_name: string,
+        url: string,
+        session_id?: string
+) => {
 	let error = null;
 
 	const res = await fetch(`${RETRIEVAL_API_BASE_URL}/process/web`, {
@@ -392,11 +404,12 @@ export const processWeb = async (token: string, collection_name: string, url: st
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			url: url,
-			collection_name: collection_name
-		})
-	})
+                body: JSON.stringify({
+                        url: url,
+                        collection_name: collection_name,
+                        ...(session_id ? { session_id } : {})
+                })
+        })
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
@@ -415,9 +428,10 @@ export const processWeb = async (token: string, collection_name: string, url: st
 };
 
 export const processWebSearch = async (
-	token: string,
-	query: string,
-	collection_name?: string
+        token: string,
+        query: string,
+        collection_name?: string,
+        session_id?: string
 ): Promise<SearchDocument | null> => {
 	let error = null;
 
@@ -427,11 +441,12 @@ export const processWebSearch = async (
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			query,
-			collection_name: collection_name ?? ''
-		})
-	})
+                body: JSON.stringify({
+                        query,
+                        collection_name: collection_name ?? '',
+                        ...(session_id ? { session_id } : {})
+                })
+        })
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
