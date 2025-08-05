@@ -1077,7 +1077,7 @@ def process_file(
         collection_name = form_data.collection_name
 
         if collection_name is None:
-            collection_name = f"file-{file.id}"
+            collection_name = f"user-{user.id}"
 
         if form_data.content:
             # Update the content in the file
@@ -1085,7 +1085,7 @@ def process_file(
 
             try:
                 # /files/{file_id}/data/content/update
-                VECTOR_DB_CLIENT.delete_collection(collection_name=f"file-{file.id}")
+                VECTOR_DB_CLIENT.delete_collection(collection_name=f"user-{user.id}")
             except:
                 # Audio file upload pipeline
                 pass
@@ -1109,7 +1109,7 @@ def process_file(
             # Usage: /knowledge/{id}/file/add, /knowledge/{id}/file/update
 
             result = VECTOR_DB_CLIENT.query(
-                collection_name=f"file-{file.id}", filter={"file_id": file.id}
+                collection_name=f"user-{user.id}", filter={"file_id": file.id}
             )
 
             if result is not None and len(result.ids[0]) > 0:
