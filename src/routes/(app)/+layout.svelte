@@ -193,9 +193,14 @@
 				}
 			});
                         
-			if ($user.role === 'admin' || $user.role === 'user'  ) {
-			        showSecuritymd.set(true)
-		        }	        
+                        if ($user.role === 'admin' || $user.role === 'user') {
+                                const lastShown = localStorage.getItem('securityMdShownDate');
+                                const today = new Date().toISOString().slice(0, 10);
+
+                                if (lastShown !== today) {
+                                        showSecuritymd.set(true);
+                                }
+                        }
                          
 			if ($page.url.searchParams.get('temporary-chat') === 'true') {
 				temporaryChatEnabled.set(true);
