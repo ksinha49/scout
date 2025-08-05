@@ -96,6 +96,7 @@ from open_webui.routers.retrieval import (
     get_ef,
     get_rf,
 )
+from open_webui.retrieval.web.google_pse import search_google_pse
 
 from open_webui.internal.db import Session, engine
 
@@ -429,6 +430,55 @@ https://github.com/ameritascorp/chatAmeritas-ui
 )
 
 
+def _select_fallback_search_engine(cfg) -> str:
+    """Return the first available non-Google search engine based on configured credentials."""
+    engines = [
+        ("searxng", getattr(cfg, "SEARXNG_QUERY_URL", "")),
+        ("brave", getattr(cfg, "BRAVE_SEARCH_API_KEY", "")),
+        ("kagi", getattr(cfg, "KAGI_SEARCH_API_KEY", "")),
+        ("mojeek", getattr(cfg, "MOJEEK_SEARCH_API_KEY", "")),
+        ("bocha", getattr(cfg, "BOCHA_SEARCH_API_KEY", "")),
+        ("serpstack", getattr(cfg, "SERPSTACK_API_KEY", "")),
+        ("serper", getattr(cfg, "SERPER_API_KEY", "")),
+        ("serply", getattr(cfg, "SERPLY_API_KEY", "")),
+        ("tavily", getattr(cfg, "TAVILY_API_KEY", "")),
+        ("exa", getattr(cfg, "EXA_API_KEY", "")),
+        ("perplexity", getattr(cfg, "PERPLEXITY_API_KEY", "")),
+        ("searchapi", getattr(cfg, "SEARCHAPI_API_KEY", "")),
+        ("serpapi", getattr(cfg, "SERPAPI_API_KEY", "")),
+    ]
+    for name, key in engines:
+        if key:
+            return name
+    return ""
+
+
+def verify_google_pse(app: FastAPI) -> None:
+    cfg = app.state.config
+    if not (cfg.GOOGLE_PSE_API_KEY and cfg.GOOGLE_PSE_ENGINE_ID):
+        app.state.GOOGLE_PSE_STATUS = False
+        return
+
+    try:
+        search_google_pse(
+            cfg.GOOGLE_PSE_API_KEY, cfg.GOOGLE_PSE_ENGINE_ID, "webui-startup-test", 1
+        )
+        app.state.GOOGLE_PSE_STATUS = True
+    except requests.RequestException as e:
+        app.state.GOOGLE_PSE_STATUS = False
+        logger.warning(
+            "Google PSE test query failed: %s. Disabling Google PSE search engine.", e
+        )
+        if cfg.RAG_WEB_SEARCH_ENGINE == "google_pse":
+            fallback = _select_fallback_search_engine(cfg)
+            if fallback:
+                cfg.RAG_WEB_SEARCH_ENGINE = fallback
+                logger.warning("Falling back to %s search engine", fallback)
+            else:
+                cfg.RAG_WEB_SEARCH_ENGINE = ""
+                logger.warning("No alternative search engine configured")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     start_logger()
@@ -439,6 +489,7 @@ async def lifespan(app: FastAPI):
         get_license_data(app, LICENSE_KEY)
 
     asyncio.create_task(periodic_usage_pool_cleanup())
+    verify_google_pse(app)
     yield
 
 
@@ -1488,6 +1539,11 @@ async def get_opensearch_xml():
 @app.get("/health")
 async def healthcheck():
     return {"status": True}
+
+
+@app.get("/health/pse")
+async def google_pse_healthcheck():
+    return {"status": getattr(app.state, "GOOGLE_PSE_STATUS", False)}
 
 
 @app.get("/health/db")
