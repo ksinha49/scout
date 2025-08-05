@@ -1256,9 +1256,7 @@ def process_text(
     form_data: ProcessTextForm,
     user=Depends(get_verified_user),
 ):
-    collection_name = form_data.collection_name
-    if collection_name is None:
-        collection_name = calculate_sha256_string(form_data.content)
+    collection_name = form_data.collection_name if form_data.collection_name else f"user-{user.id}"
 
     docs = [
         Document(
