@@ -69,37 +69,53 @@
             transition={flyAndScale}
         >
             {#if Object.keys(tools).length > 0}
-                <div class="max-h-28 overflow-y-auto scrollbar-hidden">
-                    {#each Object.keys(tools) as toolId}
-                        <DropdownMenu.Item
-                            class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-                            on:click={async (e) => {
-                                e.preventDefault();
-                                tools[toolId].enabled = !tools[toolId].enabled;
-                                await tick();
-                                if (tools[toolId].enabled) {
-                                    selectedToolIds = [...selectedToolIds, toolId];
-                                } else {
-                                    selectedToolIds = selectedToolIds.filter((id) => id !== toolId);
-                                }
-                            }}
-                        >
-                            <Tooltip
-                                content={tools[toolId]?.description ?? ''}
-                                placement="top-start"
-                                className="flex flex-1 gap-2 items-center truncate"
-                            >
-                                <div class="shrink-0">
-                                    <WrenchSolid />
-                                </div>
-                                <div class="truncate">{tools[toolId].name}</div>
-                            </Tooltip>
-                            {#if tools[toolId].enabled}
-                                <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
-                            {/if}
-                        </DropdownMenu.Item>
-                    {/each}
-                </div>
+                <DropdownMenu.Sub>
+                    <DropdownMenu.SubTrigger
+                        class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+                    >
+                        <div class="flex gap-2 items-center">
+                            <WrenchSolid />
+                            <div>{$i18n.t('Tools')}</div>
+                        </div>
+                    </DropdownMenu.SubTrigger>
+                    <DropdownMenu.SubContent
+                        class="w-full max-w-[200px] rounded-xl px-1 py-1 border border-gray-300/30 dark:border-gray-700/50 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
+                        transition={flyAndScale}
+                        sideOffset={8}
+                    >
+                        <div class="max-h-28 overflow-y-auto scrollbar-hidden">
+                            {#each Object.keys(tools) as toolId}
+                                <DropdownMenu.Item
+                                    class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+                                    on:click={async (e) => {
+                                        e.preventDefault();
+                                        tools[toolId].enabled = !tools[toolId].enabled;
+                                        await tick();
+                                        if (tools[toolId].enabled) {
+                                            selectedToolIds = [...selectedToolIds, toolId];
+                                        } else {
+                                            selectedToolIds = selectedToolIds.filter((id) => id !== toolId);
+                                        }
+                                    }}
+                                >
+                                    <Tooltip
+                                        content={tools[toolId]?.description ?? ''}
+                                        placement="top-start"
+                                        className="flex flex-1 gap-2 items-center truncate"
+                                    >
+                                        <div class="shrink-0">
+                                            <WrenchSolid />
+                                        </div>
+                                        <div class="truncate">{tools[toolId].name}</div>
+                                    </Tooltip>
+                                    {#if tools[toolId].enabled}
+                                        <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
+                                    {/if}
+                                </DropdownMenu.Item>
+                            {/each}
+                        </div>
+                    </DropdownMenu.SubContent>
+                </DropdownMenu.Sub>
                 <hr class="border-black/5 dark:border-white/5 my-1" />
             {/if}
 
