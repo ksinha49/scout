@@ -15,9 +15,9 @@
 	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
 	import { getAllTags } from '$lib/apis/chats';
 	import { getPrompts } from '$lib/apis/prompts';
-	import { getTools } from '$lib/apis/tools';
-	import { getBanners } from '$lib/apis/configs';
-	import { getUserSettings } from '$lib/apis/users';
+        import { getTools } from '$lib/apis/tools';
+        import { getBanners } from '$lib/apis/configs';
+        import { getUserSettings, updateUserSettings } from '$lib/apis/users';
 
         import { WEBUI_VERSION } from '$lib/constants';
         import { compareVersion } from '$lib/utils';
@@ -56,7 +56,6 @@
 	let localDBChats = [];
 
         let version;
-        let securityMdShown = false;
 
 	onMount(async () => {
 		if ($user === undefined) {
@@ -196,27 +195,9 @@
 			});
                         
                         if ($user.role === 'admin' || $user.role === 'user') {
-                                let lastShown: string | null = null;
                                 const today = getTodayDate();
-                                try {
-                                        lastShown = localStorage.getItem('securityMdShownDate');
-                                } catch (error) {
-                                        console.error('Unable to access localStorage', error);
-                                        try {
-                                                lastShown = sessionStorage.getItem('securityMdShownDate');
-                                        } catch {
-                                                lastShown = securityMdShown ? today : null;
-                                        }
-                                }
-
-                                if (lastShown !== today) {
+                                if (userSettings?.security_md_last_shown !== today) {
                                         showSecuritymd.set(true);
-                                        securityMdShown = true;
-                                        try {
-                                                sessionStorage.setItem('securityMdShownDate', today);
-                                        } catch {
-                                                /* ignore */
-                                        }
                                 }
                         }
                          
@@ -267,7 +248,14 @@
 
 <SettingsModal bind:show={$showSettings} />
 <ChangelogModal bind:show={$showChangelog} />
-<SecurityModal bind:show={$showSecuritymd} />
+<SecurityModal
+        bind:show={$showSecuritymd}
+        on:dismiss={async () => {
+                await updateUserSettings(localStorage.token, {
+                        security_md_last_shown: getTodayDate()
+                });
+        }}
+/>
 
 {#if version && compareVersion(version.latest, version.current) && ($settings?.showUpdateToast ?? true)}
 	<div class=" absolute bottom-8 right-8 z-50" in:fade={{ duration: 100 }}>

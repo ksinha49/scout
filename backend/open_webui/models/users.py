@@ -38,6 +38,7 @@ class User(Base):
 
 class UserSettings(BaseModel):
     ui: Optional[dict] = {}
+    security_md_last_shown: Optional[str] = None
     model_config = ConfigDict(extra="allow")
     pass
 
