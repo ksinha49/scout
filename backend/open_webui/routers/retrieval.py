@@ -88,6 +88,7 @@ from open_webui.retrieval.utils import (
 from open_webui.utils.misc import (
     calculate_sha256_string,
 )
+from open_webui.utils.collections import build_user_collection_name
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.exceptionutil import getErrorMsg
 
@@ -894,6 +895,7 @@ def save_docs_to_vector_db(
     user: Optional[UserModel] = None,
 ) -> bool:
     """Persist documents to the vector database."""
+
     def _get_docs_info(docs: list[Document]) -> str:
         docs_info = set()
 
@@ -929,9 +931,7 @@ def save_docs_to_vector_db(
             if result is not None:
                 existing_doc_ids = result.ids[0]
                 if existing_doc_ids:
-                    log.debug(
-                        f"Document with hash {metadata['hash']} already exists"
-                    )
+                    log.debug(f"Document with hash {metadata['hash']} already exists")
                     raise ValueError(ERROR_MESSAGES.DUPLICATE_CONTENT)
 
     if split:
@@ -1132,7 +1132,7 @@ def process_file(
         collection_name = form_data.collection_name
 
         if collection_name is None:
-            collection_name = f"user-{user.id}"
+            collection_name = build_user_collection_name(user.id)
 
         log.info("Updating collection %s for file %s", collection_name, file.id)
 
@@ -1143,7 +1143,7 @@ def process_file(
             try:
                 # /files/{file_id}/data/content/update
                 VECTOR_DB_CLIENT.delete(
-                    collection_name=f"user-{user.id}",
+                    collection_name=build_user_collection_name(user.id),
                     filter={"file_id": file.id},
                 )
             except Exception:
@@ -1174,7 +1174,8 @@ def process_file(
             # Usage: /knowledge/{id}/file/add, /knowledge/{id}/file/update
 
             result = VECTOR_DB_CLIENT.query(
-                collection_name=f"user-{user.id}", filter={"file_id": file.id}
+                collection_name=build_user_collection_name(user.id),
+                filter={"file_id": file.id},
             )
 
             if result is not None and len(result.ids[0]) > 0:
@@ -1350,7 +1351,11 @@ def process_text(
     user=Depends(get_verified_user),
 ) -> Dict[str, Any]:
     """Embed provided text into the user's collection."""
-    collection_name = form_data.collection_name if form_data.collection_name else f"user-{user.id}"
+    collection_name = (
+        form_data.collection_name
+        if form_data.collection_name
+        else build_user_collection_name(user.id)
+    )
 
     docs = [
         Document(
@@ -1359,9 +1364,7 @@ def process_text(
                 "name": form_data.name,
                 "created_by": user.id,
                 **(
-                    {"session_id": form_data.session_id}
-                    if form_data.session_id
-                    else {}
+                    {"session_id": form_data.session_id} if form_data.session_id else {}
                 ),
             },
         )
@@ -1391,7 +1394,7 @@ def process_youtube_video(
     try:
         collection_name = form_data.collection_name
         if not collection_name:
-            collection_name = f"user-{user.id}"
+            collection_name = build_user_collection_name(user.id)
 
         loader = YoutubeLoader(
             form_data.url,
@@ -1444,7 +1447,7 @@ def process_web(
     try:
         collection_name = form_data.collection_name
         if not collection_name:
-            collection_name = f"user-{user.id}"
+            collection_name = build_user_collection_name(user.id)
 
         loader = get_web_loader(
             form_data.url,
@@ -1714,7 +1717,7 @@ async def process_web_search(
     try:
         collection_name = form_data.collection_name
         if not collection_name:
-            collection_name = f"user-{user.id}"
+            collection_name = build_user_collection_name(user.id)
 
         urls = [result.link for result in web_results]
         loader = get_web_loader(
@@ -2045,7 +2048,9 @@ def process_files_batch(
     results: List[BatchProcessFilesResult] = []
     errors: List[BatchProcessFilesResult] = []
     collection_name = (
-        form_data.collection_name if form_data.collection_name else f"user-{user.id}"
+        form_data.collection_name
+        if form_data.collection_name
+        else build_user_collection_name(user.id)
     )
 
     all_docs: List[Document] = []
@@ -2075,19 +2080,15 @@ def process_files_batch(
 
             if is_duplicate:
                 skipped_count += 1
-                log.info(
-                    f"process_files_batch: Skipping duplicate file {file.id}"
-                )
+                log.info(f"process_files_batch: Skipping duplicate file {file.id}")
                 results.append(
-                    BatchProcessFilesResult(
-                        file_id=file.id, status="skipped_duplicate"
-                    )
+                    BatchProcessFilesResult(file_id=file.id, status="skipped_duplicate")
                 )
                 continue
 
-            doc_type = (
-                file.meta.get("doc_type") if file.meta else None
-            ) or (file.meta.get("content_type") if file.meta else None)
+            doc_type = (file.meta.get("doc_type") if file.meta else None) or (
+                file.meta.get("content_type") if file.meta else None
+            )
             if not doc_type:
                 doc_type = mimetypes.guess_type(file.filename)[0]
 
@@ -2115,9 +2116,7 @@ def process_files_batch(
                 "hash": hash,
                 "doc_type": doc_type,
                 **(
-                    {"session_id": form_data.session_id}
-                    if form_data.session_id
-                    else {}
+                    {"session_id": form_data.session_id} if form_data.session_id else {}
                 ),
             }
 
