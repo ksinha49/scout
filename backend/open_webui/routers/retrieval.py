@@ -867,7 +867,7 @@ def save_docs_to_vector_db(
     request: Request,
     docs,
     collection_name,
-    metadata: Optional[dict] = None,
+    metadata: Optional[Union[dict, Sequence[dict]]] = None,
     overwrite: bool = False,
     split: bool = True,
     add: bool = False,
@@ -893,18 +893,25 @@ def save_docs_to_vector_db(
         f"save_docs_to_vector_db: document {_get_docs_info(docs)} {collection_name}"
     )
     log.info(f"save_docs_to_vector_db {collection_name}")
-    # Check if entries with the same hash (metadata.hash) already exist
-    if metadata and "hash" in metadata:
-        result = VECTOR_DB_CLIENT.query(
-            collection_name=collection_name,
-            filter={"hash": metadata["hash"]},
-        )
 
-        if result is not None:
-            existing_doc_ids = result.ids[0]
-            if existing_doc_ids:
-                log.debug(f"Document with hash {metadata['hash']} already exists")
-                raise ValueError(ERROR_MESSAGES.DUPLICATE_CONTENT)
+    metadata_list: Optional[List[dict]] = None
+    if metadata and isinstance(metadata, Sequence) and not isinstance(metadata, dict):
+        metadata_list = list(metadata)
+    elif metadata and isinstance(metadata, dict):
+        # Check if entries with the same hash (metadata.hash) already exist
+        if "hash" in metadata:
+            result = VECTOR_DB_CLIENT.query(
+                collection_name=collection_name,
+                filter={"hash": metadata["hash"]},
+            )
+
+            if result is not None:
+                existing_doc_ids = result.ids[0]
+                if existing_doc_ids:
+                    log.debug(
+                        f"Document with hash {metadata['hash']} already exists"
+                    )
+                    raise ValueError(ERROR_MESSAGES.DUPLICATE_CONTENT)
 
     if split:
         if request.app.state.config.TEXT_SPLITTER in ["", "character"]:
@@ -965,16 +972,30 @@ def save_docs_to_vector_db(
 
     texts = [doc.page_content for doc in docs]
     metadatas = []
-    for doc in docs:
-        combined_meta = {**doc.metadata, **(metadata if metadata else {})}
-        combined_meta = {k: v for k, v in combined_meta.items() if v is not None}
-        combined_meta["embedding_config"] = json.dumps(
-            {
-                "engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
-                "model": request.app.state.config.RAG_EMBEDDING_MODEL,
-            }
-        )
-        metadatas.append(combined_meta)
+    if metadata_list is not None:
+        if len(metadata_list) != len(docs):
+            raise ValueError(ERROR_MESSAGES.DEFAULT("Metadata length mismatch"))
+        for doc, meta in zip(docs, metadata_list):
+            combined_meta = {**doc.metadata, **meta}
+            combined_meta = {k: v for k, v in combined_meta.items() if v is not None}
+            combined_meta["embedding_config"] = json.dumps(
+                {
+                    "engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
+                    "model": request.app.state.config.RAG_EMBEDDING_MODEL,
+                }
+            )
+            metadatas.append(combined_meta)
+    else:
+        for doc in docs:
+            combined_meta = {**doc.metadata, **(metadata if metadata else {})}
+            combined_meta = {k: v for k, v in combined_meta.items() if v is not None}
+            combined_meta["embedding_config"] = json.dumps(
+                {
+                    "engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
+                    "model": request.app.state.config.RAG_EMBEDDING_MODEL,
+                }
+            )
+            metadatas.append(combined_meta)
 
     # ChromaDB does not like datetime formats
     # for meta-data so convert them to string.
@@ -1975,8 +1996,15 @@ def process_files_batch(
     form_data: BatchProcessFilesForm,
     user=Depends(get_verified_user),
 ) -> BatchProcessFilesResponse:
-    """
-    Process a batch of files and save them to the vector database.
+    """Process multiple files and batch-save their documents to the vector DB.
+
+    Args:
+        request (Request): The incoming request instance.
+        form_data (BatchProcessFilesForm): Uploaded files and target collection.
+        user (UserModel): The authenticated user performing the operation.
+
+    Returns:
+        BatchProcessFilesResponse: Summary of processing results and errors.
     """
     results: List[BatchProcessFilesResult] = []
     errors: List[BatchProcessFilesResult] = []
@@ -1984,11 +2012,48 @@ def process_files_batch(
         form_data.collection_name if form_data.collection_name else f"user-{user.id}"
     )
 
-    # Prepare all documents first
     all_docs: List[Document] = []
+    all_metadata: List[dict] = []
+    processed_count = 0
+    skipped_count = 0
+
     for file in form_data.files:
         try:
             text_content = file.data.get("content", "")
+            hash = calculate_sha256_string(text_content)
+            Files.update_file_hash_by_id(file.id, hash)
+            Files.update_file_data_by_id(file.id, {"content": text_content})
+
+            # Check for duplicate content
+            is_duplicate = False
+            try:
+                existing = VECTOR_DB_CLIENT.query(
+                    collection_name=collection_name, filter={"hash": hash}
+                )
+                if existing is not None and existing.ids[0]:
+                    is_duplicate = True
+            except Exception as e:
+                log.error(
+                    f"process_files_batch: Error checking duplicate for {file.id}: {str(e)}"
+                )
+
+            if is_duplicate:
+                skipped_count += 1
+                log.info(
+                    f"process_files_batch: Skipping duplicate file {file.id}"
+                )
+                results.append(
+                    BatchProcessFilesResult(
+                        file_id=file.id, status="skipped_duplicate"
+                    )
+                )
+                continue
+
+            doc_type = (
+                file.meta.get("doc_type") if file.meta else None
+            ) or (file.meta.get("content_type") if file.meta else None)
+            if not doc_type:
+                doc_type = mimetypes.guess_type(file.filename)[0]
 
             docs: List[Document] = [
                 Document(
@@ -2008,50 +2073,66 @@ def process_files_batch(
                 )
             ]
 
-            hash = calculate_sha256_string(text_content)
-            Files.update_file_hash_by_id(file.id, hash)
-            Files.update_file_data_by_id(file.id, {"content": text_content})
+            metadata = {
+                "file_id": file.id,
+                "name": file.filename,
+                "hash": hash,
+                "doc_type": doc_type,
+                **(
+                    {"session_id": form_data.session_id}
+                    if form_data.session_id
+                    else {}
+                ),
+            }
 
             all_docs.extend(docs)
+            all_metadata.extend([metadata.copy() for _ in docs])
+            processed_count += len(docs)
             results.append(BatchProcessFilesResult(file_id=file.id, status="prepared"))
 
         except Exception as e:
             log.error(f"process_files_batch: Error processing file {file.id}: {str(e)}")
-            # MOD TAG CWE-209 Generation of Error Message Containing Sensitive Information
             errors.append(
                 BatchProcessFilesResult(
                     file_id=file.id, status="failed", error=getErrorMsg(e)
                 )
             )
 
-    # Save all documents in one batch
     if all_docs:
         try:
             save_docs_to_vector_db(
                 request=request,
                 docs=all_docs,
                 collection_name=collection_name,
+                metadata=all_metadata,
                 add=True,
                 user=user,
             )
 
-            # Update all files with collection name
             for result in results:
-                Files.update_file_metadata_by_id(
-                    result.file_id, {"collection_name": collection_name}
-                )
-                result.status = "completed"
+                if result.status == "prepared":
+                    Files.update_file_metadata_by_id(
+                        result.file_id, {"collection_name": collection_name}
+                    )
+                    result.status = "completed"
 
         except Exception as e:
             log.error(
                 f"process_files_batch: Error saving documents to vector DB: {str(e)}"
             )
             for result in results:
-                result.status = "failed"
-                errors.append(
-                    BatchProcessFilesResult(
-                        file_id=result.file_id, error=getErrorMsg(e)
+                if result.status == "prepared":
+                    result.status = "failed"
+                    errors.append(
+                        BatchProcessFilesResult(
+                            file_id=result.file_id, error=getErrorMsg(e)
+                        )
                     )
-                )
+
+    log.info(
+        "process_files_batch: processed %s document(s), skipped %s duplicates",
+        processed_count,
+        skipped_count,
+    )
 
     return BatchProcessFilesResponse(results=results, errors=errors)
