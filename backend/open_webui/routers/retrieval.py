@@ -1830,12 +1830,10 @@ class DeleteForm(BaseModel):
 def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin_user)):
     try:
         if VECTOR_DB_CLIENT.has_collection(collection_name=form_data.collection_name):
-            file = Files.get_file_by_id(form_data.file_id)
-            hash = file.hash
-
+            # Remove only vectors associated with the specified file
             VECTOR_DB_CLIENT.delete(
                 collection_name=form_data.collection_name,
-                metadata={"hash": hash},
+                filter={"file_id": form_data.file_id},
             )
             log.info(
                 "Vector DB entries deleted",
