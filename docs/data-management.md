@@ -1,17 +1,108 @@
 # Data Management
 
-## User Collection Scheme
+## Collection Namespaces
 
-Each user's uploaded files are stored in a dedicated vector collection named `user-<user_id>`. This isolates data per user and ensures that retrieval queries only search within the owner’s data unless additional knowledge bases are used.
+Vector collections are separated into namespaces to prevent data from mixing:
+
+- `user-<user_id>` – personal vectors for each user.
+- `kb-{kb_name}-{kb_id}` – vectors belonging to a knowledge base. `{kb_name}` is a slugified name and `{kb_id}` is the unique identifier.
+
+## CRUD Examples
+
+### User Namespace
+
+#### Create
+
+```json
+POST /retrieval/process/file
+{
+  "file_id": "<file_uuid>",
+  "collection_name": "user-<user_id>"
+}
+```
+
+#### Read
+
+```json
+POST /retrieval/query/collection
+{
+  "collection_name": "user-<user_id>",
+  "query": "setup steps"
+}
+```
+
+#### Update
+
+```json
+POST /retrieval/process/file
+{
+  "file_id": "<file_uuid>",
+  "collection_name": "user-<user_id>",
+  "content": "<new content>"
+}
+```
+
+#### Delete
+
+```json
+POST /retrieval/delete
+{
+  "collection_name": "user-<user_id>",
+  "file_id": "<file_uuid>"
+}
+```
+
+### Knowledge Base Namespace
+
+#### Create
+
+```json
+POST /retrieval/process/file
+{
+  "file_id": "<file_uuid>",
+  "collection_name": "kb-{kb_name}-{kb_id}"
+}
+```
+
+#### Read
+
+```json
+POST /retrieval/query/collection
+{
+  "collection_name": "kb-{kb_name}-{kb_id}",
+  "query": "deployment guide"
+}
+```
+
+#### Update
+
+```json
+POST /retrieval/process/file
+{
+  "file_id": "<file_uuid>",
+  "collection_name": "kb-{kb_name}-{kb_id}",
+  "content": "<updated text>"
+}
+```
+
+#### Delete
+
+```json
+POST /retrieval/delete
+{
+  "collection_name": "kb-{kb_name}-{kb_id}",
+  "file_id": "<file_uuid>"
+}
+```
 
 ## Metadata Filters
 
-Documents inserted into the collection include metadata fields such as:
+Documents inserted into a collection include metadata fields such as:
 
 - `file_id` – the identifier of the uploaded file
 - `session_id` – the chat or session that produced the content (optional)
 
-When querying, you can provide metadata filters to limit the scope of the search.
+When querying, you can provide metadata filters to limit the scope of the search. Use the appropriate `collection_name` for the namespace you need.
 
 ### Querying specific files or sessions
 
@@ -54,6 +145,6 @@ POST /retrieval/query/collection
 ## Cleanup Behaviour
 
 - Updating a file removes existing vectors for that file before new content is inserted.
-- A periodic task deletes files older than 24 hours that are not attached to any knowledge base and removes their associated vectors from the user collection.
+- A periodic task deletes files older than 24 hours that are not attached to any knowledge base and removes their associated vectors from the user collection. Knowledge base collections are not affected by this cleanup.
 
-These features help keep user collections accurate and free of stale data.
+These features help keep user collections accurate and free of stale data while maintaining persistent knowledge bases.
