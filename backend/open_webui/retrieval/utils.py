@@ -114,6 +114,7 @@ class VectorSearchRetriever(BaseRetriever):
         *,
         run_manager: CallbackManagerForRetrieverRun,
     ) -> list[Document]:
+        """Retrieve top documents relevant to the query."""
         try:
             result = VECTOR_DB_CLIENT.search(
                 collection_name=self.collection_name,
