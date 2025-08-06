@@ -340,92 +340,82 @@ def merge_and_sort_query_results(query_results: list[dict], k: int) -> dict:
     }
 
 
-def get_all_items_from_collections(collection_infos: list[Dict[str, Any]]) -> dict:
+def get_all_items_from_collection(
+    collection_name: str, filters: list[Dict[str, Any] | None]
+) -> dict:
     results = []
 
-    for info in collection_infos:
-        collection_name = info.get("name")
-        query_filter = info.get("filter")
-        if collection_name:
+    for query_filter in filters if filters else [None]:
+        try:
+            result = get_doc(collection_name=collection_name, query_filter=query_filter)
+            if result is not None:
+                results.append(result.model_dump())
+        except Exception as e:
+            log.exception(f"Error when querying the collection: {e}")
+
+    return merge_get_results(results)
+
+
+def query_collection(
+    collection_name: str,
+    queries: list[str],
+    embedding_function,
+    k: int,
+    query_filters: Optional[list[Dict[str, Any]]] = None,
+) -> dict:
+    results = []
+    filters = query_filters if query_filters else [None]
+    for query in queries:
+        query_embedding = embedding_function(query, prefix=RAG_EMBEDDING_QUERY_PREFIX)
+        for f in filters:
             try:
-                result = get_doc(
-                    collection_name=collection_name, query_filter=query_filter
+                result = query_doc(
+                    collection_name=collection_name,
+                    k=k,
+                    query_embedding=query_embedding,
+                    query_filter=f,
+                    filter_expr=dict_to_filter_expr(f) if f else None,
                 )
                 if result is not None:
                     results.append(result.model_dump())
             except Exception as e:
                 log.exception(f"Error when querying the collection: {e}")
 
-    return merge_get_results(results)
-
-
-def query_collection(
-    collection_infos: list[Dict[str, Any]],
-    queries: list[str],
-    embedding_function,
-    k: int,
-) -> dict:
-    results = []
-    for query in queries:
-        query_embedding = embedding_function(query, prefix=RAG_EMBEDDING_QUERY_PREFIX)
-        for info in collection_infos:
-            collection_name = info.get("name")
-            query_filter = info.get("filter")
-            filter_expr = info.get("filter_expr")
-            if collection_name:
-                try:
-                    result = query_doc(
-                        collection_name=collection_name,
-                        k=k,
-                        query_embedding=query_embedding,
-                        query_filter=query_filter,
-                        filter_expr=filter_expr,
-                    )
-                    if result is not None:
-                        results.append(result.model_dump())
-                except Exception as e:
-                    log.exception(f"Error when querying the collection: {e}")
-
     return merge_and_sort_query_results(results, k=k)
 
 
 def query_collection_with_hybrid_search(
-    collection_infos: list[Dict[str, Any]],
+    collection_name: str,
     queries: list[str],
     embedding_function,
     k: int,
     reranking_function,
     k_reranker: int,
     r: float,
+    query_filters: Optional[list[Dict[str, Any]]] = None,
 ) -> dict:
     results = []
     error = False
-    # Fetch collection data once per collection sequentially
-    # Avoid fetching the same data multiple times later
+    filters = query_filters if query_filters else [None]
     collection_results = []
-    for info in collection_infos:
+    for f in filters:
         try:
             collection_results.append(
-                get_doc(
-                    collection_name=info.get("name"),
-                    query_filter=info.get("filter"),
-                )
+                get_doc(collection_name=collection_name, query_filter=f)
             )
         except Exception as e:
-            log.exception(
-                f"Failed to fetch collection {info.get('name')}: {e}"
-            )
+            log.exception(f"Failed to fetch collection {collection_name}: {e}")
             collection_results.append(None)
 
     log.info(
-        f"Starting hybrid search for {len(queries)} queries in {len(collection_infos)} collections..."
+        f"Starting hybrid search for {len(queries)} queries in {len(filters)} filters..."
     )
 
     def process_query(index, query):
-        info = collection_infos[index]
+        f = filters[index]
         try:
             result = query_doc_with_hybrid_search(
-                collection_name=info.get("name"),
+                collection_name=collection_name,
                 collection_result=collection_results[index],
                 query=query,
                 embedding_function=embedding_function,
@@ -433,17 +423,19 @@ def query_collection_with_hybrid_search(
                 reranking_function=reranking_function,
                 k_reranker=k_reranker,
                 r=r,
-                query_filter=info.get("filter"),
-                filter_expr=info.get("filter_expr"),
+                query_filter=f,
+                filter_expr=dict_to_filter_expr(f) if f else None,
             )
             return result, None
         except Exception as e:
-            log.exception(f"Error when querying the collection with hybrid_search: {e}")
+            log.exception(
+                f"Error when querying the collection with hybrid_search: {e}"
+            )
             return None, e
 
     tasks = [
         (idx, query)
-        for idx in range(len(collection_infos))
+        for idx in range(len(filters))
         for query in queries
     ]
 
@@ -459,7 +451,7 @@ def query_collection_with_hybrid_search(
 
     if error and not results:
         raise Exception(
-            "Hybrid search failed for all collections. Using Non-hybrid search as fallback."
+            "Hybrid search failed for all filters. Using Non-hybrid search as fallback."
         )
 
     return merge_and_sort_query_results(results, k=k)
@@ -610,7 +602,6 @@ def get_sources_from_files(
                                 {
                                     "name": f"user-{file_object.user_id}",
                                     "filter": filter_dict,
-                                    "filter_expr": dict_to_filter_expr(filter_dict),
                                 }
                             )
             elif file.get("collection_name"):
@@ -620,7 +611,6 @@ def get_sources_from_files(
                         {
                             "name": file["collection_name"],
                             "filter": filter_dict,
-                            "filter_expr": dict_to_filter_expr(filter_dict),
                         }
                     )
                 else:
@@ -636,7 +626,6 @@ def get_sources_from_files(
                             {
                                 "name": f"user-{file_object.user_id}",
                                 "filter": filter_dict,
-                                "filter_expr": dict_to_filter_expr(filter_dict),
                             }
                         )
 
@@ -645,7 +634,6 @@ def get_sources_from_files(
                 ident = (
                     info.get("name"),
                     tuple(sorted(info.get("filter", {}).items())),
-                    info.get("filter_expr"),
                 )
                 if ident in extracted_collections:
                     continue
@@ -656,42 +644,63 @@ def get_sources_from_files(
                 log.debug(f"skipping {file} as it has already been extracted")
                 continue
 
+            groups: Dict[str, list[Dict[str, Any] | None]] = {}
+            for info in deduped_infos:
+                groups.setdefault(info.get("name"), []).append(info.get("filter"))
+
             if full_context:
                 try:
-                    context = get_all_items_from_collections(deduped_infos)
+                    context_results = [
+                        get_all_items_from_collection(name, filters)
+                        for name, filters in groups.items()
+                    ]
+                    context = merge_get_results(context_results)
                 except Exception as e:
                     log.exception(e)
 
             else:
                 try:
-                    context = None
+                    context_results = []
                     if file.get("type") == "text":
                         context = file["content"]
                     else:
-                        if hybrid_search:
-                            try:
-                                context = query_collection_with_hybrid_search(
-                                    collection_infos=deduped_infos,
+                        for name, filters in groups.items():
+                            res = None
+                            if hybrid_search:
+                                try:
+                                    res = query_collection_with_hybrid_search(
+                                        collection_name=name,
+                                        queries=queries,
+                                        embedding_function=embedding_function,
+                                        k=k,
+                                        reranking_function=reranking_function,
+                                        k_reranker=k_reranker,
+                                        r=r,
+                                        query_filters=filters,
+                                    )
+                                except Exception as e:
+                                    log.debug(
+                                        "Error when using hybrid search, using",
+                                        " non hybrid search as fallback.",
+                                    )
+
+                            if (not hybrid_search) or (res is None):
+                                res = query_collection(
+                                    collection_name=name,
                                     queries=queries,
                                     embedding_function=embedding_function,
                                     k=k,
-                                    reranking_function=reranking_function,
-                                    k_reranker=k_reranker,
-                                    r=r,
-                                )
-                            except Exception as e:
-                                log.debug(
-                                    "Error when using hybrid search, using",
-                                    " non hybrid search as fallback.",
+                                    query_filters=filters,
                                 )
 
-                        if (not hybrid_search) or (context is None):
-                            context = query_collection(
-                                collection_infos=deduped_infos,
-                                queries=queries,
-                                embedding_function=embedding_function,
-                                k=k,
-                            )
+                            if res is not None:
+                                context_results.append(res)
+
+                        context = (
+                            merge_and_sort_query_results(context_results, k=k)
+                            if context_results
+                            else None
+                        )
                 except Exception as e:
                     log.exception(e)
 
