@@ -594,12 +594,7 @@ async def delete_knowledge_by_id(id: str, user=Depends(get_verified_user)):
                 )
                 Models.update_model_by_id(model.id, model_form)
 
-    # Clean up vector DB
-    try:
-        VECTOR_DB_CLIENT.delete_collection(collection_name=id)
-    except Exception as e:
-        log.debug(e)
-        pass
+    # KnowledgeTable.delete_knowledge_by_id handles vector DB cleanup
     result = Knowledges.delete_knowledge_by_id(id=id)
     return result
 

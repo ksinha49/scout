@@ -200,15 +200,24 @@ class KnowledgeTable:
             return None
 
     def delete_knowledge_by_id(self, id: str) -> bool:
+        """Remove a knowledge entry and its associated vector store.
+
+        Deleting a knowledge base requires cleaning up any stored vectors to
+        prevent orphaned data in the vector database. Centralising the drop
+        logic here ensures routers and other callers do not need to duplicate
+        this behaviour.
+        """
         try:
             with get_db() as db:
                 db.query(Knowledge).filter_by(id=id).delete()
                 db.commit()
+                # Attempt to drop the corresponding vector DB collection. If the
+                # collection does not exist, quietly log the exception to avoid
+                # disrupting the deletion flow.
                 try:
                     VECTOR_DB_CLIENT.delete_collection(collection_name=id)
                 except Exception as e:
                     log.debug(e)
-                    pass
                 return True
         except Exception:
             return False
