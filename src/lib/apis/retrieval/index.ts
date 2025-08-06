@@ -1,5 +1,7 @@
 import { RETRIEVAL_API_BASE_URL } from '$lib/constants';
 
+// MOD TAG RAG-FILTERS: Frontend sends filters with a single collection name.
+
 export const getRAGConfig = async (token: string) => {
 	let error = null;
 
@@ -465,10 +467,12 @@ export const processWebSearch = async (
 };
 
 export const queryDoc = async (
-	token: string,
-	collection_name: string,
-	query: string,
-	k: number | null = null
+        token: string,
+        collection_name: string,
+        query: string,
+        k: number | null = null,
+        filter: Record<string, unknown> | null = null,
+        filter_expr: string | null = null
 ) => {
 	let error = null;
 
@@ -479,12 +483,14 @@ export const queryDoc = async (
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			collection_name: collection_name,
-			query: query,
-			k: k
-		})
-	})
+                body: JSON.stringify({
+                        collection_name: collection_name,
+                        query: query,
+                        k: k,
+                        filter: filter,
+                        filter_expr: filter_expr
+                })
+        })
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
@@ -502,10 +508,11 @@ export const queryDoc = async (
 };
 
 export const queryCollection = async (
-	token: string,
-	collection_names: string,
-	query: string,
-	k: number | null = null
+        token: string,
+        collection_name: string,
+        query: string,
+        filters: Array<Record<string, unknown>> | null = null, // MOD: RAG-FILTERS allow optional metadata filters
+        k: number | null = null
 ) => {
 	let error = null;
 
@@ -516,12 +523,13 @@ export const queryCollection = async (
 			'Content-Type': 'application/json',
 			authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			collection_names: collection_names,
-			query: query,
-			k: k
-		})
-	})
+                body: JSON.stringify({
+                        collection_name: collection_name,
+                        query: query,
+                        filters: filters, // MOD: RAG-FILTERS
+                        k: k
+                })
+        })
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();

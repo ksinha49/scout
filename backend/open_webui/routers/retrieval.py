@@ -9,6 +9,7 @@ Modification Log:
 | 2025-04-06 | AAK7S          | ASYNC-IMPROVEMENT       | Added parallel asynchronous batch insertion for large vector DB loads                |
 """
 
+# MOD TAG RAG-FILTERS: Accept a single collection with optional filter list.
 import json
 import logging
 import mimetypes
@@ -1709,6 +1710,8 @@ class QueryDocForm(BaseModel):
     k_reranker: Optional[int] = None
     r: Optional[float] = None
     hybrid: Optional[bool] = None
+    filter: Optional[dict] = None
+    filter_expr: Optional[str] = None
 
 
 @router.post("/query/doc")
@@ -1734,6 +1737,8 @@ def query_doc_handler(
                     if form_data.r
                     else request.app.state.config.RELEVANCE_THRESHOLD
                 ),
+                query_filter=form_data.filter,
+                filter_expr=form_data.filter_expr,
                 user=user,
             )
         else:
@@ -1743,6 +1748,8 @@ def query_doc_handler(
                     form_data.query, prefix=RAG_EMBEDDING_QUERY_PREFIX, user=user
                 ),
                 k=form_data.k if form_data.k else request.app.state.config.TOP_K,
+                query_filter=form_data.filter,
+                filter_expr=form_data.filter_expr,
                 user=user,
             )
     except Exception as e:
@@ -1753,9 +1760,10 @@ def query_doc_handler(
         )
 
 
-class QueryCollectionsForm(BaseModel):
-    collection_names: list[str]
+class QueryCollectionForm(BaseModel):
+    collection_name: str
     query: str
+    filters: Optional[list[dict]] = None  ## MOD: RAG-FILTERS: optional metadata filters
     k: Optional[int] = None
     k_reranker: Optional[int] = None
     r: Optional[float] = None
@@ -1765,13 +1773,13 @@ class QueryCollectionsForm(BaseModel):
 @router.post("/query/collection")
 def query_collection_handler(
     request: Request,
-    form_data: QueryCollectionsForm,
+    form_data: QueryCollectionForm,
     user=Depends(get_verified_user),
 ):
     try:
         if request.app.state.config.ENABLE_RAG_HYBRID_SEARCH:
             return query_collection_with_hybrid_search(
-                collection_names=form_data.collection_names,
+                collection_name=form_data.collection_name,
                 queries=[form_data.query],
                 embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(
                     query, prefix=prefix, user=user
@@ -1785,15 +1793,17 @@ def query_collection_handler(
                     if form_data.r
                     else request.app.state.config.RELEVANCE_THRESHOLD
                 ),
+                query_filters=form_data.filters,  ## MOD: RAG-FILTERS
             )
         else:
             return query_collection(
-                collection_names=form_data.collection_names,
+                collection_name=form_data.collection_name,
                 queries=[form_data.query],
                 embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(
                     query, prefix=prefix, user=user
                 ),
                 k=form_data.k if form_data.k else request.app.state.config.TOP_K,
+                query_filters=form_data.filters,  ## MOD: RAG-FILTERS
             )
 
     except Exception as e:
