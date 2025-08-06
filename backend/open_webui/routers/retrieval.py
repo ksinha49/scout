@@ -46,6 +46,7 @@ from langchain_core.documents import Document
 
 from open_webui.models.files import FileModel, Files
 from open_webui.models.knowledge import Knowledges
+from open_webui.models.users import UserModel
 from open_webui.storage.provider import Storage
 
 
@@ -1070,8 +1071,19 @@ class ProcessFileForm(BaseModel):
 def process_file(
     request: Request,
     form_data: ProcessFileForm,
-    user=Depends(get_verified_user),
-):
+    user: UserModel = Depends(get_verified_user),
+) -> dict:
+    """Process a single file and update its associated vector embeddings.
+
+    Args:
+        request (Request): The incoming request instance.
+        form_data (ProcessFileForm): Parameters for file processing, including
+            file identifier, optional content, and target collection.
+        user (UserModel): The authenticated user performing the operation.
+
+    Returns:
+        dict: Result details containing status, collection name, filename, and content.
+    """
     try:
         file = Files.get_file_by_id(form_data.file_id)
 
@@ -1080,14 +1092,19 @@ def process_file(
         if collection_name is None:
             collection_name = f"user-{user.id}"
 
+        log.info("Updating collection %s for file %s", collection_name, file.id)
+
         if form_data.content:
             # Update the content in the file
             # Usage: /files/{file_id}/data/content/update
 
             try:
                 # /files/{file_id}/data/content/update
-                VECTOR_DB_CLIENT.delete_collection(collection_name=f"user-{user.id}")
-            except:
+                VECTOR_DB_CLIENT.delete(
+                    collection_name=f"user-{user.id}",
+                    filter={"file_id": file.id},
+                )
+            except Exception:
                 # Audio file upload pipeline
                 pass
 
