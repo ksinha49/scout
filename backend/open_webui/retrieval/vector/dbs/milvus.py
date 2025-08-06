@@ -26,15 +26,25 @@ log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 
 class MilvusClient:
-    def __init__(self):
+    def __init__(self) -> None:
+        """Use credentials when ``MILVUS_TOKEN`` is unset; otherwise use token auth."""
         ## MOD: AMER-MOD Auth allocation for Milvus Vector DB
         #self.collection_prefix = "openwebui"
         #self.client = Client(uri=MILVUS_URI)
         self.collection_prefix = "ameritasai"
         if MILVUS_TOKEN is None:
-            self.client = Client(uri=MILVUS_URI, user=MILVUS_USER, password=MILVUS_PASSWORD, db_name=MILVUS_DB_NAME)
+            self.client = Client(
+                uri=MILVUS_URI,
+                user=MILVUS_USER,
+                password=MILVUS_PASSWORD,
+                db_name=MILVUS_DB_NAME,
+            )
         else:
-            self.client = Client(uri=MILVUS_URI, database=MILVUS_DB, token=MILVUS_TOKEN)
+            self.client = Client(
+                uri=MILVUS_URI,
+                db_name=MILVUS_DB_NAME,
+                token=MILVUS_TOKEN,
+            )
 
     def _result_to_get_result(self, result) -> GetResult:
         ids = []
