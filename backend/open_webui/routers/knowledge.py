@@ -4,8 +4,9 @@ Modification Log:
 | Date       | Author         | MOD TAG            | Description                                                                                         |
 |------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
 | 2025-12-02 | X1BA          | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
-                                                             
+
 """
+
 from typing import List, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status, Request
@@ -25,6 +26,7 @@ from open_webui.routers.retrieval import (
     process_files_batch,
     BatchProcessFilesForm,
 )
+from open_webui.utils.collections import build_kb_collection_name
 from open_webui.storage.provider import Storage
 
 from open_webui.constants import ERROR_MESSAGES
@@ -306,9 +308,10 @@ def add_file_to_knowledge_by_id(
 
     # Add content to the vector database
     try:
+        collection_name = build_kb_collection_name(knowledge.name, knowledge.id)
         process_file(
             request,
-            ProcessFileForm(file_id=form_data.file_id, collection_name=id),
+            ProcessFileForm(file_id=form_data.file_id, collection_name=collection_name),
             user=user,
         )
     except Exception as e:
@@ -396,14 +399,16 @@ def update_file_from_knowledge_by_id(
 
     # Remove content from the vector database
     VECTOR_DB_CLIENT.delete(
-        collection_name=knowledge.id, filter={"file_id": form_data.file_id}
+        collection_name=build_kb_collection_name(knowledge.name, knowledge.id),
+        filter={"file_id": form_data.file_id},
     )
 
-    # Add content to the vector database
+    # Add content back to the vector database
     try:
+        collection_name = build_kb_collection_name(knowledge.name, knowledge.id)
         process_file(
             request,
-            ProcessFileForm(file_id=form_data.file_id, collection_name=id),
+            ProcessFileForm(file_id=form_data.file_id, collection_name=collection_name),
             user=user,
         )
     except Exception as e:
@@ -478,7 +483,8 @@ def remove_file_from_knowledge_by_id(
     # Remove content from the vector database
     try:
         VECTOR_DB_CLIENT.delete(
-            collection_name=knowledge.id, filter={"file_id": form_data.file_id}
+            collection_name=build_kb_collection_name(knowledge.name, knowledge.id),
+            filter={"file_id": form_data.file_id},
         )
     except Exception as e:
         log.debug("This was most likely caused by bypassing embedding processing")
@@ -624,7 +630,9 @@ async def reset_knowledge_by_id(id: str, user=Depends(get_verified_user)):
         )
 
     try:
-        VECTOR_DB_CLIENT.delete_collection(collection_name=id)
+        VECTOR_DB_CLIENT.delete_collection(
+            collection_name=build_kb_collection_name(knowledge.name, knowledge.id)
+        )
     except Exception as e:
         log.debug(e)
         pass
@@ -690,9 +698,12 @@ def add_files_to_knowledge_batch(
 
     # Process files
     try:
+        collection_name = build_kb_collection_name(knowledge.name, knowledge.id)
         result = process_files_batch(
             request=request,
-            form_data=BatchProcessFilesForm(files=files, collection_name=id),
+            form_data=BatchProcessFilesForm(
+                files=files, collection_name=collection_name
+            ),
             user=user,
         )
     except Exception as e:
@@ -700,7 +711,9 @@ def add_files_to_knowledge_batch(
             f"add_files_to_knowledge_batch: Exception occurred: {e}", exc_info=True
         )
         # MOD TAG CWE-209 Generation of Error Message Containing Sensitive Information
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=getErrorMsg(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=getErrorMsg(e)
+        )
 
     # Add successful files to knowledge base
     data = knowledge.data or {}

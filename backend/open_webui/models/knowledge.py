@@ -10,6 +10,7 @@ from open_webui.env import SRC_LOG_LEVELS
 from open_webui.models.files import FileMetadataResponse
 from open_webui.models.users import Users, UserResponse
 from open_webui.retrieval.vector.connector import VECTOR_DB_CLIENT
+from open_webui.utils.collections import build_kb_collection_name
 
 
 from pydantic import BaseModel, ConfigDict
@@ -209,15 +210,21 @@ class KnowledgeTable:
         """
         try:
             with get_db() as db:
+                knowledge = self.get_knowledge_by_id(id=id)
                 db.query(Knowledge).filter_by(id=id).delete()
                 db.commit()
                 # Attempt to drop the corresponding vector DB collection. If the
                 # collection does not exist, quietly log the exception to avoid
                 # disrupting the deletion flow.
-                try:
-                    VECTOR_DB_CLIENT.delete_collection(collection_name=id)
-                except Exception as e:
-                    log.debug(e)
+                if knowledge:
+                    try:
+                        VECTOR_DB_CLIENT.delete_collection(
+                            collection_name=build_kb_collection_name(
+                                knowledge.name, knowledge.id
+                            )
+                        )
+                    except Exception as e:
+                        log.debug(e)
                 return True
         except Exception:
             return False

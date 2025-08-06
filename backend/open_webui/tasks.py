@@ -8,6 +8,7 @@ from uuid import uuid4
 from open_webui.models.files import Files
 from open_webui.models.knowledge import Knowledges
 from open_webui.retrieval.vector.connector import VECTOR_DB_CLIENT
+from open_webui.utils.collections import build_user_collection_name
 from open_webui.env import SRC_LOG_LEVELS
 
 # A dictionary to keep track of active tasks
@@ -89,7 +90,7 @@ async def periodic_file_cleanup(interval_seconds: int = 3600):
                 ):
                     try:
                         VECTOR_DB_CLIENT.delete(
-                            collection_name=f"user-{file.user_id}",
+                            collection_name=build_user_collection_name(file.user_id),
                             filter={"file_id": file.id},
                         )
                     except Exception as e:

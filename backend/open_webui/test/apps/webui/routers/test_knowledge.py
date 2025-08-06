@@ -2,12 +2,18 @@ import shutil
 import pytest
 from test.util.abstract_integration_test import AbstractPostgresTest
 from test.util.mock_user import mock_webui_user
+from open_webui.utils.collections import (
+    build_user_collection_name,
+    build_kb_collection_name,
+)
 
 
 DOCKER_AVAILABLE = shutil.which("docker") is not None
 
 
-@pytest.mark.skipif(not DOCKER_AVAILABLE, reason="Docker is required for database integration tests")
+@pytest.mark.skipif(
+    not DOCKER_AVAILABLE, reason="Docker is required for database integration tests"
+)
 class TestKnowledge(AbstractPostgresTest):
     BASE_PATH = "/api/v1/knowledge"
 
@@ -38,7 +44,7 @@ class TestKnowledge(AbstractPostgresTest):
 
     def test_query_by_file_id_returns_relevant_chunks(self):
         user_id = "1"
-        collection = f"user-{user_id}"
+        collection = build_user_collection_name(user_id)
 
         items = [
             self.VectorItem(
@@ -61,13 +67,19 @@ class TestKnowledge(AbstractPostgresTest):
             ),
         ]
 
-        self.vector_client.insert(collection_name=collection, items=[item.model_dump() for item in items])
+        self.vector_client.insert(
+            collection_name=collection, items=[item.model_dump() for item in items]
+        )
 
-        res1 = self.vector_client.query(collection_name=collection, filter={"file_id": "file1"})
+        res1 = self.vector_client.query(
+            collection_name=collection, filter={"file_id": "file1"}
+        )
         assert res1 is not None
         assert sorted(res1.documents[0]) == ["alpha chunk one", "alpha chunk two"]
 
-        res2 = self.vector_client.query(collection_name=collection, filter={"file_id": "file2"})
+        res2 = self.vector_client.query(
+            collection_name=collection, filter={"file_id": "file2"}
+        )
         assert res2 is not None
         assert res2.documents[0] == ["beta chunk"]
 
@@ -77,7 +89,9 @@ class TestKnowledge(AbstractPostgresTest):
 
         knowledge = self.knowledges.insert_new_knowledge(
             user_id,
-            self.KnowledgeForm(name="kb", description="desc", data={"file_ids": [file_id]}),
+            self.KnowledgeForm(
+                name="kb", description="desc", data={"file_ids": [file_id]}
+            ),
         )
 
         self.files.insert_new_file(
@@ -97,10 +111,13 @@ class TestKnowledge(AbstractPostgresTest):
             vector=[0.1, 0.2],
             metadata={"file_id": file_id},
         )
-        self.vector_client.insert(collection_name=knowledge.id, items=[item.model_dump()])
+        collection_name = build_kb_collection_name(knowledge.name, knowledge.id)
+        self.vector_client.insert(
+            collection_name=collection_name, items=[item.model_dump()]
+        )
 
         res_before = self.vector_client.query(
-            collection_name=knowledge.id, filter={"file_id": file_id}
+            collection_name=collection_name, filter={"file_id": file_id}
         )
         assert res_before is not None
         assert res_before.documents[0] == ["hello"]
@@ -113,7 +130,7 @@ class TestKnowledge(AbstractPostgresTest):
         assert response.status_code == 200
 
         res_after = self.vector_client.query(
-            collection_name=knowledge.id, filter={"file_id": file_id}
+            collection_name=collection_name, filter={"file_id": file_id}
         )
         assert res_after is not None
         assert res_after.documents[0] == []
@@ -125,4 +142,9 @@ class TestKnowledge(AbstractPostgresTest):
             )
         assert response.status_code == 200
         assert self.knowledges.get_knowledge_by_id(knowledge.id) is None
-        assert self.vector_client.has_collection(collection_name=knowledge.id) is False
+        assert (
+            self.vector_client.has_collection(
+                collection_name=build_kb_collection_name(knowledge.name, knowledge.id)
+            )
+            is False
+        )

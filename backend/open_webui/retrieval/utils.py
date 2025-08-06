@@ -22,7 +22,7 @@ import hashlib
 import json
 from concurrent.futures import ThreadPoolExecutor
 from werkzeug.utils import secure_filename  ## MOD: CWE-22: For sanitizing paths
-import re ## MOD: CWE-22: Expression check
+import re  ## MOD: CWE-22: Expression check
 from huggingface_hub import snapshot_download
 from langchain.retrievers import ContextualCompressionRetriever, EnsembleRetriever
 from langchain_community.retrievers import BM25Retriever
@@ -35,7 +35,6 @@ from open_webui.models.users import UserModel
 from open_webui.models.files import Files
 
 from open_webui.retrieval.vector.main import GetResult
-
 
 from open_webui.env import (
     SRC_LOG_LEVELS,
@@ -55,6 +54,7 @@ log.setLevel(SRC_LOG_LEVELS["RAG"])
 from typing import Any, Optional, Dict
 
 from open_webui.retrieval.vector.main import GetResult, SearchResult
+from open_webui.utils.collections import build_user_collection_name
 
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
@@ -63,7 +63,9 @@ from langchain_core.retrievers import BaseRetriever
 # filters instead of maintaining per-file collections.
 
 
-def _filter_search_result(result: SearchResult, query_filter: Dict[str, Any]) -> SearchResult:
+def _filter_search_result(
+    result: SearchResult, query_filter: Dict[str, Any]
+) -> SearchResult:
     if result is None or not query_filter:
         return result
     ids = result.ids[0] if result.ids else []
@@ -120,8 +122,12 @@ class VectorSearchRetriever(BaseRetriever):
                 collection_name=self.collection_name,
                 vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
                 limit=self.top_k,
-                **({"filter": self.query_filter} if self.query_filter else {}),  ## MOD: RAG-FILTERS: pass structured filter
-                **({"expr": self.filter_expr} if self.filter_expr else {}),  ## MOD: RAG-FILTERS: pass expression for Milvus <2.4
+                **(
+                    {"filter": self.query_filter} if self.query_filter else {}
+                ),  ## MOD: RAG-FILTERS: pass structured filter
+                **(
+                    {"expr": self.filter_expr} if self.filter_expr else {}
+                ),  ## MOD: RAG-FILTERS: pass expression for Milvus <2.4
             )
         except TypeError:
             result = VECTOR_DB_CLIENT.search(
@@ -161,7 +167,9 @@ def query_doc(
                 collection_name=collection_name,
                 vectors=[query_embedding],
                 limit=k,
-                **({"filter": query_filter} if query_filter else {}),  ## MOD: RAG-FILTERS
+                **(
+                    {"filter": query_filter} if query_filter else {}
+                ),  ## MOD: RAG-FILTERS
                 **({"expr": filter_expr} if filter_expr else {}),  ## MOD: RAG-FILTERS
             )
         except TypeError:
@@ -367,10 +375,14 @@ def query_collection(
     queries: list[str],
     embedding_function,
     k: int,
-    query_filters: Optional[list[Dict[str, Any]]] = None,  ## MOD: RAG-FILTERS: support multiple filter dicts
+    query_filters: Optional[
+        list[Dict[str, Any]]
+    ] = None,  ## MOD: RAG-FILTERS: support multiple filter dicts
 ) -> dict:
     results = []
-    filters = query_filters if query_filters else [None]  ## MOD: RAG-FILTERS: iterate through provided filters
+    filters = (
+        query_filters if query_filters else [None]
+    )  ## MOD: RAG-FILTERS: iterate through provided filters
     for query in queries:
         query_embedding = embedding_function(query, prefix=RAG_EMBEDDING_QUERY_PREFIX)
         for f in filters:
@@ -398,7 +410,9 @@ def query_collection_with_hybrid_search(
     reranking_function,
     k_reranker: int,
     r: float,
-    query_filters: Optional[list[Dict[str, Any]]] = None,  ## MOD: RAG-FILTERS: list of filter dicts
+    query_filters: Optional[
+        list[Dict[str, Any]]
+    ] = None,  ## MOD: RAG-FILTERS: list of filter dicts
 ) -> dict:
     results = []
     error = False
@@ -434,16 +448,10 @@ def query_collection_with_hybrid_search(
             )
             return result, None
         except Exception as e:
-            log.exception(
-                f"Error when querying the collection with hybrid_search: {e}"
-            )
+            log.exception(f"Error when querying the collection with hybrid_search: {e}")
             return None, e
 
-    tasks = [
-        (idx, query)
-        for idx in range(len(filters))
-        for query in queries
-    ]
+    tasks = [(idx, query) for idx in range(len(filters)) for query in queries]
 
     with ThreadPoolExecutor() as executor:
         future_results = [executor.submit(process_query, idx, q) for idx, q in tasks]
@@ -606,7 +614,9 @@ def get_sources_from_files(
                             filter_dict = {"file_id": file_id}
                             collection_infos.append(
                                 {
-                                    "name": f"user-{file_object.user_id}",
+                                    "name": build_user_collection_name(
+                                        file_object.user_id
+                                    ),
                                     "filter": filter_dict,
                                 }
                             )
@@ -630,7 +640,7 @@ def get_sources_from_files(
                         filter_dict = {"file_id": file["id"]}
                         collection_infos.append(
                             {
-                                "name": f"user-{file_object.user_id}",
+                                "name": build_user_collection_name(file_object.user_id),
                                 "filter": filter_dict,
                             }
                         )
@@ -772,14 +782,14 @@ def get_model_path(model: str, update_model: bool = False):
     # Use allowlist to validate model format (only letters, numbers, dashes, and slashes)
     if not re.match(r"^[\w\-/]+$", model):
         raise ValueError("Model format not allowed; must match approved patterns.")
-    
+
     # Inspiration from upstream sentence_transformers
-    #if (
+    # if (
     #    os.path.exists(model)
     #    or ("\\" in model or model.count("/") > 1)
     #    and local_files_only
-    #):
-        # If fully qualified path exists, return input, else set repo_id
+    # ):
+    # If fully qualified path exists, return input, else set repo_id
     #    return model
     # Limit `os.path.exists` check to cache_dir scope
     if os.path.exists(normalized_path) and local_files_only:
