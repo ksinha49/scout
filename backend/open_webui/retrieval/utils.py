@@ -59,6 +59,9 @@ from open_webui.retrieval.vector.main import GetResult, SearchResult
 from langchain_core.callbacks import CallbackManagerForRetrieverRun
 from langchain_core.retrievers import BaseRetriever
 
+# MOD TAG RAG-FILTERS: Enable querying a single user collection with optional
+# filters instead of maintaining per-file collections.
+
 
 def _filter_search_result(result: SearchResult, query_filter: Dict[str, Any]) -> SearchResult:
     if result is None or not query_filter:
@@ -91,6 +94,7 @@ def _filter_search_result(result: SearchResult, query_filter: Dict[str, Any]) ->
 
 
 def dict_to_filter_expr(filter_dict: Dict[str, Any]) -> str:
+    """Translate a metadata filter dict to a Milvus filter expression."""
     return " && ".join(
         f'metadata["{k}"] == {json.dumps(v)}' for k, v in filter_dict.items()
     )
@@ -101,7 +105,8 @@ class VectorSearchRetriever(BaseRetriever):
     embedding_function: Any
     top_k: int
     query_filter: Optional[Dict[str, Any]] = None
-    filter_expr: Optional[str] = None
+    filter_expr: Optional[str] = None  ## MOD: RAG-FILTERS: allow backend search
+    ## MOD: RAG-FILTERS: to constrain results via Milvus "expr" syntax.
 
     def _get_relevant_documents(
         self,
@@ -114,8 +119,8 @@ class VectorSearchRetriever(BaseRetriever):
                 collection_name=self.collection_name,
                 vectors=[self.embedding_function(query, RAG_EMBEDDING_QUERY_PREFIX)],
                 limit=self.top_k,
-                **({"filter": self.query_filter} if self.query_filter else {}),
-                **({"expr": self.filter_expr} if self.filter_expr else {}),
+                **({"filter": self.query_filter} if self.query_filter else {}),  ## MOD: RAG-FILTERS: pass structured filter
+                **({"expr": self.filter_expr} if self.filter_expr else {}),  ## MOD: RAG-FILTERS: pass expression for Milvus <2.4
             )
         except TypeError:
             result = VECTOR_DB_CLIENT.search(
@@ -147,7 +152,7 @@ def query_doc(
     k: int,
     user: UserModel = None,
     query_filter: Optional[Dict[str, Any]] = None,
-    filter_expr: Optional[str] = None,
+    filter_expr: Optional[str] = None,  ## MOD: RAG-FILTERS: optional filter constraints
 ):
     try:
         try:
@@ -155,8 +160,8 @@ def query_doc(
                 collection_name=collection_name,
                 vectors=[query_embedding],
                 limit=k,
-                **({"filter": query_filter} if query_filter else {}),
-                **({"expr": filter_expr} if filter_expr else {}),
+                **({"filter": query_filter} if query_filter else {}),  ## MOD: RAG-FILTERS
+                **({"expr": filter_expr} if filter_expr else {}),  ## MOD: RAG-FILTERS
             )
         except TypeError:
             result = VECTOR_DB_CLIENT.search(
@@ -361,10 +366,10 @@ def query_collection(
     queries: list[str],
     embedding_function,
     k: int,
-    query_filters: Optional[list[Dict[str, Any]]] = None,
+    query_filters: Optional[list[Dict[str, Any]]] = None,  ## MOD: RAG-FILTERS: support multiple filter dicts
 ) -> dict:
     results = []
-    filters = query_filters if query_filters else [None]
+    filters = query_filters if query_filters else [None]  ## MOD: RAG-FILTERS: iterate through provided filters
     for query in queries:
         query_embedding = embedding_function(query, prefix=RAG_EMBEDDING_QUERY_PREFIX)
         for f in filters:
@@ -392,11 +397,11 @@ def query_collection_with_hybrid_search(
     reranking_function,
     k_reranker: int,
     r: float,
-    query_filters: Optional[list[Dict[str, Any]]] = None,
+    query_filters: Optional[list[Dict[str, Any]]] = None,  ## MOD: RAG-FILTERS: list of filter dicts
 ) -> dict:
     results = []
     error = False
-    filters = query_filters if query_filters else [None]
+    filters = query_filters if query_filters else [None]  ## MOD: RAG-FILTERS
     collection_results = []
     for f in filters:
         try:

@@ -1,5 +1,7 @@
 import { RETRIEVAL_API_BASE_URL } from '$lib/constants';
 
+// MOD TAG RAG-FILTERS: Frontend sends filters with a single collection name.
+
 export const getRAGConfig = async (token: string) => {
 	let error = null;
 
@@ -509,7 +511,7 @@ export const queryCollection = async (
         token: string,
         collection_name: string,
         query: string,
-        filters: Array<Record<string, unknown>> | null = null,
+        filters: Array<Record<string, unknown>> | null = null, // MOD: RAG-FILTERS allow optional metadata filters
         k: number | null = null
 ) => {
 	let error = null;
@@ -524,7 +526,7 @@ export const queryCollection = async (
                 body: JSON.stringify({
                         collection_name: collection_name,
                         query: query,
-                        filters: filters,
+                        filters: filters, // MOD: RAG-FILTERS
                         k: k
                 })
         })

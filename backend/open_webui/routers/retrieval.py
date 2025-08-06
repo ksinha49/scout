@@ -9,6 +9,7 @@ Modification Log:
 | 2025-04-06 | AAK7S          | ASYNC-IMPROVEMENT       | Added parallel asynchronous batch insertion for large vector DB loads                |
 """
 
+# MOD TAG RAG-FILTERS: Accept a single collection with optional filter list.
 import json
 import logging
 import mimetypes
@@ -1762,7 +1763,7 @@ def query_doc_handler(
 class QueryCollectionForm(BaseModel):
     collection_name: str
     query: str
-    filters: Optional[list[dict]] = None
+    filters: Optional[list[dict]] = None  ## MOD: RAG-FILTERS: optional metadata filters
     k: Optional[int] = None
     k_reranker: Optional[int] = None
     r: Optional[float] = None
@@ -1792,7 +1793,7 @@ def query_collection_handler(
                     if form_data.r
                     else request.app.state.config.RELEVANCE_THRESHOLD
                 ),
-                query_filters=form_data.filters,
+                query_filters=form_data.filters,  ## MOD: RAG-FILTERS
             )
         else:
             return query_collection(
@@ -1802,7 +1803,7 @@ def query_collection_handler(
                     query, prefix=prefix, user=user
                 ),
                 k=form_data.k if form_data.k else request.app.state.config.TOP_K,
-                query_filters=form_data.filters,
+                query_filters=form_data.filters,  ## MOD: RAG-FILTERS
             )
 
     except Exception as e:
