@@ -9,7 +9,7 @@ from pymilvus import MilvusClient as Client
 from pymilvus import FieldSchema, DataType
 import json
 import logging
-from typing import Optional
+from typing import Any, Optional
 
 from open_webui.retrieval.vector.main import VectorItem, SearchResult, GetResult
 from open_webui.config import (
@@ -27,7 +27,7 @@ log.setLevel(SRC_LOG_LEVELS["RAG"])
 
 class MilvusClient:
     def __init__(self) -> None:
-        """Use credentials when ``MILVUS_TOKEN`` is unset; otherwise use token auth."""
+        """Initialize the Milvus client using credentials or token auth."""
         ## MOD: AMER-MOD Auth allocation for Milvus Vector DB
         #self.collection_prefix = "openwebui"
         #self.client = Client(uri=MILVUS_URI)
@@ -107,7 +107,7 @@ class MilvusClient:
             }
         )
 
-    def _create_collection(self, collection_name: str, dimension: int):
+    def _create_collection(self, collection_name: str, dimension: int) -> None:
         schema = self.client.create_schema(
             auto_id=False,
             enable_dynamic_field=True,
@@ -144,14 +144,14 @@ class MilvusClient:
         )
 
     def has_collection(self, collection_name: str) -> bool:
-        # Check if the collection exists based on the collection name.
+        """Check if a collection exists."""
         collection_name = collection_name.replace("-", "_")
         return self.client.has_collection(
             collection_name=f"{self.collection_prefix}_{collection_name}"
         )
 
-    def delete_collection(self, collection_name: str):
-        # Delete the collection based on the collection name.
+    def delete_collection(self, collection_name: str) -> bool:
+        """Delete a collection by name."""
         collection_name = collection_name.replace("-", "_")
         return self.client.drop_collection(
             collection_name=f"{self.collection_prefix}_{collection_name}"
@@ -164,7 +164,7 @@ class MilvusClient:
         limit: int,
         expr: Optional[str] = None,
     ) -> Optional[SearchResult]:
-        # Search for the nearest neighbor items based on the vectors and return 'limit' number of results.
+        """Search for nearest neighbor items and return results."""
         collection_name = collection_name.replace("-", "_")
         result = self.client.search(
             collection_name=f"{self.collection_prefix}_{collection_name}",
@@ -176,8 +176,10 @@ class MilvusClient:
 
         return self._result_to_search_result(result)
 
-    def query(self, collection_name: str, filter: dict, limit: Optional[int] = None):
-        # Construct the filter string for querying
+    def query(
+        self, collection_name: str, filter: dict, limit: Optional[int] = None
+    ) -> Optional[GetResult]:
+        """Query a collection using metadata filters."""
         collection_name = collection_name.replace("-", "_")
         if not self.has_collection(collection_name):
             return None
@@ -202,7 +204,7 @@ class MilvusClient:
         try:
             # Loop until there are no more items to fetch or the desired limit is reached
             while remaining > 0:
-                log.info(f"remaining: {remaining}")
+                log.debug(f"remaining: {remaining}")
                 current_fetch = min(
                     max_limit, remaining
                 )  # Determine how many items to fetch in this iteration
@@ -237,8 +239,8 @@ class MilvusClient:
             )
             return None
 
-    def get(self, collection_name: str) -> Optional[GetResult]:
-        # Get all the items in the collection.
+    def get(self, collection_name: str) -> GetResult:
+        """Retrieve all items in a collection."""
         collection_name = collection_name.replace("-", "_")
         result = self.client.query(
             collection_name=f"{self.collection_prefix}_{collection_name}",
@@ -246,8 +248,8 @@ class MilvusClient:
         )
         return self._result_to_get_result([result])
 
-    def insert(self, collection_name: str, items: list[VectorItem]):
-        # Insert the items into the collection, if the collection does not exist, it will be created.
+    def insert(self, collection_name: str, items: list[VectorItem]) -> Any:
+        """Insert items into a collection, creating it if needed."""
         collection_name = collection_name.replace("-", "_")
         if not self.client.has_collection(
             collection_name=f"{self.collection_prefix}_{collection_name}"
@@ -269,8 +271,8 @@ class MilvusClient:
             ],
         )
 
-    def upsert(self, collection_name: str, items: list[VectorItem]):
-        # Update the items in the collection, if the items are not present, insert them. If the collection does not exist, it will be created.
+    def upsert(self, collection_name: str, items: list[VectorItem]) -> Any:
+        """Update or insert items in a collection."""
         collection_name = collection_name.replace("-", "_")
         if not self.client.has_collection(
             collection_name=f"{self.collection_prefix}_{collection_name}"
@@ -297,8 +299,8 @@ class MilvusClient:
         collection_name: str,
         ids: Optional[list[str]] = None,
         filter: Optional[dict] = None,
-    ):
-        # Delete the items from the collection based on the ids.
+    ) -> Any:
+        """Delete items by ID or metadata filter."""
         collection_name = collection_name.replace("-", "_")
         if ids:
             return self.client.delete(
@@ -306,7 +308,6 @@ class MilvusClient:
                 ids=ids,
             )
         elif filter:
-            # Convert the filter dictionary to a string using JSON_CONTAINS.
             filter_string = " && ".join(
                 [
                     f'metadata["{key}"] == {json.dumps(value)}'
@@ -319,8 +320,8 @@ class MilvusClient:
                 filter=filter_string,
             )
 
-    def reset(self):
-        # Resets the database. This will delete all collections and item entries.
+    def reset(self) -> None:
+        """Drop all collections with the configured prefix."""
         collection_names = self.client.list_collections()
         for collection_name in collection_names:
             if collection_name.startswith(self.collection_prefix):

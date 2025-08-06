@@ -19,7 +19,7 @@ import shutil
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Iterator, List, Optional, Sequence, Union
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 import psutil
 
 from fastapi import (
@@ -246,7 +246,8 @@ class SearchForm(CollectionNameForm):
 
 
 @router.get("/")
-async def get_status(request: Request):
+async def get_status(request: Request) -> Dict[str, Any]:
+    """Return current retrieval configuration values."""
     return {
         "status": True,
         "chunk_size": request.app.state.config.CHUNK_SIZE,
@@ -260,7 +261,10 @@ async def get_status(request: Request):
 
 
 @router.get("/embedding")
-async def get_embedding_config(request: Request, user=Depends(get_admin_user)):
+async def get_embedding_config(
+    request: Request, user=Depends(get_admin_user)
+) -> Dict[str, Any]:
+    """Return embedding engine configuration."""
     return {
         "status": True,
         "embedding_engine": request.app.state.config.RAG_EMBEDDING_ENGINE,
@@ -278,7 +282,10 @@ async def get_embedding_config(request: Request, user=Depends(get_admin_user)):
 
 
 @router.get("/reranking")
-async def get_reraanking_config(request: Request, user=Depends(get_admin_user)):
+async def get_reraanking_config(
+    request: Request, user=Depends(get_admin_user)
+) -> Dict[str, Any]:
+    """Return reranking model configuration."""
     return {
         "status": True,
         "reranking_model": request.app.state.config.RAG_RERANKING_MODEL,
@@ -306,7 +313,8 @@ class EmbeddingModelUpdateForm(BaseModel):
 @router.post("/embedding/update")
 async def update_embedding_config(
     request: Request, form_data: EmbeddingModelUpdateForm, user=Depends(get_admin_user)
-):
+) -> Dict[str, Any]:
+    """Modify embedding engine configuration."""
     log.info(
         f"Updating embedding model: {request.app.state.config.RAG_EMBEDDING_MODEL} to {form_data.embedding_model}"
     )
@@ -394,7 +402,8 @@ class RerankingModelUpdateForm(BaseModel):
 @router.post("/reranking/update")
 async def update_reranking_config(
     request: Request, form_data: RerankingModelUpdateForm, user=Depends(get_admin_user)
-):
+) -> Dict[str, Any]:
+    """Change the reranking model in use."""
     log.info(
         f"Updating reranking model: {request.app.state.config.RAG_RERANKING_MODEL} to {form_data.reranking_model}"
     )
@@ -431,7 +440,10 @@ async def update_reranking_config(
 
 
 @router.get("/config")
-async def get_rag_config(request: Request, user=Depends(get_admin_user)):
+async def get_rag_config(
+    request: Request, user=Depends(get_admin_user)
+) -> Dict[str, Any]:
+    """Return server-side retrieval configuration."""
     return {
         "status": True,
         "pdf_extract_images": request.app.state.config.PDF_EXTRACT_IMAGES,
@@ -581,7 +593,8 @@ class ConfigUpdateForm(BaseModel):
 @router.post("/config/update")
 async def update_rag_config(
     request: Request, form_data: ConfigUpdateForm, user=Depends(get_admin_user)
-):
+) -> Dict[str, Any]:
+    """Update various retrieval settings."""
     request.app.state.config.PDF_EXTRACT_IMAGES = (
         form_data.pdf_extract_images
         if form_data.pdf_extract_images is not None
@@ -798,7 +811,10 @@ async def update_rag_config(
 
 
 @router.get("/template")
-async def get_rag_template(request: Request, user=Depends(get_verified_user)):
+async def get_rag_template(
+    request: Request, user=Depends(get_verified_user)
+) -> Dict[str, Any]:
+    """Return the prompt template used for retrieval."""
     return {
         "status": True,
         "template": request.app.state.config.RAG_TEMPLATE,
@@ -806,7 +822,10 @@ async def get_rag_template(request: Request, user=Depends(get_verified_user)):
 
 
 @router.get("/query/settings")
-async def get_query_settings(request: Request, user=Depends(get_admin_user)):
+async def get_query_settings(
+    request: Request, user=Depends(get_admin_user)
+) -> Dict[str, Any]:
+    """Return retrieval query tuning parameters."""
     return {
         "status": True,
         "template": request.app.state.config.RAG_TEMPLATE,
@@ -828,7 +847,8 @@ class QuerySettingsForm(BaseModel):
 @router.post("/query/settings/update")
 async def update_query_settings(
     request: Request, form_data: QuerySettingsForm, user=Depends(get_admin_user)
-):
+) -> Dict[str, Any]:
+    """Update query parameters like top-k and template."""
     request.app.state.config.RAG_TEMPLATE = form_data.template
     request.app.state.config.TOP_K = form_data.k if form_data.k else 4
     request.app.state.config.TOP_K_RERANKER = form_data.k_reranker or 4
@@ -865,14 +885,15 @@ async def update_query_settings(
 
 def save_docs_to_vector_db(
     request: Request,
-    docs,
-    collection_name,
-    metadata: Optional[Union[dict, Sequence[dict]]] = None,
+    docs: Sequence[Document],
+    collection_name: str,
+    metadata: Optional[Union[Dict[str, Any], Sequence[Dict[str, Any]]]] = None,
     overwrite: bool = False,
     split: bool = True,
     add: bool = False,
-    user=None,
+    user: Optional[UserModel] = None,
 ) -> bool:
+    """Persist documents to the vector database."""
     def _get_docs_info(docs: list[Document]) -> str:
         docs_info = set()
 
@@ -1093,7 +1114,7 @@ def process_file(
     request: Request,
     form_data: ProcessFileForm,
     user: UserModel = Depends(get_verified_user),
-) -> dict:
+) -> Dict[str, Any]:
     """Process a single file and update its associated vector embeddings.
 
     Args:
@@ -1327,7 +1348,8 @@ def process_text(
     request: Request,
     form_data: ProcessTextForm,
     user=Depends(get_verified_user),
-):
+) -> Dict[str, Any]:
+    """Embed provided text into the user's collection."""
     collection_name = form_data.collection_name if form_data.collection_name else f"user-{user.id}"
 
     docs = [
@@ -1364,7 +1386,8 @@ def process_text(
 @router.post("/process/youtube")
 def process_youtube_video(
     request: Request, form_data: ProcessUrlForm, user=Depends(get_verified_user)
-):
+) -> Dict[str, Any]:
+    """Process a YouTube video and store its transcript."""
     try:
         collection_name = form_data.collection_name
         if not collection_name:
@@ -1416,7 +1439,8 @@ def process_youtube_video(
 @router.post("/process/web")
 def process_web(
     request: Request, form_data: ProcessUrlForm, user=Depends(get_verified_user)
-):
+) -> Dict[str, Any]:
+    """Fetch web content and optionally index it."""
     try:
         collection_name = form_data.collection_name
         if not collection_name:
@@ -1662,7 +1686,8 @@ def search_web(request: Request, engine: str, query: str) -> list[SearchResult]:
 @router.post("/process/web/search")
 async def process_web_search(
     request: Request, form_data: SearchForm, user=Depends(get_verified_user)
-):
+) -> Dict[str, Any]:
+    """Search the web and index retrieved pages."""
     try:
         logging.info(
             f"trying to web search with {request.app.state.config.RAG_WEB_SEARCH_ENGINE, form_data.query}"
@@ -1757,7 +1782,8 @@ def query_doc_handler(
     request: Request,
     form_data: QueryDocForm,
     user=Depends(get_verified_user),
-):
+) -> Dict[str, Any]:
+    """Query a single collection for relevant documents."""
     try:
         if request.app.state.config.ENABLE_RAG_HYBRID_SEARCH:
             return query_doc_with_hybrid_search(
@@ -1813,7 +1839,8 @@ def query_collection_handler(
     request: Request,
     form_data: QueryCollectionForm,
     user=Depends(get_verified_user),
-):
+) -> Dict[str, Any]:
+    """Query multiple documents within a collection."""
     try:
         if request.app.state.config.ENABLE_RAG_HYBRID_SEARCH:
             return query_collection_with_hybrid_search(
@@ -1865,7 +1892,10 @@ class DeleteForm(BaseModel):
 
 
 @router.post("/delete")
-def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin_user)):
+def delete_entries_from_collection(
+    form_data: DeleteForm, user=Depends(get_admin_user)
+) -> Dict[str, Any]:
+    """Remove file entries from a collection."""
     try:
         if VECTOR_DB_CLIENT.has_collection(collection_name=form_data.collection_name):
             # Remove only vectors associated with the specified file
@@ -1909,7 +1939,8 @@ def delete_entries_from_collection(form_data: DeleteForm, user=Depends(get_admin
 
 
 @router.post("/reset/db")
-def reset_vector_db(user=Depends(get_admin_user)):
+def reset_vector_db(user=Depends(get_admin_user)) -> Dict[str, bool]:
+    """Clear the vector database and knowledge records."""
     VECTOR_DB_CLIENT.reset()
     Knowledges.delete_all_knowledge()
     log.info(
@@ -1920,10 +1951,12 @@ def reset_vector_db(user=Depends(get_admin_user)):
             "action": "reset_vector_db",
         },
     )
+    return {"status": True}
 
 
 @router.post("/reset/uploads")
 def reset_upload_dir(user=Depends(get_admin_user)) -> bool:
+    """Remove all files from the uploads directory."""
     folder = f"{UPLOAD_DIR}"
     try:
         # Check if the directory exists
@@ -1965,7 +1998,10 @@ def reset_upload_dir(user=Depends(get_admin_user)) -> bool:
 if ENV == "dev":
 
     @router.get("/ef/{text}")
-    async def get_embeddings(request: Request, text: Optional[str] = "Hello World!"):
+    async def get_embeddings(
+        request: Request, text: Optional[str] = "Hello World!"
+    ) -> Dict[str, Any]:
+        """Return raw embeddings for debugging."""
         return {
             "result": request.app.state.EMBEDDING_FUNCTION(
                 text, prefix=RAG_EMBEDDING_QUERY_PREFIX
