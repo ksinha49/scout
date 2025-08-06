@@ -23,9 +23,15 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
 - ⚙️ **Many Models Conversations**: Effortlessly engage with various models simultaneously, harnessing their unique strengths for optimal responses. Enhance your experience by leveraging a diverse set of models in parallel.
 - 🔐 **Role-Based Access Control (RBAC)**: Ensure secure access with restricted permissions; only authorized individuals can access your Ollama, and exclusive model creation/pulling rights are reserved for administrators.
 - 🌐🌍 **Multilingual Support**: Experience Open WebUI in your preferred language with our internationalization (i18n) support. Join us in expanding our supported languages! We're actively seeking contributors!
+## Data Collections and Cleanup
 
-  
-  
+- User uploads are stored in per-user vector collections named `user-{user_id}`.
+- Each document stores metadata such as `file_id` and optional `session_id` so you can scope RAG queries.
+- Retrieval endpoints accept metadata filters, allowing you to limit results to a specific file or session.
+- Files not attached to a knowledge base are cleaned up after 24 hours, and their vectors are removed automatically.
+
+For examples on filtering by `file_id` or `session_id`, see [data management docs](docs/data-management.md).
+
 ## Deployment Configuration
 
 - `GUNICORN_TIMEOUT` – Gunicorn worker timeout in seconds (default: `120`).
