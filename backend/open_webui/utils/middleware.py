@@ -771,6 +771,13 @@ async def process_chat_payload(request, form_data, user, metadata, model):
             form_data=form_data,
             extra_params=extra_params,
         )
+
+        new_sources = [
+            s for s in flags.get("sources", []) if s.get("source", {}).get("name", "")
+        ]
+        if new_sources:
+            sources.extend(new_sources)
+            events.append({"sources": new_sources})
     except Exception as e:
         raise Exception(f"Error: {e}")
 
@@ -858,14 +865,24 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                 form_data, flags = await chat_completion_tools_handler(
                     request, form_data, extra_params, user, models, tools_dict
                 )
-                sources.extend(flags.get("sources", []))
+                new_sources = [
+                    s for s in flags.get("sources", []) if s.get("source", {}).get("name", "")
+                ]
+                if new_sources:
+                    sources.extend(new_sources)
+                    events.append({"sources": new_sources})
 
             except Exception as e:
                 log.exception(e)
 
     try:
         form_data, flags = await chat_completion_files_handler(request, form_data, user)
-        sources.extend(flags.get("sources", []))
+        new_sources = [
+            s for s in flags.get("sources", []) if s.get("source", {}).get("name", "")
+        ]
+        if new_sources:
+            sources.extend(new_sources)
+            events.append({"sources": new_sources})
     except Exception as e:
         log.exception(e)
 
@@ -907,11 +924,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                 form_data["messages"],
             )
 
-    # If there are citations, add them to the data_items
-    sources = [source for source in sources if source.get("source", {}).get("name", "")]
-
-    if len(sources) > 0:
-        events.append({"sources": sources})
 
     if model_knowledge:
         await event_emitter(

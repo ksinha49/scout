@@ -276,12 +276,12 @@ previousReasoningEffort = undefined;
 					} else {
 						message.statusHistory = [data];
 					}
-				} else if (type === 'source' || type === 'citation') {
-					if (data?.type === 'code_execution') {
-						// Code execution; update existing code execution by ID, or add new one.
-						if (!message?.code_executions) {
-							message.code_executions = [];
-						}
+                                } else if (type === 'source' || type === 'citation') {
+                                        if (data?.type === 'code_execution') {
+                                                // Code execution; update existing code execution by ID, or add new one.
+                                                if (!message?.code_executions) {
+                                                        message.code_executions = [];
+                                                }
 
 						const existingCodeExecutionIndex = message.code_executions.findIndex(
 							(execution) => execution.id === data.id
@@ -293,20 +293,23 @@ previousReasoningEffort = undefined;
 							message.code_executions.push(data);
 						}
 
-						message.code_executions = message.code_executions;
-					} else {
-						// Regular source.
-						if (message?.sources) {
-							message.sources.push(data);
-						} else {
-							message.sources = [data];
-						}
-					}
-				} else if (type === 'chat:completion') {
-					chatCompletionEventHandler(data, message, event.chat_id);
-				} else if (type === 'chat:title') {
-					chatTitle.set(data);
-					currentChatPage.set(1);
+                                                message.code_executions = message.code_executions;
+                                        } else {
+                                                // Regular source.
+                                                if (message?.sources) {
+                                                        message.sources.push(data);
+                                                } else {
+                                                        message.sources = [data];
+                                                }
+                                                message.sources = [...message.sources];
+                                        }
+                                        history.messages[event.message_id] = message;
+                                        history = history;
+                                } else if (type === 'chat:completion') {
+                                        chatCompletionEventHandler(data, message, event.chat_id);
+                                } else if (type === 'chat:title') {
+                                        chatTitle.set(data);
+                                        currentChatPage.set(1);
 					await chats.set(await getChatList(localStorage.token, $currentChatPage));
 				} else if (type === 'chat:tags') {
 					chat = await getChatById(localStorage.token, $chatId);
@@ -1115,7 +1118,14 @@ previousReasoningEffort = undefined;
                 }
 
                 if (sources) {
-                        message.sources = sources;
+                        if (message?.sources) {
+                                message.sources.push(...sources);
+                        } else {
+                                message.sources = [...sources];
+                        }
+                        message.sources = [...message.sources];
+                        history.messages[message.id] = message;
+                        history = history;
                 }
 
                 let baseContent = removeDetails(message.content, ['reasoning']);
@@ -1825,6 +1835,16 @@ previousReasoningEffort = undefined;
                                 const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
                                 for await (const update of textStream) {
                                         const { value, done, sources, error, usage, reasoning } = update;
+                                        if (sources) {
+                                                if (message?.sources) {
+                                                        message.sources.push(...sources);
+                                                } else {
+                                                        message.sources = [...sources];
+                                                }
+                                                message.sources = [...message.sources];
+                                                history.messages[messageId] = message;
+                                                history = history;
+                                        }
                                         if (error || done) {
                                                 const baseContent = removeDetails(mergedResponse.content, ['reasoning']);
                                                 mergedResponse.content = `${
