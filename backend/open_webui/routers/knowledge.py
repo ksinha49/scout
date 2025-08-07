@@ -26,8 +26,10 @@ from open_webui.routers.retrieval import (
     process_files_batch,
     BatchProcessFilesForm,
 )
-from open_webui.utils.collections import build_kb_collection_name
-from open_webui.storage.provider import Storage
+from open_webui.utils.collections import (
+    build_kb_collection_name,
+    build_user_collection_name,
+)
 
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.utils.auth import get_verified_user
@@ -179,6 +181,10 @@ async def create_new_knowledge(
 
 class KnowledgeFilesResponse(KnowledgeResponse):
     files: list[FileModel]
+
+
+class KnowledgeFileRemoveResponse(KnowledgeFilesResponse):
+    file_deleted: bool
 
 
 @router.get("/{id}", response_model=Optional[KnowledgeFilesResponse])
@@ -450,7 +456,9 @@ def update_file_from_knowledge_by_id(
 ############################
 
 
-@router.post("/{id}/file/remove", response_model=Optional[KnowledgeFilesResponse])
+@router.post(
+    "/{id}/file/remove", response_model=Optional[KnowledgeFileRemoveResponse]
+)
 def remove_file_from_knowledge_by_id(
     id: str,
     form_data: KnowledgeFileIdForm,
@@ -480,29 +488,20 @@ def remove_file_from_knowledge_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    # Remove content from the vector database
+    # Remove content from the vector database for this knowledge base
     try:
         VECTOR_DB_CLIENT.delete(
             collection_name=build_kb_collection_name(knowledge.name, knowledge.id),
             filter={"file_id": form_data.file_id},
         )
     except Exception as e:
-        log.debug("This was most likely caused by bypassing embedding processing")
+        log.debug(
+            "This was most likely caused by bypassing embedding processing"
+        )
         log.debug(e)
         pass
 
-    try:
-        # Remove the file's collection from vector database
-        file_collection = f"file-{form_data.file_id}"
-        if VECTOR_DB_CLIENT.has_collection(collection_name=file_collection):
-            VECTOR_DB_CLIENT.delete_collection(collection_name=file_collection)
-    except Exception as e:
-        log.debug("This was most likely caused by bypassing embedding processing")
-        log.debug(e)
-        pass
-
-    # Delete file from database
-    Files.delete_file_by_id(form_data.file_id)
+    file_deleted = False
 
     if knowledge:
         data = knowledge.data or {}
@@ -515,6 +514,54 @@ def remove_file_from_knowledge_by_id(
             knowledge = Knowledges.update_knowledge_data_by_id(id=id, data=data)
 
             if knowledge:
+                # Determine if the file is used elsewhere
+                referenced_elsewhere = False
+                for kb in Knowledges.get_knowledge_bases():
+                    if kb.id != id and form_data.file_id in (
+                        (kb.data or {}).get("file_ids", [])
+                    ):
+                        referenced_elsewhere = True
+                        break
+
+                if not referenced_elsewhere:
+                    try:
+                        res = VECTOR_DB_CLIENT.query(
+                            collection_name=build_user_collection_name(file.user_id),
+                            filter={"file_id": form_data.file_id},
+                            limit=1,
+                        )
+                        referenced_elsewhere = (
+                            res is not None and len(res.documents[0]) > 0
+                        )
+                    except Exception as e:
+                        log.debug(
+                            "Failed checking user collection for file reference"
+                        )
+                        log.debug(e)
+
+                if not referenced_elsewhere:
+                    try:
+                        VECTOR_DB_CLIENT.delete(
+                            collection_name=build_user_collection_name(file.user_id),
+                            filter={"file_id": form_data.file_id},
+                        )
+                    except Exception as e:
+                        log.debug(e)
+
+                    try:
+                        file_collection = f"file-{form_data.file_id}"
+                        if VECTOR_DB_CLIENT.has_collection(
+                            collection_name=file_collection
+                        ):
+                            VECTOR_DB_CLIENT.delete_collection(
+                                collection_name=file_collection
+                            )
+                    except Exception as e:
+                        log.debug(e)
+
+                    Files.delete_file_by_id(form_data.file_id)
+                    file_deleted = True
+
                 log.info(
                     f"Removed file {form_data.file_id} from knowledge {id}",
                     extra={
@@ -526,9 +573,10 @@ def remove_file_from_knowledge_by_id(
                 )
                 files = Files.get_files_by_ids(file_ids)
 
-                return KnowledgeFilesResponse(
+                return KnowledgeFileRemoveResponse(
                     **knowledge.model_dump(),
                     files=files,
+                    file_deleted=file_deleted,
                 )
             else:
                 raise HTTPException(

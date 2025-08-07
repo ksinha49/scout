@@ -128,6 +128,7 @@ class TestKnowledge(AbstractPostgresTest):
                 json={"file_id": file_id},
             )
         assert response.status_code == 200
+        assert response.json()["file_deleted"] is True
 
         res_after = self.vector_client.query(
             collection_name=collection_name, filter={"file_id": file_id}
@@ -148,3 +149,41 @@ class TestKnowledge(AbstractPostgresTest):
             )
             is False
         )
+
+    def test_remove_file_shared_across_knowledge_retains_file(self):
+        user_id = "1"
+        file_id = "file1"
+
+        kb1 = self.knowledges.insert_new_knowledge(
+            user_id,
+            self.KnowledgeForm(
+                name="kb1", description="desc", data={"file_ids": [file_id]}
+            ),
+        )
+        kb2 = self.knowledges.insert_new_knowledge(
+            user_id,
+            self.KnowledgeForm(
+                name="kb2", description="desc", data={"file_ids": [file_id]}
+            ),
+        )
+
+        self.files.insert_new_file(
+            user_id,
+            self.FileForm(
+                id=file_id,
+                filename="file.txt",
+                path="/tmp/file.txt",
+                data={"content": "hello"},
+                meta={},
+            ),
+        )
+
+        with mock_webui_user(id=user_id):
+            response = self.fast_api_client.post(
+                self.create_url(f"/{kb1.id}/file/remove"),
+                json={"file_id": file_id},
+            )
+
+        assert response.status_code == 200
+        assert response.json()["file_deleted"] is False
+        assert self.files.get_file_by_id(file_id) is not None
