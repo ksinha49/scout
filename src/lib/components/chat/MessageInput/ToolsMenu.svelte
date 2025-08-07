@@ -9,18 +9,21 @@
     import Dropdown from '$lib/components/common/Dropdown.svelte';
     import Tooltip from '$lib/components/common/Tooltip.svelte';
 
-    import WrenchSolid from '$lib/components/icons/WrenchSolid.svelte';
-    import GlobeAltSolid from '$lib/components/icons/GlobeAltSolid.svelte';
-    import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
-    import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
+import WrenchSolid from '$lib/components/icons/WrenchSolid.svelte';
+import GlobeAltSolid from '$lib/components/icons/GlobeAltSolid.svelte';
+import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
+import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
+import Brain from '$lib/components/icons/Brain.svelte';
     import Check from '$lib/components/icons/Check.svelte';
 
     const i18n = getContext('i18n');
 
-    export let selectedToolIds: string[] = [];
-    export let webSearchEnabled = false;
-    export let codeInterpreterEnabled = false;
-    export let imageGenerationEnabled = false;
+export let selectedToolIds: string[] = [];
+export let webSearchEnabled = false;
+export let codeInterpreterEnabled = false;
+export let imageGenerationEnabled = false;
+export let extendedThinkingEnabled = false;
+export let reasoningCapable = false;
 
     export let onClose: Function;
 
@@ -168,6 +171,24 @@
                         <div>{$i18n.t('Image')}</div>
                     </div>
                     {#if imageGenerationEnabled}
+                        <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
+                    {/if}
+                </DropdownMenu.Item>
+            {/if}
+
+            {#if reasoningCapable}
+                <DropdownMenu.Item
+                    class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+                    on:click={(e) => {
+                        e.preventDefault();
+                        extendedThinkingEnabled = !extendedThinkingEnabled;
+                    }}
+                >
+                    <div class="flex gap-2 items-center">
+                        <Brain />
+                        <div>{$i18n.t('Extended Thinking')}</div>
+                    </div>
+                    {#if extendedThinkingEnabled}
                         <Check className="shrink-0 size-4 text-gray-900 dark:text-white" strokeWidth="2.5" />
                     {/if}
                 </DropdownMenu.Item>

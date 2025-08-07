@@ -1,3 +1,4 @@
+/** @vitest-environment jsdom */
 import { render, fireEvent } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import { describe, test, expect, beforeEach } from 'vitest';
@@ -21,10 +22,12 @@ describe('ToolsMenu', () => {
         const { getByText, component } = render(ToolsMenu, {
             props: {
                 selectedToolIds: [],
-                webSearchEnabled: false,
-                codeInterpreterEnabled: false,
-                imageGenerationEnabled: false,
-                onClose: () => {}
+                  webSearchEnabled: false,
+                  codeInterpreterEnabled: false,
+                  imageGenerationEnabled: false,
+                  extendedThinkingEnabled: false,
+                  reasoningCapable: true,
+                  onClose: () => {}
             },
             context: new Map([
                 [
@@ -41,17 +44,22 @@ describe('ToolsMenu', () => {
 
         await fireEvent.click(getByText('open'));
         await tick();
-        await fireEvent.click(getByText('Web Search'));
-        expect(component.$$.ctx[component.$$.props['webSearchEnabled']]).toBe(true);
+          await fireEvent.click(getByText('Extended Thinking'));
+          expect(component.$$.ctx[component.$$.props['extendedThinkingEnabled']]).toBe(true);
 
-        // Reopen menu in case it closed after the previous selection
-        await fireEvent.click(getByText('open'));
-        await tick();
+          // Reopen menu in case it closed after the previous selection
+          await fireEvent.click(getByText('open'));
+          await tick();
+          await fireEvent.click(getByText('Web Search'));
+          expect(component.$$.ctx[component.$$.props['webSearchEnabled']]).toBe(true);
 
-        await fireEvent.click(getByText('Tools'));
-        await tick();
-        await fireEvent.click(getByText('Test Tool'));
-        const selectedToolIds = component.$$.ctx[component.$$.props['selectedToolIds']];
-        expect(selectedToolIds).toContain('test-tool');
-    });
-});
+          // Reopen menu again for tool selection
+          await fireEvent.click(getByText('open'));
+          await tick();
+          await fireEvent.click(getByText('Tools'));
+          await tick();
+          await fireEvent.click(getByText('Test Tool'));
+          const selectedToolIds = component.$$.ctx[component.$$.props['selectedToolIds']];
+          expect(selectedToolIds).toContain('test-tool');
+      });
+  });
