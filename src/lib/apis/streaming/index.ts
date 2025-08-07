@@ -2,14 +2,15 @@ import { EventSourceParserStream } from 'eventsource-parser/stream';
 import type { ParsedEvent } from 'eventsource-parser';
 
 type TextStreamUpdate = {
-	done: boolean;
-	value: string;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	sources?: any;
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	selectedModelId?: any;
-	error?: any;
-	usage?: ResponseUsage;
+        done: boolean;
+        value: string;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        sources?: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        selectedModelId?: any;
+        error?: any;
+        usage?: ResponseUsage;
+        reasoning?: string;
 };
 
 type ResponseUsage = {
@@ -67,29 +68,42 @@ async function* openAIStreamToIterator(
 				break;
 			}
 
-			if (parsedData.sources) {
-				yield { done: false, value: '', sources: parsedData.sources };
-				continue;
-			}
+                        if (parsedData.sources) {
+                                yield { done: false, value: '', sources: parsedData.sources };
+                        }
 
-			if (parsedData.selected_model_id) {
-				yield { done: false, value: '', selectedModelId: parsedData.selected_model_id };
-				continue;
-			}
+                        if (parsedData.selected_model_id) {
+                                yield {
+                                        done: false,
+                                        value: '',
+                                        selectedModelId: parsedData.selected_model_id
+                                };
+                        }
 
-			if (parsedData.usage) {
-				yield { done: false, value: '', usage: parsedData.usage };
-				continue;
-			}
+                        if (parsedData.usage) {
+                                yield { done: false, value: '', usage: parsedData.usage };
+                        }
 
-			yield {
-				done: false,
-				value: parsedData.choices?.[0]?.delta?.content ?? ''
-			};
-		} catch (e) {
-			console.error('Error extracting delta from SSE event:', e);
-		}
-	}
+                        const reasoning =
+                                parsedData.choices?.[0]?.delta?.reasoning_content ??
+                                parsedData.choices?.[0]?.delta?.reasoning ??
+                                parsedData.choices?.[0]?.message?.reasoning ??
+                                parsedData.reasoning;
+                        if (reasoning) {
+                                yield { done: false, value: '', reasoning };
+                        }
+
+                        const content =
+                                parsedData.choices?.[0]?.delta?.content ??
+                                parsedData.choices?.[0]?.message?.content ??
+                                '';
+                        if (content !== '') {
+                                yield { done: false, value: content };
+                        }
+                } catch (e) {
+                        console.error('Error extracting delta from SSE event:', e);
+                }
+        }
 }
 
 // streamLargeDeltasAsRandomChunks will chunk large deltas (length > 5) into random sized chunks between 1-3 characters
@@ -103,22 +117,26 @@ async function* streamLargeDeltasAsRandomChunks(
 			return;
 		}
 
-		if (textStreamUpdate.error) {
-			yield textStreamUpdate;
-			continue;
-		}
-		if (textStreamUpdate.sources) {
-			yield textStreamUpdate;
-			continue;
-		}
-		if (textStreamUpdate.selectedModelId) {
-			yield textStreamUpdate;
-			continue;
-		}
-		if (textStreamUpdate.usage) {
-			yield textStreamUpdate;
-			continue;
-		}
+                if (textStreamUpdate.error) {
+                        yield textStreamUpdate;
+                        continue;
+                }
+                if (textStreamUpdate.sources) {
+                        yield textStreamUpdate;
+                        continue;
+                }
+                if (textStreamUpdate.selectedModelId) {
+                        yield textStreamUpdate;
+                        continue;
+                }
+                if (textStreamUpdate.usage) {
+                        yield textStreamUpdate;
+                        continue;
+                }
+                if (textStreamUpdate.reasoning) {
+                        yield textStreamUpdate;
+                        continue;
+                }
 
 		let content = textStreamUpdate.value;
 		if (content.length < 5) {

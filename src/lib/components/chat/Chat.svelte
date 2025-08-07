@@ -1097,149 +1097,151 @@ previousReasoningEffort = undefined;
 		}
 	};
 
-	const chatCompletionEventHandler = async (data, message, chatId) => {
-		const { id, done, choices, content, sources, selected_model_id, error, usage } = data;
+        const chatCompletionEventHandler = async (data, message, chatId) => {
+                const {
+                        id,
+                        done,
+                        choices,
+                        content,
+                        sources,
+                        selected_model_id,
+                        error,
+                        usage,
+                        reasoning: rootReasoning
+                } = data;
 
-		if (error) {
-			await handleOpenAIError(error, message);
-		}
+                if (error) {
+                        await handleOpenAIError(error, message);
+                }
 
-		if (sources) {
-			message.sources = sources;
-		}
+                if (sources) {
+                        message.sources = sources;
+                }
 
-		if (choices) {
-			if (choices[0]?.message?.content) {
-				// Non-stream response
-				message.content += choices[0]?.message?.content;
-			} else {
-				// Stream response
-				let value = choices[0]?.delta?.content ?? '';
-				if (message.content == '' && value == '\n') {
-					console.log('Empty response');
-				} else {
-					message.content += value;
+                let baseContent = removeDetails(message.content, ['reasoning']);
+                let ttsTriggered = false;
 
-					if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-						navigator.vibrate(5);
-					}
+                let reasoningDelta =
+                        rootReasoning ??
+                        choices?.[0]?.delta?.reasoning_content ??
+                        choices?.[0]?.delta?.reasoning ??
+                        choices?.[0]?.message?.reasoning ??
+                        '';
+                if (reasoningDelta) {
+                        message.reasoning = (message.reasoning ?? '') + reasoningDelta;
+                }
 
-					// Emit chat event for TTS
-					const messageContentParts = getMessageContentParts(
-						message.content,
-						$config?.audio?.tts?.split_on ?? 'punctuation'
-					);
-					messageContentParts.pop();
+                if (choices) {
+                        if (choices[0]?.message?.content) {
+                                baseContent += choices[0]?.message?.content;
+                                ttsTriggered = true;
+                        } else {
+                                let value = choices[0]?.delta?.content ?? '';
+                                if (!(baseContent == '' && value == '\n' && !message.reasoning)) {
+                                        baseContent += value;
+                                        if (value) ttsTriggered = true;
+                                }
+                        }
+                }
 
-					// dispatch only last sentence and make sure it hasn't been dispatched before
-					if (
-						messageContentParts.length > 0 &&
-						messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-					) {
-						message.lastSentence = messageContentParts[messageContentParts.length - 1];
-						eventTarget.dispatchEvent(
-							new CustomEvent('chat', {
-								detail: {
-									id: message.id,
-									content: messageContentParts[messageContentParts.length - 1]
-								}
-							})
-						);
-					}
-				}
-			}
-		}
+                if (content) {
+                        baseContent = content;
+                        ttsTriggered = true;
+                }
 
-		if (content) {
-			// REALTIME_CHAT_SAVE is disabled
-			message.content = content;
+                message.content = `${
+                        message.reasoning
+                                ? `<details type="reasoning" done="${done ? 'true' : 'false'}"${
+                                          extendedThinkingEnabled ? ' open="true"' : ''
+                                  }><summary>${$i18n.t('Thinking...')}</summary>${message.reasoning}</details>`
+                                : ''
+                }${baseContent}`;
 
-			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-				navigator.vibrate(5);
-			}
+                if (ttsTriggered) {
+                        if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
+                                navigator.vibrate(5);
+                        }
 
-			// Emit chat event for TTS
-			const messageContentParts = getMessageContentParts(
-				message.content,
-				$config?.audio?.tts?.split_on ?? 'punctuation'
-			);
-			messageContentParts.pop();
+                        const messageContentParts = getMessageContentParts(
+                                message.content,
+                                $config?.audio?.tts?.split_on ?? 'punctuation'
+                        );
+                        messageContentParts.pop();
 
-			// dispatch only last sentence and make sure it hasn't been dispatched before
-			if (
-				messageContentParts.length > 0 &&
-				messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-			) {
-				message.lastSentence = messageContentParts[messageContentParts.length - 1];
-				eventTarget.dispatchEvent(
-					new CustomEvent('chat', {
-						detail: {
-							id: message.id,
-							content: messageContentParts[messageContentParts.length - 1]
-						}
-					})
-				);
-			}
-		}
+                        if (
+                                messageContentParts.length > 0 &&
+                                messageContentParts[messageContentParts.length - 1] !== message.lastSentence
+                        ) {
+                                message.lastSentence = messageContentParts[messageContentParts.length - 1];
+                                eventTarget.dispatchEvent(
+                                        new CustomEvent('chat', {
+                                                detail: {
+                                                        id: message.id,
+                                                        content: messageContentParts[messageContentParts.length - 1]
+                                                }
+                                        })
+                                );
+                        }
+                }
 
-		if (selected_model_id) {
-			message.selectedModelId = selected_model_id;
-			message.arena = true;
-		}
+                if (selected_model_id) {
+                        message.selectedModelId = selected_model_id;
+                        message.arena = true;
+                }
 
-		if (usage) {
-			message.usage = usage;
-		}
+                if (usage) {
+                        message.usage = usage;
+                }
 
-		history.messages[message.id] = message;
+                history.messages[message.id] = message;
 
-		if (done) {
-			message.done = true;
+                if (done) {
+                        message.done = true;
 
-			if ($settings.responseAutoCopy) {
-				copyToClipboard(message.content);
-			}
+                        if ($settings.responseAutoCopy) {
+                                copyToClipboard(message.content);
+                        }
 
-			if ($settings.responseAutoPlayback && !$showCallOverlay) {
-				await tick();
-				document.getElementById(`speak-button-${message.id}`)?.click();
-			}
+                        if ($settings.responseAutoPlayback && !$showCallOverlay) {
+                                await tick();
+                                document.getElementById(`speak-button-${message.id}`)?.click();
+                        }
 
-			// Emit chat event for TTS
-			let lastMessageContentPart =
-				getMessageContentParts(message.content, $config?.audio?.tts?.split_on ?? 'punctuation')?.at(
-					-1
-				) ?? '';
-			if (lastMessageContentPart) {
-				eventTarget.dispatchEvent(
-					new CustomEvent('chat', {
-						detail: { id: message.id, content: lastMessageContentPart }
-					})
-				);
-			}
-			eventTarget.dispatchEvent(
-				new CustomEvent('chat:finish', {
-					detail: {
-						id: message.id,
-						content: message.content
-					}
-				})
-			);
+                        let lastMessageContentPart =
+                                getMessageContentParts(
+                                        message.content,
+                                        $config?.audio?.tts?.split_on ?? 'punctuation'
+                                )?.at(-1) ?? '';
+                        if (lastMessageContentPart) {
+                                eventTarget.dispatchEvent(
+                                        new CustomEvent('chat', {
+                                                detail: { id: message.id, content: lastMessageContentPart }
+                                        })
+                                );
+                        }
+                        eventTarget.dispatchEvent(
+                                new CustomEvent('chat:finish', {
+                                        detail: {
+                                                id: message.id,
+                                                content: message.content
+                                        }
+                                })
+                        );
 
-			history.messages[message.id] = message;
-			await chatCompletedHandler(
-				chatId,
-				message.model,
-				message.id,
-				createMessagesList(history, message.id)
-			);
-		}
+                        history.messages[message.id] = message;
+                        await chatCompletedHandler(
+                                chatId,
+                                message.model,
+                                message.id,
+                                createMessagesList(history, message.id)
+                        );
+                }
 
-		console.log(data);
-		if (autoScroll) {
-			scrollToBottom();
-		}
-	};
+                console.log(data);
+                if (autoScroll) {
+                        scrollToBottom();
+                }
+        };
 
 	//////////////////////////
 	// Chat functions
@@ -1819,33 +1821,60 @@ previousReasoningEffort = undefined;
 				responses
 			);
 
-			if (res && res.ok && res.body) {
-				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
-				for await (const update of textStream) {
-					const { value, done, sources, error, usage } = update;
-					if (error || done) {
-						break;
-					}
+                        if (res && res.ok && res.body) {
+                                const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
+                                for await (const update of textStream) {
+                                        const { value, done, sources, error, usage, reasoning } = update;
+                                        if (error || done) {
+                                                const baseContent = removeDetails(mergedResponse.content, ['reasoning']);
+                                                mergedResponse.content = `${
+                                                        mergedResponse.reasoning
+                                                                ? `<details type="reasoning" done="true"${
+                                                                                extendedThinkingEnabled
+                                                                                        ? ' open="true"'
+                                                                                        : ''
+                                                                        }><summary>${$i18n.t('Thinking...')}</summary>${
+                                                                                mergedResponse.reasoning
+                                                                        }</details>`
+                                                                : ''
+                                                }${baseContent}`;
+                                                history.messages[messageId] = message;
+                                                break;
+                                        }
 
-					if (mergedResponse.content == '' && value == '\n') {
-						continue;
-					} else {
-						mergedResponse.content += value;
-						history.messages[messageId] = message;
-					}
+                                        let baseContent = removeDetails(mergedResponse.content, ['reasoning']);
+                                        if (reasoning) {
+                                                mergedResponse.reasoning =
+                                                        (mergedResponse.reasoning ?? '') + reasoning;
+                                        }
 
-					if (autoScroll) {
-						scrollToBottom();
-					}
-				}
+                                        if (!(baseContent == '' && value == '\n' && !mergedResponse.reasoning)) {
+                                                baseContent += value;
+                                        }
 
-				await saveChatHandler(_chatId, history);
-			} else {
-				console.error(res);
-			}
-		} catch (e) {
-			console.error(e);
-		}
+                                        mergedResponse.content = `${
+                                                mergedResponse.reasoning
+                                                        ? `<details type="reasoning" done="false"${
+                                                                        extendedThinkingEnabled ? ' open="true"' : ''
+                                                                }><summary>${$i18n.t('Thinking...')}</summary>${
+                                                                        mergedResponse.reasoning
+                                                                }</details>`
+                                                        : ''
+                                        }${baseContent}`;
+                                        history.messages[messageId] = message;
+
+                                        if (autoScroll) {
+                                                scrollToBottom();
+                                        }
+                                }
+
+                                await saveChatHandler(_chatId, history);
+                        } else {
+                                console.error(res);
+                        }
+                } catch (e) {
+                        console.error(e);
+                }
 	};
 
 	const initChatHandler = async (history) => {
