@@ -7,6 +7,7 @@ Modification Log:
 | 2024-11-16 | AAK7S          | AMER-HOTFIX-1                 | VECTOR DB INSERT IN BATCH FOR BETTER PERFORMANCE                               |
 | 2025-12-02 | X1BA           | CWE-209                       | Replace direct exception messages with generic responses in user-facing outputs|
 | 2025-04-06 | AAK7S          | ASYNC-IMPROVEMENT       | Added parallel asynchronous batch insertion for large vector DB loads                |
+| 2025-08-07 | OPENAI         | BATCH-DUPLICATE-LOOKUP        | Validate empty content and batch duplicate hash check |
 """
 
 # MOD TAG RAG-FILTERS: Accept a single collection with optional filter list.
@@ -2035,12 +2036,16 @@ class BatchProcessFilesResponse(BaseModel):
 
 
 @router.post("/process/files/batch")
+"""
+MOD: BATCH-DUPLICATE-LOOKUP: Validate file content and perform batch duplicate hash lookup
+"""
+
 def process_files_batch(
     request: Request,
     form_data: BatchProcessFilesForm,
     user=Depends(get_verified_user),
 ) -> BatchProcessFilesResponse:
-    """Process multiple files and batch-save their documents to the vector DB.
+"""Process multiple files and batch-save their documents to the vector DB.
 
     Args:
         request (Request): The incoming request instance.
@@ -2063,72 +2068,24 @@ def process_files_batch(
     processed_count = 0
     skipped_count = 0
 
+    file_entries: List[tuple[FileModel, str, str]] = []  # (file, text_content, hash)
+
     for file in form_data.files:
         try:
-            text_content = file.data.get("content", "")
-            hash = calculate_sha256_string(text_content)
-            Files.update_file_hash_by_id(file.id, hash)
-            Files.update_file_data_by_id(file.id, {"content": text_content})
-
-            # Check for duplicate content
-            is_duplicate = False
-            try:
-                existing = VECTOR_DB_CLIENT.query(
-                    collection_name=collection_name, filter={"hash": hash}
+            text_content: Optional[str] = file.data.get("content") if file.data else None
+            if not text_content:
+                log.warning(
+                    f"process_files_batch: Empty content for file {file.id}; skipping"
                 )
-                if existing is not None and existing.ids[0]:
-                    is_duplicate = True
-            except Exception as e:
-                log.error(
-                    f"process_files_batch: Error checking duplicate for {file.id}: {str(e)}"
-                )
-
-            if is_duplicate:
-                skipped_count += 1
-                log.info(f"process_files_batch: Skipping duplicate file {file.id}")
                 results.append(
-                    BatchProcessFilesResult(file_id=file.id, status="skipped_duplicate")
+                    BatchProcessFilesResult(file_id=file.id, status="skipped_empty")
                 )
                 continue
 
-            doc_type = (file.meta.get("doc_type") if file.meta else None) or (
-                file.meta.get("content_type") if file.meta else None
-            )
-            if not doc_type:
-                doc_type = mimetypes.guess_type(file.filename)[0]
-
-            docs: List[Document] = [
-                Document(
-                    page_content=text_content.replace("<br/>", "\n"),
-                    metadata={
-                        **file.meta,
-                        "name": file.filename,
-                        "created_by": file.user_id,
-                        "file_id": file.id,
-                        "source": file.filename,
-                        **(
-                            {"session_id": form_data.session_id}
-                            if form_data.session_id
-                            else {}
-                        ),
-                    },
-                )
-            ]
-
-            metadata = {
-                "file_id": file.id,
-                "name": file.filename,
-                "hash": hash,
-                "doc_type": doc_type,
-                **(
-                    {"session_id": form_data.session_id} if form_data.session_id else {}
-                ),
-            }
-
-            all_docs.extend(docs)
-            all_metadata.extend([metadata.copy() for _ in docs])
-            processed_count += len(docs)
-            results.append(BatchProcessFilesResult(file_id=file.id, status="prepared"))
+            hash = calculate_sha256_string(text_content)
+            Files.update_file_hash_by_id(file.id, hash)
+            Files.update_file_data_by_id(file.id, {"content": text_content})
+            file_entries.append((file, text_content, hash))
 
         except Exception as e:
             log.error(f"process_files_batch: Error processing file {file.id}: {str(e)}")
@@ -2137,6 +2094,72 @@ def process_files_batch(
                     file_id=file.id, status="failed", error=getErrorMsg(e)
                 )
             )
+
+    existing_hashes: set[str] = set()
+    hashes: List[str] = [entry[2] for entry in file_entries]
+    if hashes:
+        try:
+            existing = VECTOR_DB_CLIENT.query(
+                collection_name=collection_name, filter={"hash": hashes}
+            )
+            if existing is not None and existing.metadatas:
+                existing_hashes = {
+                    meta.get("hash")
+                    for meta in existing.metadatas[0]
+                    if meta.get("hash")
+                }
+        except Exception as e:
+            log.error(
+                f"process_files_batch: Error checking duplicates in batch: {str(e)}"
+            )
+
+    for file, text_content, hash in file_entries:
+        if hash in existing_hashes:
+            skipped_count += 1
+            log.info(f"process_files_batch: Skipping duplicate file {file.id}")
+            results.append(
+                BatchProcessFilesResult(file_id=file.id, status="skipped_duplicate")
+            )
+            continue
+
+        doc_type = (file.meta.get("doc_type") if file.meta else None) or (
+            file.meta.get("content_type") if file.meta else None
+        )
+        if not doc_type:
+            doc_type = mimetypes.guess_type(file.filename)[0]
+
+        docs: List[Document] = [
+            Document(
+                page_content=text_content.replace("<br/>", "\n"),
+                metadata={
+                    **file.meta,
+                    "name": file.filename,
+                    "created_by": file.user_id,
+                    "file_id": file.id,
+                    "source": file.filename,
+                    **(
+                        {"session_id": form_data.session_id}
+                        if form_data.session_id
+                        else {}
+                    ),
+                },
+            )
+        ]
+
+        metadata = {
+            "file_id": file.id,
+            "name": file.filename,
+            "hash": hash,
+            "doc_type": doc_type,
+            **(
+                {"session_id": form_data.session_id} if form_data.session_id else {}
+            ),
+        }
+
+        all_docs.extend(docs)
+        all_metadata.extend([metadata.copy() for _ in docs])
+        processed_count += len(docs)
+        results.append(BatchProcessFilesResult(file_id=file.id, status="prepared"))
 
     if all_docs:
         try:
@@ -2176,3 +2199,7 @@ def process_files_batch(
     )
 
     return BatchProcessFilesResponse(results=results, errors=errors)
+
+"""
+MOD: BATCH-DUPLICATE-LOOKUP: End of Mod
+"""
