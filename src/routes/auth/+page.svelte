@@ -161,10 +161,10 @@ Modification Log:
                 }
                await checkOauthCallback();
 
-               const providerParam = querystringValue('provider');
-               const providers = providerParam
-                       ? [providerParam]
-                       : Object.keys($config?.oauth?.providers ?? {});
+              const providerParam = querystringValue('provider');
+              const providers = providerParam !== null
+                      ? [providerParam]
+                      : Object.keys($config?.oauth?.providers ?? {});
 
                const shouldAttemptSilent =
                        sessionStorage.getItem('attemptSilentLogin') === 'true' ||
