@@ -93,7 +93,7 @@ def upload_file(
         id = str(uuid.uuid4())
         name = filename
         filename = f"{id}_{filename}"
-        contents, file_path = Storage.upload_file(file.file, filename)
+        size, file_path = Storage.upload_file(file.file, filename)
 
         file_item = Files.insert_new_file(
             user.id,
@@ -105,7 +105,7 @@ def upload_file(
                     "meta": {
                         "name": name,
                         "content_type": file.content_type,
-                        "size": len(contents),
+                        "size": size,
                         "data": file_metadata,
                     },
                 }
@@ -450,7 +450,7 @@ async def get_file_content_by_id(id: str, user=Depends(get_verified_user)):
                     detail=ERROR_MESSAGES.NOT_FOUND,
                 )
         else:
-            # File path doesn’t exist, return the content as .txt if possible
+            # File path doesnÂ’t exist, return the content as .txt if possible
             file_content = file.content.get("content", "")
             file_name = file.filename
 
