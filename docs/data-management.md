@@ -145,6 +145,7 @@ POST /retrieval/query/collection
 ## Cleanup Behaviour
 
 - Updating a file removes existing vectors for that file before new content is inserted.
+- Removing a file from a knowledge base only deletes the file itself when no other knowledge bases or user collections reference it.
 - A periodic task deletes files older than 24 hours that are not attached to any knowledge base and removes their associated vectors from the user collection. Knowledge base collections are not affected by this cleanup.
 
 These features help keep user collections accurate and free of stale data while maintaining persistent knowledge bases.
