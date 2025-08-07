@@ -743,7 +743,7 @@ def get_sources_from_files(
         except Exception as e:
             log.exception(e)
     # MOD TAG AMER-ENH
-    log.debug("contexts", context)
+    log.debug("contexts %s", context)
 
     return sources
 
