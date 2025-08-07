@@ -173,6 +173,19 @@ Modification Log:
                if (shouldAttemptSilent) {
                        for (const provider of providers) {
                                console.log('Attempting silent login for provider:', provider);
+                               try {
+                                       const resp = await fetch(
+                                               `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
+                                               {
+                                                       credentials: 'include'
+                                               }
+                                       );
+                                       console.log('Response status:', resp.status);
+                                       console.log('Response headers:', resp.headers);
+                               } catch (err) {
+                                       console.error('Silent login fetch failed:', err);
+                               }
+
                                const silentAuthWindow = window.open(
                                        `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
                                        'silent-auth',
