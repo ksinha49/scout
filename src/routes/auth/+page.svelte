@@ -166,39 +166,20 @@ Modification Log:
                       ? [providerParam]
                       : Object.keys($config?.oauth?.providers ?? {});
 
-               const shouldAttemptSilent =
-                       sessionStorage.getItem('attemptSilentLogin') === 'true' ||
-                       providerParam !== null;
-
-               if (shouldAttemptSilent) {
-                       for (const provider of providers) {
-                               console.log('Attempting silent login for provider:', provider);
-                               try {
-                                       const resp = await fetch(
-                                               `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
-                                               {
-                                                       credentials: 'include'
-                                               }
-                                       );
-                                       console.log('Response status:', resp.status);
-                                       console.log('Response headers:', resp.headers);
-                               } catch (err) {
-                                       console.error('Silent login fetch failed:', err);
+               for (const provider of providers) {
+                       console.log('Attempting silent login for provider:', provider);
+                       const silentAuthWindow = window.open(
+                               `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
+                               'silent-auth',
+                               'width=1,height=1,left=-1000,top=-1000'
+                       );
+                       setTimeout(() => {
+                               if (silentAuthWindow && !silentAuthWindow.closed) {
+                                       silentAuthWindow.close();
                                }
-
-                               const silentAuthWindow = window.open(
-                                       `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
-                                       'silent-auth',
-                                       'width=1,height=1,left=-1000,top=-1000'
-                               );
-                               setTimeout(() => {
-                                       if (silentAuthWindow && !silentAuthWindow.closed) {
-                                               silentAuthWindow.close();
-                                       }
-                               }, 3000);
-                       }
-                       sessionStorage.removeItem('attemptSilentLogin');
+                       }, 3000);
                }
+               sessionStorage.removeItem('attemptSilentLogin');
                loaded = true;
                setLogoImage();
 
