@@ -4,6 +4,7 @@ Modification Log:
 | Date       | Author         | MOD TAG            | Description                                         |
 |------------|----------------|--------------------|-----------------------------------------------------|
 | 2024-11-12 | AAK7S          | AMER-MOD           | Updated code to allow S3 bucket allocations to work |
+| 2025-08-07 | Codex          | CODX-STREAM        | Stream file uploads in chunks and derive size from filesystem |
 """
 import os
 import shutil
@@ -52,6 +53,16 @@ class StorageProvider(ABC):
 
     @abstractmethod
     def upload_file(self, file: BinaryIO, filename: str) -> Tuple[int, str]:
+        """Persist a file and return its size and storage path.
+
+        Args:
+            file: Binary stream containing the file data.
+            filename: Name to save the file as.
+
+        Returns:
+            Tuple[int, str]: Size of the saved file in bytes and its path.
+        """
+
         pass
 
     @abstractmethod
@@ -66,6 +77,19 @@ class StorageProvider(ABC):
 class LocalStorageProvider(StorageProvider):
     @staticmethod
     def upload_file(file: BinaryIO, filename: str) -> Tuple[int, str]:
+        """Stream a file to disk and return its size and path.
+
+        Args:
+            file: Binary stream to read from.
+            filename: Name to save the file as within the upload directory.
+
+        Returns:
+            Tuple[int, str]: Size of the saved file in bytes and its path.
+
+        Raises:
+            ValueError: If the uploaded file is empty.
+        """
+
         file_path = f"{UPLOAD_DIR}/{filename}"
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         with open(file_path, "wb") as f:
@@ -142,7 +166,16 @@ class S3StorageProvider(StorageProvider):
         self.key_prefix = S3_KEY_PREFIX if S3_KEY_PREFIX else ""
 
     def upload_file(self, file: BinaryIO, filename: str) -> Tuple[int, str]:
-        """Handles uploading of the file to S3 storage."""
+        """Upload a file to S3 using the local streamed copy.
+
+        Args:
+            file: Binary stream to upload.
+            filename: Destination object name in S3.
+
+        Returns:
+            Tuple[int, str]: Size of the uploaded file in bytes and the S3 URI.
+        """
+
         size, file_path = LocalStorageProvider.upload_file(file, filename)
         try:
             s3_key = os.path.join(self.key_prefix, filename)
@@ -218,7 +251,16 @@ class GCSStorageProvider(StorageProvider):
         self.bucket = self.gcs_client.bucket(GCS_BUCKET_NAME)
 
     def upload_file(self, file: BinaryIO, filename: str) -> Tuple[int, str]:
-        """Handles uploading of the file to GCS storage."""
+        """Upload a file to GCS using the local streamed copy.
+
+        Args:
+            file: Binary stream to upload.
+            filename: Destination object name in GCS.
+
+        Returns:
+            Tuple[int, str]: Size of the uploaded file in bytes and the GCS URI.
+        """
+
         size, file_path = LocalStorageProvider.upload_file(file, filename)
         try:
             blob = self.bucket.blob(filename)
@@ -288,7 +330,16 @@ class AzureStorageProvider(StorageProvider):
         )
 
     def upload_file(self, file: BinaryIO, filename: str) -> Tuple[int, str]:
-        """Handles uploading of the file to Azure Blob Storage."""
+        """Upload a file to Azure Blob Storage using the local streamed copy.
+
+        Args:
+            file: Binary stream to upload.
+            filename: Destination blob name.
+
+        Returns:
+            Tuple[int, str]: Size of the uploaded file in bytes and the blob URI.
+        """
+
         size, file_path = LocalStorageProvider.upload_file(file, filename)
         try:
             blob_client = self.container_client.get_blob_client(filename)

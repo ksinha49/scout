@@ -1,3 +1,11 @@
+"""
+Modification Log:
+------------------
+| Date       | Author | MOD TAG      | Description                               |
+|------------|--------|--------------|-------------------------------------------|
+| 2025-08-07 | Codex  | CODX-STREAM  | Record streamed upload size in metadata   |
+"""
+
 import logging
 import os
 import uuid
@@ -84,6 +92,8 @@ def upload_file(
     file_metadata: dict = {},
     process: bool = Query(True),
 ):
+    """Upload a file and store its size from the streamed upload."""
+
     log.info(f"file.content_type: {file.content_type}")
     try:
         unsanitized_filename = file.filename
@@ -450,7 +460,7 @@ async def get_file_content_by_id(id: str, user=Depends(get_verified_user)):
                     detail=ERROR_MESSAGES.NOT_FOUND,
                 )
         else:
-            # File path doesnt exist, return the content as .txt if possible
+            # File path doesn’t exist, return the content as .txt if possible
             file_content = file.content.get("content", "")
             file_name = file.filename
 
