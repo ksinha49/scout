@@ -129,6 +129,9 @@ def get_dynamic_batch_size(max_size=1000, min_size=10):
     """
     Determines the batch size based on current CPU and memory usage.
 
+    The CPU check uses a non-blocking call so that retrieval operations
+    like ``save_docs_to_vector_db`` don't incur an artificial pause.
+
     Args:
         max_size (int): Maximum allowable batch size.
         min_size (int): Minimum allowable batch size.
@@ -136,7 +139,9 @@ def get_dynamic_batch_size(max_size=1000, min_size=10):
     Returns:
         int: Calculated batch size.
     """
-    cpu_percent = psutil.cpu_percent(interval=1)
+    # ``interval=1`` blocks for a full second, slowing down callers.
+    # ``interval=None`` provides an instantaneous snapshot without waiting.
+    cpu_percent = psutil.cpu_percent(interval=None)
     mem = psutil.virtual_memory()
     available_mem_mb = mem.available / (1024 * 1024)  # Convert bytes to MB
 
