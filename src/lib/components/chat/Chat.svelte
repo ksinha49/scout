@@ -116,11 +116,11 @@
 	let selectedModelIds = [];
 	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
 
-let selectedToolIds = [];
-let imageGenerationEnabled = false;
-let webSearchEnabled = false;
-let codeInterpreterEnabled = false;
-let extendedThinkingEnabled = false;
+	let selectedToolIds = [];
+	let imageGenerationEnabled = false;
+	let webSearchEnabled = false;
+	let codeInterpreterEnabled = false;
+	let extendedThinkingEnabled = false;
 
 	let chat = null;
 	let tags = [];
@@ -136,20 +136,32 @@ let extendedThinkingEnabled = false;
 	let prompt = '';
 	let chatFiles = [];
 	let files = [];
-let params = {};
-let previousReasoningEffort = undefined;
-$: if (extendedThinkingEnabled) {
-previousReasoningEffort = params.reasoning_effort;
-params = { ...params, reasoning_effort: 'high' };
-} else if ('reasoning_effort' in params) {
-if (previousReasoningEffort !== undefined) {
-params = { ...params, reasoning_effort: previousReasoningEffort };
-} else {
-const { reasoning_effort, ...rest } = params;
-params = rest;
-}
-previousReasoningEffort = undefined;
-}
+	let params = {};
+	let previousReasoningEffort = undefined;
+	let previousTemperature = undefined;
+	let extendedThinkingWasEnabled = false;
+	$: if (extendedThinkingEnabled) {
+		previousReasoningEffort = params.reasoning_effort;
+		previousTemperature = params.temperature;
+		params = { ...params, reasoning_effort: 'high', temperature: 1 };
+		extendedThinkingWasEnabled = true;
+	} else if (extendedThinkingWasEnabled) {
+		let newParams = { ...params };
+		if (previousReasoningEffort !== undefined) {
+			newParams.reasoning_effort = previousReasoningEffort;
+		} else {
+			delete newParams.reasoning_effort;
+		}
+		if (previousTemperature !== undefined) {
+			newParams.temperature = previousTemperature;
+		} else {
+			delete newParams.temperature;
+		}
+		params = newParams;
+		previousReasoningEffort = undefined;
+		previousTemperature = undefined;
+		extendedThinkingWasEnabled = false;
+	}
 
 	$: if (chatIdProp) {
 		(async () => {
@@ -158,10 +170,10 @@ previousReasoningEffort = undefined;
 
 			prompt = '';
 			files = [];
-                        selectedToolIds = [];
-                        webSearchEnabled = false;
-                        imageGenerationEnabled = false;
-                        extendedThinkingEnabled = false;
+			selectedToolIds = [];
+			webSearchEnabled = false;
+			imageGenerationEnabled = false;
+			extendedThinkingEnabled = false;
 
 			if (chatIdProp && (await loadChat())) {
 				await tick();
@@ -173,12 +185,12 @@ previousReasoningEffort = undefined;
 
 						prompt = input.prompt;
 						files = input.files;
-                                                selectedToolIds = input.selectedToolIds;
-                                                webSearchEnabled = input.webSearchEnabled;
-                                                imageGenerationEnabled = input.imageGenerationEnabled;
-                                                extendedThinkingEnabled = input.extendedThinkingEnabled;
-                                        } catch (e) {}
-                                }
+						selectedToolIds = input.selectedToolIds;
+						webSearchEnabled = input.webSearchEnabled;
+						imageGenerationEnabled = input.imageGenerationEnabled;
+						extendedThinkingEnabled = input.extendedThinkingEnabled;
+					} catch (e) {}
+				}
 
 				window.setTimeout(() => scrollToBottom(), 0);
 				const chatInput = document.getElementById('chat-input');
@@ -276,12 +288,12 @@ previousReasoningEffort = undefined;
 					} else {
 						message.statusHistory = [data];
 					}
-                                } else if (type === 'source' || type === 'citation') {
-                                        if (data?.type === 'code_execution') {
-                                                // Code execution; update existing code execution by ID, or add new one.
-                                                if (!message?.code_executions) {
-                                                        message.code_executions = [];
-                                                }
+				} else if (type === 'source' || type === 'citation') {
+					if (data?.type === 'code_execution') {
+						// Code execution; update existing code execution by ID, or add new one.
+						if (!message?.code_executions) {
+							message.code_executions = [];
+						}
 
 						const existingCodeExecutionIndex = message.code_executions.findIndex(
 							(execution) => execution.id === data.id
@@ -293,23 +305,23 @@ previousReasoningEffort = undefined;
 							message.code_executions.push(data);
 						}
 
-                                                message.code_executions = message.code_executions;
-                                        } else {
-                                                // Regular source.
-                                                if (message?.sources) {
-                                                        message.sources.push(data);
-                                                } else {
-                                                        message.sources = [data];
-                                                }
-                                                message.sources = [...message.sources];
-                                        }
-                                        history.messages[event.message_id] = message;
-                                        history = history;
-                                } else if (type === 'chat:completion') {
-                                        chatCompletionEventHandler(data, message, event.chat_id);
-                                } else if (type === 'chat:title') {
-                                        chatTitle.set(data);
-                                        currentChatPage.set(1);
+						message.code_executions = message.code_executions;
+					} else {
+						// Regular source.
+						if (message?.sources) {
+							message.sources.push(data);
+						} else {
+							message.sources = [data];
+						}
+						message.sources = [...message.sources];
+					}
+					history.messages[event.message_id] = message;
+					history = history;
+				} else if (type === 'chat:completion') {
+					chatCompletionEventHandler(data, message, event.chat_id);
+				} else if (type === 'chat:title') {
+					chatTitle.set(data);
+					currentChatPage.set(1);
 					await chats.set(await getChatList(localStorage.token, $currentChatPage));
 				} else if (type === 'chat:tags') {
 					chat = await getChatById(localStorage.token, $chatId);
@@ -433,19 +445,19 @@ previousReasoningEffort = undefined;
 				const input = JSON.parse(localStorage.getItem(`chat-input-${chatIdProp}`));
 				prompt = input.prompt;
 				files = input.files;
-                                selectedToolIds = input.selectedToolIds;
-                                webSearchEnabled = input.webSearchEnabled;
-                                imageGenerationEnabled = input.imageGenerationEnabled;
-                                extendedThinkingEnabled = input.extendedThinkingEnabled;
-                        } catch (e) {
-                                prompt = '';
-                                files = [];
-                                selectedToolIds = [];
-                                webSearchEnabled = false;
-                                imageGenerationEnabled = false;
-                                extendedThinkingEnabled = false;
-                        }
-                }
+				selectedToolIds = input.selectedToolIds;
+				webSearchEnabled = input.webSearchEnabled;
+				imageGenerationEnabled = input.imageGenerationEnabled;
+				extendedThinkingEnabled = input.extendedThinkingEnabled;
+			} catch (e) {
+				prompt = '';
+				files = [];
+				selectedToolIds = [];
+				webSearchEnabled = false;
+				imageGenerationEnabled = false;
+				extendedThinkingEnabled = false;
+			}
+		}
 
 		showControls.subscribe(async (value) => {
 			if (controlPane && !$mobile) {
@@ -734,9 +746,9 @@ previousReasoningEffort = undefined;
 			currentId: null
 		};
 
-               chatFiles = [];
-               params = {};
-               extendedThinkingEnabled = false;
+		chatFiles = [];
+		params = {};
+		extendedThinkingEnabled = false;
 
 		if ($page.url.searchParams.get('youtube')) {
 			uploadYoutubeTranscription(
@@ -1100,158 +1112,157 @@ previousReasoningEffort = undefined;
 		}
 	};
 
-        const chatCompletionEventHandler = async (data, message, chatId) => {
-                const {
-                        id,
-                        done,
-                        choices,
-                        content,
-                        sources,
-                        selected_model_id,
-                        error,
-                        usage,
-                        reasoning: rootReasoning
-                } = data;
+	const chatCompletionEventHandler = async (data, message, chatId) => {
+		const {
+			id,
+			done,
+			choices,
+			content,
+			sources,
+			selected_model_id,
+			error,
+			usage,
+			reasoning: rootReasoning
+		} = data;
 
-                if (error) {
-                        await handleOpenAIError(error, message);
-                }
+		if (error) {
+			await handleOpenAIError(error, message);
+		}
 
-                if (sources) {
-                        if (message?.sources) {
-                                message.sources.push(...sources);
-                        } else {
-                                message.sources = [...sources];
-                        }
-                        message.sources = [...message.sources];
-                        history.messages[message.id] = message;
-                        history = history;
-                }
+		if (sources) {
+			if (message?.sources) {
+				message.sources.push(...sources);
+			} else {
+				message.sources = [...sources];
+			}
+			message.sources = [...message.sources];
+			history.messages[message.id] = message;
+			history = history;
+		}
 
-                let baseContent = removeDetails(message.content, ['reasoning']);
-                let ttsTriggered = false;
+		let baseContent = removeDetails(message.content, ['reasoning']);
+		let ttsTriggered = false;
 
-                let reasoningDelta =
-                        rootReasoning ??
-                        choices?.[0]?.delta?.reasoning_content ??
-                        choices?.[0]?.delta?.reasoning ??
-                        choices?.[0]?.message?.reasoning ??
-                        '';
-                if (reasoningDelta) {
-                        message.reasoning = (message.reasoning ?? '') + reasoningDelta;
-                }
+		let reasoningDelta =
+			rootReasoning ??
+			choices?.[0]?.delta?.reasoning_content ??
+			choices?.[0]?.delta?.reasoning ??
+			choices?.[0]?.message?.reasoning ??
+			'';
+		if (reasoningDelta) {
+			message.reasoning = (message.reasoning ?? '') + reasoningDelta;
+		}
 
-                if (choices) {
-                        if (choices[0]?.message?.content) {
-                                baseContent += choices[0]?.message?.content;
-                                ttsTriggered = true;
-                        } else {
-                                let value = choices[0]?.delta?.content ?? '';
-                                if (!(baseContent == '' && value == '\n' && !message.reasoning)) {
-                                        baseContent += value;
-                                        if (value) ttsTriggered = true;
-                                }
-                        }
-                }
+		if (choices) {
+			if (choices[0]?.message?.content) {
+				baseContent += choices[0]?.message?.content;
+				ttsTriggered = true;
+			} else {
+				let value = choices[0]?.delta?.content ?? '';
+				if (!(baseContent == '' && value == '\n' && !message.reasoning)) {
+					baseContent += value;
+					if (value) ttsTriggered = true;
+				}
+			}
+		}
 
-                if (content) {
-                        baseContent = content;
-                        ttsTriggered = true;
-                }
+		if (content) {
+			baseContent = content;
+			ttsTriggered = true;
+		}
 
-                message.content = `${
-                        message.reasoning
-                                ? `<details type="reasoning" done="${done ? 'true' : 'false'}"${
-                                          extendedThinkingEnabled ? ' open="true"' : ''
-                                  }><summary>${$i18n.t('Thinking...')}</summary>${message.reasoning}</details>`
-                                : ''
-                }${baseContent}`;
+		message.content = `${
+			message.reasoning
+				? `<details type="reasoning" done="${done ? 'true' : 'false'}"${
+						extendedThinkingEnabled ? ' open="true"' : ''
+					}><summary>${$i18n.t('Thinking...')}</summary>${message.reasoning}</details>`
+				: ''
+		}${baseContent}`;
 
-                if (ttsTriggered) {
-                        if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-                                navigator.vibrate(5);
-                        }
+		if (ttsTriggered) {
+			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
+				navigator.vibrate(5);
+			}
 
-                        const messageContentParts = getMessageContentParts(
-                                message.content,
-                                $config?.audio?.tts?.split_on ?? 'punctuation'
-                        );
-                        messageContentParts.pop();
+			const messageContentParts = getMessageContentParts(
+				message.content,
+				$config?.audio?.tts?.split_on ?? 'punctuation'
+			);
+			messageContentParts.pop();
 
-                        if (
-                                messageContentParts.length > 0 &&
-                                messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-                        ) {
-                                message.lastSentence = messageContentParts[messageContentParts.length - 1];
-                                eventTarget.dispatchEvent(
-                                        new CustomEvent('chat', {
-                                                detail: {
-                                                        id: message.id,
-                                                        content: messageContentParts[messageContentParts.length - 1]
-                                                }
-                                        })
-                                );
-                        }
-                }
+			if (
+				messageContentParts.length > 0 &&
+				messageContentParts[messageContentParts.length - 1] !== message.lastSentence
+			) {
+				message.lastSentence = messageContentParts[messageContentParts.length - 1];
+				eventTarget.dispatchEvent(
+					new CustomEvent('chat', {
+						detail: {
+							id: message.id,
+							content: messageContentParts[messageContentParts.length - 1]
+						}
+					})
+				);
+			}
+		}
 
-                if (selected_model_id) {
-                        message.selectedModelId = selected_model_id;
-                        message.arena = true;
-                }
+		if (selected_model_id) {
+			message.selectedModelId = selected_model_id;
+			message.arena = true;
+		}
 
-                if (usage) {
-                        message.usage = usage;
-                }
+		if (usage) {
+			message.usage = usage;
+		}
 
-                history.messages[message.id] = message;
+		history.messages[message.id] = message;
 
-                if (done) {
-                        message.done = true;
+		if (done) {
+			message.done = true;
 
-                        if ($settings.responseAutoCopy) {
-                                copyToClipboard(message.content);
-                        }
+			if ($settings.responseAutoCopy) {
+				copyToClipboard(message.content);
+			}
 
-                        if ($settings.responseAutoPlayback && !$showCallOverlay) {
-                                await tick();
-                                document.getElementById(`speak-button-${message.id}`)?.click();
-                        }
+			if ($settings.responseAutoPlayback && !$showCallOverlay) {
+				await tick();
+				document.getElementById(`speak-button-${message.id}`)?.click();
+			}
 
-                        let lastMessageContentPart =
-                                getMessageContentParts(
-                                        message.content,
-                                        $config?.audio?.tts?.split_on ?? 'punctuation'
-                                )?.at(-1) ?? '';
-                        if (lastMessageContentPart) {
-                                eventTarget.dispatchEvent(
-                                        new CustomEvent('chat', {
-                                                detail: { id: message.id, content: lastMessageContentPart }
-                                        })
-                                );
-                        }
-                        eventTarget.dispatchEvent(
-                                new CustomEvent('chat:finish', {
-                                        detail: {
-                                                id: message.id,
-                                                content: message.content
-                                        }
-                                })
-                        );
+			let lastMessageContentPart =
+				getMessageContentParts(message.content, $config?.audio?.tts?.split_on ?? 'punctuation')?.at(
+					-1
+				) ?? '';
+			if (lastMessageContentPart) {
+				eventTarget.dispatchEvent(
+					new CustomEvent('chat', {
+						detail: { id: message.id, content: lastMessageContentPart }
+					})
+				);
+			}
+			eventTarget.dispatchEvent(
+				new CustomEvent('chat:finish', {
+					detail: {
+						id: message.id,
+						content: message.content
+					}
+				})
+			);
 
-                        history.messages[message.id] = message;
-                        await chatCompletedHandler(
-                                chatId,
-                                message.model,
-                                message.id,
-                                createMessagesList(history, message.id)
-                        );
-                }
+			history.messages[message.id] = message;
+			await chatCompletedHandler(
+				chatId,
+				message.model,
+				message.id,
+				createMessagesList(history, message.id)
+			);
+		}
 
-                console.log(data);
-                if (autoScroll) {
-                        scrollToBottom();
-                }
-        };
+		console.log(data);
+		if (autoScroll) {
+			scrollToBottom();
+		}
+	};
 
 	//////////////////////////
 	// Chat functions
@@ -1831,70 +1842,65 @@ previousReasoningEffort = undefined;
 				responses
 			);
 
-                        if (res && res.ok && res.body) {
-                                const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
-                                for await (const update of textStream) {
-                                        const { value, done, sources, error, usage, reasoning } = update;
-                                        if (sources) {
-                                                if (message?.sources) {
-                                                        message.sources.push(...sources);
-                                                } else {
-                                                        message.sources = [...sources];
-                                                }
-                                                message.sources = [...message.sources];
-                                                history.messages[messageId] = message;
-                                                history = history;
-                                        }
-                                        if (error || done) {
-                                                const baseContent = removeDetails(mergedResponse.content, ['reasoning']);
-                                                mergedResponse.content = `${
-                                                        mergedResponse.reasoning
-                                                                ? `<details type="reasoning" done="true"${
-                                                                                extendedThinkingEnabled
-                                                                                        ? ' open="true"'
-                                                                                        : ''
-                                                                        }><summary>${$i18n.t('Thinking...')}</summary>${
-                                                                                mergedResponse.reasoning
-                                                                        }</details>`
-                                                                : ''
-                                                }${baseContent}`;
-                                                history.messages[messageId] = message;
-                                                break;
-                                        }
+			if (res && res.ok && res.body) {
+				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
+				for await (const update of textStream) {
+					const { value, done, sources, error, usage, reasoning } = update;
+					if (sources) {
+						if (message?.sources) {
+							message.sources.push(...sources);
+						} else {
+							message.sources = [...sources];
+						}
+						message.sources = [...message.sources];
+						history.messages[messageId] = message;
+						history = history;
+					}
+					if (error || done) {
+						const baseContent = removeDetails(mergedResponse.content, ['reasoning']);
+						mergedResponse.content = `${
+							mergedResponse.reasoning
+								? `<details type="reasoning" done="true"${
+										extendedThinkingEnabled ? ' open="true"' : ''
+									}><summary>${$i18n.t('Thinking...')}</summary>${
+										mergedResponse.reasoning
+									}</details>`
+								: ''
+						}${baseContent}`;
+						history.messages[messageId] = message;
+						break;
+					}
 
-                                        let baseContent = removeDetails(mergedResponse.content, ['reasoning']);
-                                        if (reasoning) {
-                                                mergedResponse.reasoning =
-                                                        (mergedResponse.reasoning ?? '') + reasoning;
-                                        }
+					let baseContent = removeDetails(mergedResponse.content, ['reasoning']);
+					if (reasoning) {
+						mergedResponse.reasoning = (mergedResponse.reasoning ?? '') + reasoning;
+					}
 
-                                        if (!(baseContent == '' && value == '\n' && !mergedResponse.reasoning)) {
-                                                baseContent += value;
-                                        }
+					if (!(baseContent == '' && value == '\n' && !mergedResponse.reasoning)) {
+						baseContent += value;
+					}
 
-                                        mergedResponse.content = `${
-                                                mergedResponse.reasoning
-                                                        ? `<details type="reasoning" done="false"${
-                                                                        extendedThinkingEnabled ? ' open="true"' : ''
-                                                                }><summary>${$i18n.t('Thinking...')}</summary>${
-                                                                        mergedResponse.reasoning
-                                                                }</details>`
-                                                        : ''
-                                        }${baseContent}`;
-                                        history.messages[messageId] = message;
+					mergedResponse.content = `${
+						mergedResponse.reasoning
+							? `<details type="reasoning" done="false"${
+									extendedThinkingEnabled ? ' open="true"' : ''
+								}><summary>${$i18n.t('Thinking...')}</summary>${mergedResponse.reasoning}</details>`
+							: ''
+					}${baseContent}`;
+					history.messages[messageId] = message;
 
-                                        if (autoScroll) {
-                                                scrollToBottom();
-                                        }
-                                }
+					if (autoScroll) {
+						scrollToBottom();
+					}
+				}
 
-                                await saveChatHandler(_chatId, history);
-                        } else {
-                                console.error(res);
-                        }
-                } catch (e) {
-                        console.error(e);
-                }
+				await saveChatHandler(_chatId, history);
+			} else {
+				console.error(res);
+			}
+		} catch (e) {
+			console.error(e);
+		}
 	};
 
 	const initChatHandler = async (history) => {
@@ -2074,19 +2080,19 @@ previousReasoningEffort = undefined;
 							</div>
 						</div>
 
-                                                <div class="relative pb-5">
+						<div class="relative pb-5">
 							<MessageInput
 								{history}
 								{selectedModels}
 								bind:files
 								bind:prompt
 								bind:autoScroll
-bind:selectedToolIds
-bind:imageGenerationEnabled
-bind:codeInterpreterEnabled
-bind:webSearchEnabled
-bind:extendedThinkingEnabled
-bind:atSelectedModel
+								bind:selectedToolIds
+								bind:imageGenerationEnabled
+								bind:codeInterpreterEnabled
+								bind:webSearchEnabled
+								bind:extendedThinkingEnabled
+								bind:atSelectedModel
 								toolServers={$toolServers}
 								transparentBackground={$settings?.backgroundImageUrl ?? false}
 								{stopResponse}
@@ -2121,12 +2127,12 @@ bind:atSelectedModel
 								}}
 							/>
 
-                                                        <div
-                                                                class="absolute bottom-1 text-xs text-gray-500 text-center line-clamp-1 right-0 left-0"
-                                                        >
-                                                                {$WEBUI_NAME} can make mistakes. Check important info.
-                                                        </div>
-                                                </div>
+							<div
+								class="absolute bottom-1 text-xs text-gray-500 text-center line-clamp-1 right-0 left-0"
+							>
+								{$WEBUI_NAME} can make mistakes. Check important info.
+							</div>
+						</div>
 					{:else}
 						<div class="overflow-auto w-full h-full flex items-center">
 							<Placeholder
@@ -2176,6 +2182,7 @@ bind:atSelectedModel
 				bind:params
 				bind:files
 				bind:pane={controlPane}
+				{extendedThinkingEnabled}
 				chatId={$chatId}
 				modelId={selectedModelIds?.at(0) ?? null}
 				models={selectedModelIds.reduce((a, e, i, arr) => {
