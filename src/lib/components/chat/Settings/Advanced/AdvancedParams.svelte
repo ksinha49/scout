@@ -9,6 +9,8 @@
 
 	export let admin = false;
 
+	export let extendedThinkingEnabled = false;
+
 	export let params = {
 		// Advanced
 		stream_response: null, // Set stream responses for this model individually
@@ -213,23 +215,27 @@
 				<div class=" self-center text-xs font-medium">
 					{$i18n.t('Temperature')}
 				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.temperature = (params?.temperature ?? null) === null ? 0.8 : null;
-					}}
-				>
-					{#if (params?.temperature ?? null) === null}
-						<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-					{:else}
-						<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-					{/if}
-				</button>
+				{#if extendedThinkingEnabled}
+					<span class="ml-2 self-center">1</span>
+				{:else}
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+						type="button"
+						on:click={() => {
+							params.temperature = (params?.temperature ?? null) === null ? 0.8 : null;
+						}}
+					>
+						{#if (params?.temperature ?? null) === null}
+							<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+						{:else}
+							<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
+						{/if}
+					</button>
+				{/if}
 			</div>
 		</Tooltip>
 
-		{#if (params?.temperature ?? null) !== null}
+		{#if !extendedThinkingEnabled && (params?.temperature ?? null) !== null}
 			<div class="flex mt-0.5 space-x-2">
 				<div class=" flex-1">
 					<input
