@@ -5,9 +5,10 @@
 
 	const dispatch = createEventDispatcher();
 
-	const i18n = getContext('i18n');
+const i18n = getContext('i18n');
 
-	export let admin = false;
+export let admin = false;
+export let extendedThinkingEnabled = false;
 
 	export let params = {
 		// Advanced
@@ -59,42 +60,45 @@
 				<div class=" self-center text-xs font-medium">
 					{$i18n.t('Stream Chat Response')}
 				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition"
-					on:click={() => {
-						params.stream_response =
-							(params?.stream_response ?? null) === null
-								? true
-								: params.stream_response
-									? false
-									: null;
-					}}
-					type="button"
-				>
-					{#if params.stream_response === true}
-						<span class="ml-2 self-center">{$i18n.t('On')}</span>
-					{:else if params.stream_response === false}
-						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-	</div>
+                                <button
+                                        class="p-1 px-3 text-xs flex rounded-sm transition"
+                                        disabled={extendedThinkingEnabled}
+                                        on:click={() => {
+                                                if (!extendedThinkingEnabled) {
+                                                        params.stream_response =
+                                                                (params?.stream_response ?? null) === null
+                                                                        ? true
+                                                                        : params.stream_response
+                                                                                ? false
+                                                                                : null;
+                                                }
+                                        }}
+                                        type="button"
+                                >
+                                        {#if extendedThinkingEnabled || params.stream_response === true}
+                                                <span class="ml-2 self-center">{$i18n.t('On')}</span>
+                                        {:else if params.stream_response === false}
+                                                <span class="ml-2 self-center">{$i18n.t('Off')}</span>
+                                        {:else}
+                                                <span class="ml-2 self-center">{$i18n.t('Default')}</span>
+                                        {/if}
+                                </button>
+                        </div>
+                </Tooltip>
+        </div>
 
-	<div>
-		<Tooltip
-			content={$i18n.t(
-				'Default mode works with a wider range of models by calling tools once before execution. Native mode leverages the model’s built-in tool-calling capabilities, but requires the model to inherently support this feature.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
+        <div>
+                <Tooltip
+                        content={$i18n.t(
+                                'Default mode works with a wider range of models by calling tools once before execution. Native mode leverages the model’s built-in tool-calling capabilities, but requires the model to inherently support this feature.'
+                        )}
+                        placement="top-start"
+                        className="inline-tooltip"
 		>
-			<div class=" py-0.5 flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Function Calling')}
-				</div>
+                        <div class=" py-0.5 flex w-full justify-between">
+                                <div class=" self-center text-xs font-medium">
+                                        {$i18n.t('Function Calling')}
+                                </div>
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition"
 					on:click={() => {
@@ -110,9 +114,9 @@
 				</button>
 			</div>
 		</Tooltip>
-	</div>
+        </div>
 
-	<div class=" py-0.5 w-full justify-between">
+        <div class=" py-0.5 w-full justify-between">
 		<Tooltip
 			content={$i18n.t(
 				'Sets the random number seed to use for generation. Setting this to a specific number will make the model generate the same text for the same prompt.'
@@ -256,48 +260,50 @@
 		{/if}
 	</div>
 
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'Constrains effort on reasoning for reasoning models. Only applicable to reasoning models from specific providers that support reasoning effort.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Reasoning Effort')}
-				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.reasoning_effort = (params?.reasoning_effort ?? null) === null ? 'medium' : null;
-					}}
-				>
-					{#if (params?.reasoning_effort ?? null) === null}
-						<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-					{:else}
-						<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
+        {#if !extendedThinkingEnabled}
+        <div class=" py-0.5 w-full justify-between">
+                <Tooltip
+                        content={$i18n.t(
+                                'Constrains effort on reasoning for reasoning models. Only applicable to reasoning models from specific providers that support reasoning effort.'
+                        )}
+                        placement="top-start"
+                        className="inline-tooltip"
+                >
+                        <div class="flex w-full justify-between">
+                                <div class=" self-center text-xs font-medium">
+                                        {$i18n.t('Reasoning Effort')}
+                                </div>
+                                <button
+                                        class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+                                        type="button"
+                                        on:click={() => {
+                                                params.reasoning_effort = (params?.reasoning_effort ?? null) === null ? 'medium' : null;
+                                        }}
+                                >
+                                        {#if (params?.reasoning_effort ?? null) === null}
+                                                <span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+                                        {:else}
+                                                <span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
+                                        {/if}
+                                </button>
+                        </div>
+                </Tooltip>
 
-		{#if (params?.reasoning_effort ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						class="w-full rounded-lg py-2 px-1 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-						type="text"
-						placeholder={$i18n.t('Enter reasoning effort')}
-						bind:value={params.reasoning_effort}
-						autocomplete="off"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
+                {#if (params?.reasoning_effort ?? null) !== null}
+                        <div class="flex mt-0.5 space-x-2">
+                                <div class=" flex-1">
+                                        <input
+                                                class="w-full rounded-lg py-2 px-1 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                type="text"
+                                                placeholder={$i18n.t('Enter reasoning effort')}
+                                                bind:value={params.reasoning_effort}
+                                                autocomplete="off"
+                                        />
+                                </div>
+                        </div>
+                {/if}
+        </div>
+        {/if}
 
 	<div class=" py-0.5 w-full justify-between">
 		<Tooltip
@@ -1397,6 +1403,5 @@
 					</div>
 				</div>
 			{/if}
-		</div> -->
-	{/if}
+                </div> -->
 </div>

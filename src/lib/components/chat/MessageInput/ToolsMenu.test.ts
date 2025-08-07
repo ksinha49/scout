@@ -60,6 +60,56 @@ describe('ToolsMenu', () => {
           await tick();
           await fireEvent.click(getByText('Test Tool'));
           const selectedToolIds = component.$$.ctx[component.$$.props['selectedToolIds']];
-          expect(selectedToolIds).toContain('test-tool');
-      });
+      expect(selectedToolIds).toContain('test-tool');
   });
+
+  test('extended thinking sets and restores params', async () => {
+      const { getByText, component } = render(ToolsMenu, {
+          props: {
+              selectedToolIds: [],
+              webSearchEnabled: false,
+              codeInterpreterEnabled: false,
+              imageGenerationEnabled: false,
+              extendedThinkingEnabled: false,
+              reasoningCapable: true,
+              params: {
+                  stream_response: false,
+                  thinking: { type: 'disabled' },
+                  reasoning_effort: 'medium'
+              },
+              selectedModels: ['gpt-4'],
+              onClose: () => {}
+          },
+          context: new Map([
+              [
+                  'i18n',
+                  {
+                      subscribe: (run: Function) => {
+                          run({ t: (s: string) => s });
+                          return () => {};
+                      }
+                  }
+              ]
+          ])
+      });
+
+      await fireEvent.click(getByText('open'));
+      await tick();
+      await fireEvent.click(getByText('Extended Thinking'));
+      let params = component.$$.ctx[component.$$.props['params']];
+      let models = component.$$.ctx[component.$$.props['selectedModels']];
+      expect(params.stream_response).toBe(true);
+      expect(params.thinking).toEqual({ type: 'enabled', budget_tokens: 5000 });
+      expect(models).toEqual(['claude']);
+
+      await fireEvent.click(getByText('open'));
+      await tick();
+      await fireEvent.click(getByText('Extended Thinking'));
+      params = component.$$.ctx[component.$$.props['params']];
+      models = component.$$.ctx[component.$$.props['selectedModels']];
+      expect(params.stream_response).toBe(false);
+      expect(params.thinking).toEqual({ type: 'disabled' });
+      expect(models).toEqual(['gpt-4']);
+      expect(params.reasoning_effort).toBe('medium');
+  });
+});

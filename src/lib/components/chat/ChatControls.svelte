@@ -19,8 +19,9 @@
 
 	export let chatId = null;
 
-	export let chatFiles = [];
-	export let params = {};
+export let chatFiles = [];
+export let params = {};
+export let extendedThinkingEnabled = false;
 
 	export let eventTarget: EventTarget;
 	export let submitPrompt: Function;
@@ -177,14 +178,15 @@
 							}}
 						/>
 					{:else}
-						<Controls
-							on:close={() => {
-								showControls.set(false);
-							}}
-							{models}
-							bind:chatFiles
-							bind:params
-						/>
+                                                <Controls
+                                                        on:close={() => {
+                                                                showControls.set(false);
+                                                        }}
+                                                        {models}
+                                                        bind:chatFiles
+                                                        bind:params
+                                                        {extendedThinkingEnabled}
+                                                />
 					{/if}
 				</div>
 			</Drawer>
@@ -264,14 +266,15 @@
 								}}
 							/>
 						{:else}
-							<Controls
-								on:close={() => {
-									showControls.set(false);
-								}}
-								{models}
-								bind:chatFiles
-								bind:params
-							/>
+                                                        <Controls
+                                                                on:close={() => {
+                                                                        showControls.set(false);
+                                                                }}
+                                                                {models}
+                                                                bind:chatFiles
+                                                                bind:params
+                                                                {extendedThinkingEnabled}
+                                                        />
 						{/if}
 					</div>
 				</div>
