@@ -1,8 +1,13 @@
+"""
+MOD: BATCH-DUPLICATE-LOOKUP: Regression test for batch duplicate lookup and empty content skip
+"""
+
 import json
 import os
 import tempfile
 from types import SimpleNamespace
 from unittest.mock import MagicMock
+from pytest import MonkeyPatch
 
 # Ensure env module loads with dictionary configuration before importing open_webui
 tmp = tempfile.NamedTemporaryFile(delete=False)
@@ -15,10 +20,10 @@ from test.util.abstract_integration_test import AbstractPostgresTest
 
 
 class DummyVectorClient:
-    def __init__(self):
-        self.calls = []
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict]] = []
 
-    def query(self, collection_name, filter):
+    def query(self, collection_name: str, filter: dict) -> SimpleNamespace:
         self.calls.append((collection_name, filter))
         hashes = filter.get("hash", [])
         if isinstance(hashes, list) and hashes:
@@ -46,8 +51,8 @@ class TestProcessFilesBatch(AbstractPostgresTest):
             id="u1", name="user", email="user@example.com"
         )
 
-    def _create_file(self, id, content):
-        from open_webui.models.files import FileForm
+    def _create_file(self, id: str, content: str) -> "FileModel":
+        from open_webui.models.files import FileForm, FileModel
 
         form = FileForm(
             id=id,
@@ -58,7 +63,7 @@ class TestProcessFilesBatch(AbstractPostgresTest):
         )
         return self.files.insert_new_file(self.user.id, form)
 
-    def test_batch_duplicate_lookup_and_empty_skip(self, monkeypatch):
+    def test_batch_duplicate_lookup_and_empty_skip(self, monkeypatch: MonkeyPatch) -> None:
         from open_webui.routers import retrieval
         from open_webui.routers.retrieval import (
             BatchProcessFilesForm,
@@ -90,4 +95,8 @@ class TestProcessFilesBatch(AbstractPostgresTest):
         assert status_map[file1.id] == "skipped_duplicate"
         assert status_map[file2.id] == "completed"
         assert status_map[file3.id] == "skipped_empty"
+
+"""
+MOD: BATCH-DUPLICATE-LOOKUP: End of Mod
+"""
 

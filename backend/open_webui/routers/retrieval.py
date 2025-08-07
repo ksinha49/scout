@@ -7,6 +7,7 @@ Modification Log:
 | 2024-11-16 | AAK7S          | AMER-HOTFIX-1                 | VECTOR DB INSERT IN BATCH FOR BETTER PERFORMANCE                               |
 | 2025-12-02 | X1BA           | CWE-209                       | Replace direct exception messages with generic responses in user-facing outputs|
 | 2025-04-06 | AAK7S          | ASYNC-IMPROVEMENT       | Added parallel asynchronous batch insertion for large vector DB loads                |
+| 2025-08-07 | OPENAI         | BATCH-DUPLICATE-LOOKUP        | Validate empty content and batch duplicate hash check |
 """
 
 # MOD TAG RAG-FILTERS: Accept a single collection with optional filter list.
@@ -2035,12 +2036,16 @@ class BatchProcessFilesResponse(BaseModel):
 
 
 @router.post("/process/files/batch")
+"""
+MOD: BATCH-DUPLICATE-LOOKUP: Validate file content and perform batch duplicate hash lookup
+"""
+
 def process_files_batch(
     request: Request,
     form_data: BatchProcessFilesForm,
     user=Depends(get_verified_user),
 ) -> BatchProcessFilesResponse:
-    """Process multiple files and batch-save their documents to the vector DB.
+"""Process multiple files and batch-save their documents to the vector DB.
 
     Args:
         request (Request): The incoming request instance.
@@ -2067,7 +2072,7 @@ def process_files_batch(
 
     for file in form_data.files:
         try:
-            text_content = file.data.get("content") if file.data else None
+            text_content: Optional[str] = file.data.get("content") if file.data else None
             if not text_content:
                 log.warning(
                     f"process_files_batch: Empty content for file {file.id}; skipping"
@@ -2091,7 +2096,7 @@ def process_files_batch(
             )
 
     existing_hashes: set[str] = set()
-    hashes = [entry[2] for entry in file_entries]
+    hashes: List[str] = [entry[2] for entry in file_entries]
     if hashes:
         try:
             existing = VECTOR_DB_CLIENT.query(
@@ -2194,3 +2199,7 @@ def process_files_batch(
     )
 
     return BatchProcessFilesResponse(results=results, errors=errors)
+
+"""
+MOD: BATCH-DUPLICATE-LOOKUP: End of Mod
+"""
