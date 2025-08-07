@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed Ameritas Custom Changes - 2025-08-02
 - 🔐**Provider-aware Silent SSO Login**: Silent login now uses the configured OAuth provider instead of a Microsoft-only endpoint.
+- 🧪**Batched duplicate checks for document uploads**: `process_files_batch` now validates empty content and performs a single batched lookup to skip duplicate files more efficiently.
 
 ## [1.2.0] - 2025-04-06
 
