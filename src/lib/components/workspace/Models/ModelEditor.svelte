@@ -73,11 +73,12 @@
 	let params = {
 		system: ''
 	};
-	let capabilities = {
-		vision: true,
-		usage: undefined,
-		citations: true
-	};
+        let capabilities = {
+                vision: true,
+                usage: undefined,
+                citations: true,
+                reasoning: false
+        };
 
 	let knowledge = [];
 	let toolIds = [];
@@ -113,8 +114,8 @@
 			toast.error('Model Name is required.');
 		}
 
-		info.access_control = accessControl;
-		info.meta.capabilities = capabilities;
+                info.access_control = accessControl;
+                info.meta.capabilities = { ...capabilities, reasoning: capabilities.reasoning };
 
 		if (enableDescription) {
 			info.meta.description = info.meta.description.trim() === '' ? null : info.meta.description;
