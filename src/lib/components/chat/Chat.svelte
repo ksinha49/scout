@@ -116,10 +116,11 @@
 	let selectedModelIds = [];
 	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
 
-	let selectedToolIds = [];
-	let imageGenerationEnabled = false;
-	let webSearchEnabled = false;
-	let codeInterpreterEnabled = false;
+let selectedToolIds = [];
+let imageGenerationEnabled = false;
+let webSearchEnabled = false;
+let codeInterpreterEnabled = false;
+let extendedThinkingEnabled = false;
 
 	let chat = null;
 	let tags = [];
@@ -135,7 +136,20 @@
 	let prompt = '';
 	let chatFiles = [];
 	let files = [];
-	let params = {};
+let params = {};
+let previousReasoningEffort = undefined;
+$: if (extendedThinkingEnabled) {
+previousReasoningEffort = params.reasoning_effort;
+params = { ...params, reasoning_effort: 'high' };
+} else if ('reasoning_effort' in params) {
+if (previousReasoningEffort !== undefined) {
+params = { ...params, reasoning_effort: previousReasoningEffort };
+} else {
+const { reasoning_effort, ...rest } = params;
+params = rest;
+}
+previousReasoningEffort = undefined;
+}
 
 	$: if (chatIdProp) {
 		(async () => {
@@ -144,9 +158,10 @@
 
 			prompt = '';
 			files = [];
-			selectedToolIds = [];
-			webSearchEnabled = false;
-			imageGenerationEnabled = false;
+                        selectedToolIds = [];
+                        webSearchEnabled = false;
+                        imageGenerationEnabled = false;
+                        extendedThinkingEnabled = false;
 
 			if (chatIdProp && (await loadChat())) {
 				await tick();
@@ -158,11 +173,12 @@
 
 						prompt = input.prompt;
 						files = input.files;
-						selectedToolIds = input.selectedToolIds;
-						webSearchEnabled = input.webSearchEnabled;
-						imageGenerationEnabled = input.imageGenerationEnabled;
-					} catch (e) {}
-				}
+                                                selectedToolIds = input.selectedToolIds;
+                                                webSearchEnabled = input.webSearchEnabled;
+                                                imageGenerationEnabled = input.imageGenerationEnabled;
+                                                extendedThinkingEnabled = input.extendedThinkingEnabled;
+                                        } catch (e) {}
+                                }
 
 				window.setTimeout(() => scrollToBottom(), 0);
 				const chatInput = document.getElementById('chat-input');
@@ -414,17 +430,19 @@
 				const input = JSON.parse(localStorage.getItem(`chat-input-${chatIdProp}`));
 				prompt = input.prompt;
 				files = input.files;
-				selectedToolIds = input.selectedToolIds;
-				webSearchEnabled = input.webSearchEnabled;
-				imageGenerationEnabled = input.imageGenerationEnabled;
-			} catch (e) {
-				prompt = '';
-				files = [];
-				selectedToolIds = [];
-				webSearchEnabled = false;
-				imageGenerationEnabled = false;
-			}
-		}
+                                selectedToolIds = input.selectedToolIds;
+                                webSearchEnabled = input.webSearchEnabled;
+                                imageGenerationEnabled = input.imageGenerationEnabled;
+                                extendedThinkingEnabled = input.extendedThinkingEnabled;
+                        } catch (e) {
+                                prompt = '';
+                                files = [];
+                                selectedToolIds = [];
+                                webSearchEnabled = false;
+                                imageGenerationEnabled = false;
+                                extendedThinkingEnabled = false;
+                        }
+                }
 
 		showControls.subscribe(async (value) => {
 			if (controlPane && !$mobile) {
@@ -713,8 +731,9 @@
 			currentId: null
 		};
 
-		chatFiles = [];
-		params = {};
+               chatFiles = [];
+               params = {};
+               extendedThinkingEnabled = false;
 
 		if ($page.url.searchParams.get('youtube')) {
 			uploadYoutubeTranscription(
@@ -2013,11 +2032,12 @@
 								bind:files
 								bind:prompt
 								bind:autoScroll
-								bind:selectedToolIds
-								bind:imageGenerationEnabled
-								bind:codeInterpreterEnabled
-								bind:webSearchEnabled
-								bind:atSelectedModel
+bind:selectedToolIds
+bind:imageGenerationEnabled
+bind:codeInterpreterEnabled
+bind:webSearchEnabled
+bind:extendedThinkingEnabled
+bind:atSelectedModel
 								toolServers={$toolServers}
 								transparentBackground={$settings?.backgroundImageUrl ?? false}
 								{stopResponse}

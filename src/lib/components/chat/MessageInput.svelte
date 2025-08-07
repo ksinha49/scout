@@ -46,9 +46,10 @@ import Spinner from '../common/Spinner.svelte';
         import Photo from '../icons/Photo.svelte';
         import GlobeAlt from '../icons/GlobeAlt.svelte';
         import CommandLine from '../icons/CommandLine.svelte';
-        import WrenchSolid from '../icons/WrenchSolid.svelte';
-        import Sparkles from '../icons/Sparkles.svelte';
-        import { KokoroWorker } from '$lib/workers/KokoroWorker';
+import WrenchSolid from '../icons/WrenchSolid.svelte';
+import Sparkles from '../icons/Sparkles.svelte';
+import Brain from '../icons/Brain.svelte';
+import { KokoroWorker } from '$lib/workers/KokoroWorker';
         import ToolServersModal from './ToolServersModal.svelte';
 
 	const i18n = getContext('i18n');
@@ -76,9 +77,10 @@ import Spinner from '../common/Spinner.svelte';
 
         export let selectedToolIds = [];
 
-        export let imageGenerationEnabled = false;
-        export let webSearchEnabled = false;
-        export let codeInterpreterEnabled = false;
+export let imageGenerationEnabled = false;
+export let webSearchEnabled = false;
+export let codeInterpreterEnabled = false;
+export let extendedThinkingEnabled = false;
 
         $: activeTools = [
                 ...selectedToolIds.map((id) => {
@@ -105,25 +107,36 @@ import Spinner from '../common/Spinner.svelte';
                                   }
                           ]
                         : []),
-                ...(codeInterpreterEnabled
-                        ? [
-                                  {
-                                          id: 'code-interpreter',
-                                          name: $i18n.t('Code Interpreter'),
-                                          type: 'code',
-                                          removable: true
-                                  }
-                          ]
-                        : [])
-        ];
+...(codeInterpreterEnabled
+? [
+{
+id: 'code-interpreter',
+name: $i18n.t('Code Interpreter'),
+type: 'code',
+removable: true
+}
+]
+: []),
+...(extendedThinkingEnabled
+? [
+{
+id: 'extended-thinking',
+name: $i18n.t('Extended Thinking'),
+type: 'reasoning',
+removable: true
+}
+]
+: [])
+];
 
-	$: onChange({
-		prompt,
-		files,
-		selectedToolIds,
-		imageGenerationEnabled,
-		webSearchEnabled
-	});
+$: onChange({
+prompt,
+files,
+selectedToolIds,
+imageGenerationEnabled,
+webSearchEnabled,
+extendedThinkingEnabled
+});
 
 	let showToolServers = false;
 
@@ -145,10 +158,16 @@ import Spinner from '../common/Spinner.svelte';
 	let user = null;
 	export let placeholder = '';
 
-	let visionCapableModels = [];
-	$: visionCapableModels = [...(atSelectedModel ? [atSelectedModel] : selectedModels)].filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.vision ?? true
-	);
+let visionCapableModels = [];
+$: visionCapableModels = [...(atSelectedModel ? [atSelectedModel] : selectedModels)].filter(
+(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.vision ?? true
+);
+
+// Reasoning capability is derived from model.info.meta.capabilities.reasoning
+let reasoningCapable = false;
+$: reasoningCapable = [...(atSelectedModel ? [atSelectedModel] : selectedModels)].every(
+(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.reasoning ?? false
+);
 
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
@@ -1164,13 +1183,15 @@ import Spinner from '../common/Spinner.svelte';
 											</button>
                                                                                 </InputMenu>
 
-                                                                                <ToolsMenu
-                                                                                        bind:selectedToolIds
-                                                                                        bind:webSearchEnabled
-                                                                                        bind:codeInterpreterEnabled
-                                                                                        bind:imageGenerationEnabled
-                                                                                        onClose={async () => {
-                                                                                                await tick();
+<ToolsMenu
+bind:selectedToolIds
+bind:webSearchEnabled
+bind:codeInterpreterEnabled
+bind:imageGenerationEnabled
+bind:extendedThinkingEnabled
+reasoningCapable={reasoningCapable}
+onClose={async () => {
+await tick();
 
                                                                                                 const chatInput = document.getElementById('chat-input');
                                                                                                 chatInput?.focus();
@@ -1190,16 +1211,20 @@ import Spinner from '../common/Spinner.svelte';
                                                                                                 <div
                                                                                                         class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400"
                                                                                                 >
-                                                                                                        {#if tool.type === 'web'}
-                                                                                                                <GlobeAlt className="size-5" />
-                                                                                                        {:else if tool.type === 'code'}
-                                                                                                                <CommandLine className="size-5" />
-                                                                                                        {:else if tool.type === 'image'}
-                                                                                                                <Photo className="size-5" strokeWidth="1.75" />
-                                                                                                        {:else}
-                                                                                                                <WrenchSolid className="size-5" />
-                                                                                                        {/if}
-                                                                                                        <span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5">{tool.name}</span>
+{#if tool.type === 'web'}
+<GlobeAlt className="size-5" />
+{:else if tool.type === 'code'}
+<CommandLine className="size-5" />
+{:else if tool.type === 'image'}
+<Photo className="size-5" strokeWidth="1.75" />
+{:else if tool.type === 'reasoning'}
+<Brain className="size-5" />
+{:else}
+<WrenchSolid className="size-5" />
+{/if}
+{#if tool.type !== 'reasoning'}
+<span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5">{tool.name}</span>
+{/if}
                                                                                                         {#if tool.removable}
                                                                                                                 <button
                                                                                                                         class="translate-y-[1px] -mr-1"
@@ -1212,6 +1237,11 @@ import Spinner from '../common/Spinner.svelte';
                                                                                                                                         codeInterpreterEnabled = false;
                                                                                                                                 } else if (tool.type === 'image') {
                                                                                                                                         imageGenerationEnabled = false;
+
+        } else if (tool.type === 'reasoning') {
+
+                extendedThinkingEnabled = false;
+
                                                                                                                                 } else {
                                                                                                                                         selectedToolIds = selectedToolIds.filter((id) => id !== tool.id);
                                                                                                                                 }
