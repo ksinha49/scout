@@ -159,39 +159,42 @@ Modification Log:
                         const redirectPath = querystringValue('redirect') || '/';
                         goto(redirectPath);
                 }
-                await checkOauthCallback();
+               await checkOauthCallback();
 
-                const providerParam = querystringValue('provider');
-                const providers = providerParam
-                        ? [providerParam]
-                        : Object.keys($config?.oauth?.providers ?? {});
+               const providerParam = querystringValue('provider');
+               const providers = providerParam
+                       ? [providerParam]
+                       : Object.keys($config?.oauth?.providers ?? {});
 
-                for (const provider of providers) {
-                        try {
-                                const resp = await fetch(
-                                        `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
-                                        { redirect: 'manual', credentials: 'include' }
-                                );
-                                if (resp.status >= 300 && resp.status < 400) {
-                                        const url = resp.headers.get('Location');
-                                        if (url) {
-                                                window.location.href = url;
-                                                return;
-                                        }
-                                }
-                        } catch (e) {
-                                console.error(e);
-                        }
-                }
-                loaded = true;
-                setLogoImage();
+               const shouldAttemptSilent =
+                       sessionStorage.getItem('attemptSilentLogin') === 'true' ||
+                       providerParam !== null;
 
-                if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
-                        await signInHandler();
-                } else {
-                        onboarding = $config?.onboarding ?? false;
-                }
-        });
+               if (shouldAttemptSilent) {
+                       for (const provider of providers) {
+                               console.log('Attempting silent login for provider:', provider);
+                               const silentAuthWindow = window.open(
+                                       `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
+                                       'silent-auth',
+                                       'width=1,height=1,left=-1000,top=-1000'
+                               );
+                               setTimeout(() => {
+                                       if (silentAuthWindow && !silentAuthWindow.closed) {
+                                               silentAuthWindow.close();
+                                       }
+                               }, 3000);
+                       }
+                       sessionStorage.removeItem('attemptSilentLogin');
+               }
+               loaded = true;
+               setLogoImage();
+
+               if (($config?.features.auth_trusted_header ?? false) || $config?.features.auth === false) {
+                       await signInHandler();
+               } else {
+                       onboarding = $config?.onboarding ?? false;
+               }
+       });
 </script>
 
 <svelte:head>
