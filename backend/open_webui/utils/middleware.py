@@ -1195,9 +1195,11 @@ async def process_chat_response(
 
             choices = response.get("choices", [])
             if choices and choices[0].get("message", {}).get("content"):
-                content = response["choices"][0]["message"]["content"]
+                message_data = response["choices"][0]["message"]
+                content = message_data.get("content", "")
+                reasoning = message_data.get("reasoning", None)
 
-                if content:
+                if content or reasoning:
 
                     await event_emitter(
                         {
@@ -1208,14 +1210,14 @@ async def process_chat_response(
 
                     title = Chats.get_chat_title_by_id(metadata["chat_id"])
 
+                    done_data = {"done": True, "content": content, "title": title}
+                    if reasoning:
+                        done_data["reasoning"] = reasoning
+
                     await event_emitter(
                         {
                             "type": "chat:completion",
-                            "data": {
-                                "done": True,
-                                "content": content,
-                                "title": title,
-                            },
+                            "data": done_data,
                         }
                     )
 
@@ -1223,9 +1225,8 @@ async def process_chat_response(
                     Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
-                        {
-                            "content": content,
-                        },
+                        {"content": content},
+                        reasoning,
                     )
 
                     # Send a webhook notification if the user is not active
@@ -1306,6 +1307,7 @@ async def process_chat_response(
         async def post_response_handler(response, events):
             def serialize_content_blocks(content_blocks, raw=False):
                 content = ""
+                reasoning = ""
 
                 for block in content_blocks:
                     if block["type"] == "text":
@@ -1360,23 +1362,12 @@ async def process_chat_response(
                                 content = f"{content}\n{tool_calls_display_content}\n\n"
 
                     elif block["type"] == "reasoning":
-                        reasoning_display_content = "\n".join(
-                            (f"> {line}" if not line.startswith(">") else line)
-                            for line in block["content"].splitlines()
-                        )
+                        reasoning += block["content"]
 
                         reasoning_duration = block.get("duration", None)
 
-                        if reasoning_duration is not None:
-                            if raw:
-                                content = f'{content}\n<{block["start_tag"]}>{block["content"]}<{block["end_tag"]}>\n'
-                            else:
-                                content = f'{content}\n<details type="reasoning" done="true" duration="{reasoning_duration}">\n<summary>Thought for {reasoning_duration} seconds</summary>\n{reasoning_display_content}\n</details>\n'
-                        else:
-                            if raw:
-                                content = f'{content}\n<{block["start_tag"]}>{block["content"]}<{block["end_tag"]}>\n'
-                            else:
-                                content = f'{content}\n<details type="reasoning" done="false">\n<summary>Thinking…</summary>\n{reasoning_display_content}\n</details>\n'
+                        if raw:
+                            content = f'{content}\n<{block["start_tag"]}>{block["content"]}<{block["end_tag"]}>\n'
 
                     elif block["type"] == "code_interpreter":
                         attributes = block.get("attributes", {})
@@ -1413,7 +1404,7 @@ async def process_chat_response(
                         block_content = str(block["content"]).strip()
                         content = f"{content}{block['type']}: {block_content}\n"
 
-                return content.strip()
+                return content.strip(), reasoning.strip()
 
             def convert_content_blocks_to_messages(content_blocks):
                 messages = []
@@ -1421,13 +1412,15 @@ async def process_chat_response(
                 temp_blocks = []
                 for idx, block in enumerate(content_blocks):
                     if block["type"] == "tool_calls":
-                        messages.append(
-                            {
-                                "role": "assistant",
-                                "content": serialize_content_blocks(temp_blocks),
-                                "tool_calls": block.get("content"),
-                            }
-                        )
+                        _content, _reasoning = serialize_content_blocks(temp_blocks)
+                        msg = {
+                            "role": "assistant",
+                            "content": _content,
+                            "tool_calls": block.get("content"),
+                        }
+                        if _reasoning:
+                            msg["reasoning"] = _reasoning
+                        messages.append(msg)
 
                         results = block.get("results", [])
 
@@ -1444,14 +1437,15 @@ async def process_chat_response(
                         temp_blocks.append(block)
 
                 if temp_blocks:
-                    content = serialize_content_blocks(temp_blocks)
-                    if content:
-                        messages.append(
-                            {
-                                "role": "assistant",
-                                "content": content,
-                            }
-                        )
+                    _content, _reasoning = serialize_content_blocks(temp_blocks)
+                    if _content or _reasoning:
+                        msg = {
+                            "role": "assistant",
+                            "content": _content,
+                        }
+                        if _reasoning:
+                            msg["reasoning"] = _reasoning
+                        messages.append(msg)
 
                 return messages
 
@@ -1664,12 +1658,12 @@ async def process_chat_response(
                     )
 
                     # Save message in the database
+                    reasoning = event.get("reasoning")
                     Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
-                        {
-                            **event,
-                        },
+                        {k: v for k, v in event.items() if k != "reasoning"},
+                        reasoning,
                     )
 
                 async def stream_body_handler(response):
@@ -1807,11 +1801,12 @@ async def process_chat_response(
 
                                         reasoning_block["content"] += reasoning_content
 
-                                        data = {
-                                            "content": serialize_content_blocks(
-                                                content_blocks
-                                            )
-                                        }
+                                        _content, _reasoning = serialize_content_blocks(
+                                            content_blocks
+                                        )
+                                        data = {"content": _content}
+                                        if _reasoning:
+                                            data["reasoning"] = _reasoning
                                         log.debug(
                                             "Emitting reasoning start event: %s", data
                                         )
@@ -1839,19 +1834,26 @@ async def process_chat_response(
                                                 reasoning_block["ended_at"]
                                                 - reasoning_block["started_at"]
                                             )
+
+                                            _content, _reasoning = serialize_content_blocks(
+                                                content_blocks
+                                            )
+                        
+
                                             log.debug(
                                                 "Reasoning block ended: %s",
                                                 reasoning_block["content"],
                                             )
+
                                             done_data = {
-                                                "content": serialize_content_blocks(
-                                                    content_blocks
-                                                ),
+                                                "content": _content,
                                                 "done": True,
                                                 "duration": reasoning_block[
                                                     "duration"
                                                 ],
                                             }
+                                            if _reasoning:
+                                                done_data["reasoning"] = _reasoning
                                             log.debug(
                                                 "Emitting reasoning end event: %s",
                                                 done_data,
@@ -1918,21 +1920,22 @@ async def process_chat_response(
 
                                         if ENABLE_REALTIME_CHAT_SAVE:
                                             # Save message in the database
+                                            _content, _reasoning = serialize_content_blocks(
+                                                content_blocks
+                                            )
                                             Chats.upsert_message_to_chat_by_id_and_message_id(
                                                 metadata["chat_id"],
                                                 metadata["message_id"],
-                                                {
-                                                    "content": serialize_content_blocks(
-                                                        content_blocks
-                                                    ),
-                                                },
+                                                {"content": _content},
+                                                _reasoning,
                                             )
                                         else:
-                                            data = {
-                                                "content": serialize_content_blocks(
-                                                    content_blocks
-                                                ),
-                                            }
+                                            _content, _reasoning = serialize_content_blocks(
+                                                content_blocks
+                                            )
+                                            data = {"content": _content}
+                                            if _reasoning:
+                                                data["reasoning"] = _reasoning
 
                                 if data:
                                     await event_emitter(
@@ -1990,14 +1993,11 @@ async def process_chat_response(
                         }
                     )
 
-                    await event_emitter(
-                        {
-                            "type": "chat:completion",
-                            "data": {
-                                "content": serialize_content_blocks(content_blocks),
-                            },
-                        }
-                    )
+                    _content, _reasoning = serialize_content_blocks(content_blocks)
+                    data = {"content": _content}
+                    if _reasoning:
+                        data["reasoning"] = _reasoning
+                    await event_emitter({"type": "chat:completion", "data": data})
 
                     tools = metadata.get("tools", {})
 
@@ -2089,14 +2089,11 @@ async def process_chat_response(
                         }
                     )
 
-                    await event_emitter(
-                        {
-                            "type": "chat:completion",
-                            "data": {
-                                "content": serialize_content_blocks(content_blocks),
-                            },
-                        }
-                    )
+                    _content, _reasoning = serialize_content_blocks(content_blocks)
+                    data = {"content": _content}
+                    if _reasoning:
+                        data["reasoning"] = _reasoning
+                    await event_emitter({"type": "chat:completion", "data": data})
 
                     try:
                         res = await generate_chat_completion(
@@ -2129,14 +2126,11 @@ async def process_chat_response(
                         content_blocks[-1]["type"] == "code_interpreter"
                         and retries < MAX_RETRIES
                     ):
-                        await event_emitter(
-                            {
-                                "type": "chat:completion",
-                                "data": {
-                                    "content": serialize_content_blocks(content_blocks),
-                                },
-                            }
-                        )
+                        _content, _reasoning = serialize_content_blocks(content_blocks)
+                        data = {"content": _content}
+                        if _reasoning:
+                            data["reasoning"] = _reasoning
+                        await event_emitter({"type": "chat:completion", "data": data})
 
                         retries += 1
                         log.debug(f"Attempt count: {retries}")
@@ -2266,14 +2260,11 @@ async def process_chat_response(
                             }
                         )
 
-                        await event_emitter(
-                            {
-                                "type": "chat:completion",
-                                "data": {
-                                    "content": serialize_content_blocks(content_blocks),
-                                },
-                            }
-                        )
+                        _content, _reasoning = serialize_content_blocks(content_blocks)
+                        data = {"content": _content}
+                        if _reasoning:
+                            data["reasoning"] = _reasoning
+                        await event_emitter({"type": "chat:completion", "data": data})
 
                         try:
                             res = await generate_chat_completion(
@@ -2287,7 +2278,7 @@ async def process_chat_response(
                                             "role": "assistant",
                                             "content": serialize_content_blocks(
                                                 content_blocks, raw=True
-                                            ),
+                                            )[0],
                                         },
                                     ],
                                 },
@@ -2303,20 +2294,19 @@ async def process_chat_response(
                             break
 
                 title = Chats.get_chat_title_by_id(metadata["chat_id"])
-                data = {
-                    "done": True,
-                    "content": serialize_content_blocks(content_blocks),
-                    "title": title,
-                }
+                _content, _reasoning = serialize_content_blocks(content_blocks)
+                data = {"done": True, "content": _content, "title": title}
+                if _reasoning:
+                    data["reasoning"] = _reasoning
 
                 if not ENABLE_REALTIME_CHAT_SAVE:
                     # Save message in the database
+                    _content, _reasoning = serialize_content_blocks(content_blocks)
                     Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
-                        {
-                            "content": serialize_content_blocks(content_blocks),
-                        },
+                        {"content": _content},
+                        _reasoning,
                     )
 
                 # Send a webhook notification if the user is not active
@@ -2349,12 +2339,12 @@ async def process_chat_response(
 
                 if not ENABLE_REALTIME_CHAT_SAVE:
                     # Save message in the database
+                    _content, _reasoning = serialize_content_blocks(content_blocks)
                     Chats.upsert_message_to_chat_by_id_and_message_id(
                         metadata["chat_id"],
                         metadata["message_id"],
-                        {
-                            "content": serialize_content_blocks(content_blocks),
-                        },
+                        {"content": _content},
+                        _reasoning,
                     )
 
             if response.background is not None:

@@ -74,9 +74,15 @@ class ChatImportForm(ChatForm):
     folder_id: Optional[str] = None
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+    reasoning: Optional[str] = None
+
+
 class ChatTitleMessagesForm(BaseModel):
     title: str
-    messages: list[dict]
+    messages: list[ChatMessage]
 
 
 class ChatTitleForm(BaseModel):
@@ -226,7 +232,11 @@ class ChatTable:
         return chat.chat.get("history", {}).get("messages", {}).get(message_id, {})
 
     def upsert_message_to_chat_by_id_and_message_id(
-        self, id: str, message_id: str, message: dict
+        self,
+        id: str,
+        message_id: str,
+        message: dict,
+        reasoning: Optional[str] = None,
     ) -> Optional[ChatModel]:
         chat = self.get_chat_by_id(id)
         if chat is None:
@@ -242,6 +252,10 @@ class ChatTable:
             }
         else:
             history["messages"][message_id] = message
+
+        if reasoning is not None:
+            existing_reasoning = history["messages"][message_id].get("reasoning", "")
+            history["messages"][message_id]["reasoning"] = f"{existing_reasoning}{reasoning}"
 
         history["currentId"] = message_id
 
