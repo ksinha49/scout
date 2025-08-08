@@ -379,6 +379,7 @@ async def update_chat_by_id(
 ############################
 class MessageForm(BaseModel):
     content: str
+    reasoning: Optional[str] = None
 
 
 @router.post("/{id}/messages/{message_id}", response_model=Optional[ChatResponse])
@@ -405,6 +406,7 @@ async def update_chat_message_by_id(
         {
             "content": form_data.content,
         },
+        form_data.reasoning,
     )
 
     event_emitter = get_event_emitter(
@@ -424,6 +426,11 @@ async def update_chat_message_by_id(
                     "chat_id": id,
                     "message_id": message_id,
                     "content": form_data.content,
+                    **(
+                        {"reasoning": form_data.reasoning}
+                        if form_data.reasoning is not None
+                        else {}
+                    ),
                 },
             }
         )

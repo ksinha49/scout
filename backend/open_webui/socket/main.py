@@ -347,23 +347,25 @@ def get_event_emitter(request_info, update_db=True):
                 content = message.get("content", "")
                 content += event_data.get("data", {}).get("content", "")
 
+                reasoning = message.get("reasoning", "")
+                reasoning += event_data.get("data", {}).get("reasoning", "")
+
                 Chats.upsert_message_to_chat_by_id_and_message_id(
                     request_info["chat_id"],
                     request_info["message_id"],
-                    {
-                        "content": content,
-                    },
+                    {"content": content},
+                    reasoning,
                 )
 
             if "type" in event_data and event_data["type"] == "replace":
                 content = event_data.get("data", {}).get("content", "")
+                reasoning = event_data.get("data", {}).get("reasoning", "")
 
                 Chats.upsert_message_to_chat_by_id_and_message_id(
                     request_info["chat_id"],
                     request_info["message_id"],
-                    {
-                        "content": content,
-                    },
+                    {"content": content},
+                    reasoning,
                 )
 
     return __event_emitter__
