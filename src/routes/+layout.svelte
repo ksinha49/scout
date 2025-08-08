@@ -567,12 +567,24 @@
 			await goto(`/error`);
 		}
 
-		await tick();
+                await tick();
 
-		if (
-			document.documentElement.classList.contains('her') &&
-			document.getElementById('progress-bar')
-		) {
+                const removeSplashScreen = () => {
+                        const splash = document.getElementById('splash-screen');
+                        if (splash) {
+                                splash.classList.add('splash-exit');
+                                splash.addEventListener(
+                                        'animationend',
+                                        () => splash.remove(),
+                                        { once: true }
+                                );
+                        }
+                };
+
+                if (
+                        document.documentElement.classList.contains('her') &&
+                        document.getElementById('progress-bar')
+                ) {
 			loadingProgress.subscribe((value) => {
 				const progressBar = document.getElementById('progress-bar');
 
@@ -581,9 +593,9 @@
 				}
 			});
 
-			await loadingProgress.set(100);
+                        await loadingProgress.set(100);
 
-			document.getElementById('splash-screen')?.remove();
+                        removeSplashScreen();
 
 			const audio = new Audio(`/audio/greeting.mp3`);
 			const playAudio = () => {
@@ -594,10 +606,10 @@
 			document.addEventListener('click', playAudio);
 
 			loaded = true;
-		} else {
-			document.getElementById('splash-screen')?.remove();
-			loaded = true;
-		}
+                } else {
+                        removeSplashScreen();
+                        loaded = true;
+                }
 
 		return () => {
 			window.removeEventListener('resize', onResize);
