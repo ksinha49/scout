@@ -534,6 +534,7 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
     def merge_models_lists(model_lists):
         log.debug(f"merge_models_lists {model_lists}")
         merged_list = []
+        reasoning_models = set(request.app.state.config.OPENAI_REASONING_MODELS)
 
         for idx, models in enumerate(model_lists):
             if models is not None and "error" not in models:
@@ -546,6 +547,17 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
                             "owned_by": "openai",
                             "openai": model,
                             "urlIdx": idx,
+                            **(
+                                {
+                                    "info": {
+                                        "meta": {
+                                            "capabilities": {"reasoning": True}
+                                        }
+                                    }
+                                }
+                                if model.get("id") in reasoning_models
+                                else {}
+                            ),
                         }
                         for model in models
                         if (model.get("id") or model.get("name"))

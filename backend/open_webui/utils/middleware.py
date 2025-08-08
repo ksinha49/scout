@@ -697,6 +697,37 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     else:
         models = request.app.state.MODELS
 
+    reasoning_capable = (
+        model.get("info", {})
+        .get("meta", {})
+        .get("capabilities", {})
+        .get("reasoning", False)
+    )
+    if reasoning_capable:
+        form_data["messages"] = add_or_update_system_message(
+            "Think step by step: <think></think>",
+            form_data.get("messages", []),
+        )
+        if model.get("owned_by") == "openai":
+            reason_tool = {
+                "type": "function",
+                "function": {
+                    "name": "reason",
+                    "description": "Expose reasoning steps",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {"reason": {"type": "string"}},
+                        "required": ["reason"],
+                    },
+                },
+            }
+            form_data.setdefault("tools", [])
+            if all(
+                t.get("function", {}).get("name") != "reason"
+                for t in form_data["tools"]
+            ):
+                form_data["tools"].append(reason_tool)
+
     task_model_id = get_task_model_id(
         form_data["model"],
         request.app.state.config.TASK_MODEL,
