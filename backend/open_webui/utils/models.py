@@ -217,6 +217,15 @@ async def get_all_models(request, user: UserModel = None):
             model["actions"].extend(
                 get_action_items_from_module(action_function, function_module)
             )
+    reasoning_models = set(request.app.state.config.OPENAI_REASONING_MODELS)
+    for model in models:
+        if model.get("id") in reasoning_models:
+            (
+                model.setdefault("info", {})
+                .setdefault("meta", {})
+                .setdefault("capabilities", {})
+            )["reasoning"] = True
+
     log.debug(f"get_all_models() returned {len(models)} models")
 
     request.app.state.MODELS = {model["id"]: model for model in models}

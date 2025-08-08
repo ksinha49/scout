@@ -697,8 +697,12 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     else:
         models = request.app.state.MODELS
 
+    override = request.app.state.config.REASONING_OVERRIDE
     reasoning_capable = (
-        model.get("info", {})
+        override
+        if override is not None
+        else metadata.get("model", {})
+        .get("info", {})
         .get("meta", {})
         .get("capabilities", {})
         .get("reasoning", False)
@@ -1554,8 +1558,16 @@ async def process_chat_response(
                 }
             ]
 
-            # We might want to disable this by default
-            DETECT_REASONING = True
+            override = request.app.state.config.REASONING_OVERRIDE
+            DETECT_REASONING = (
+                override
+                if override is not None
+                else metadata.get("model", {})
+                .get("info", {})
+                .get("meta", {})
+                .get("capabilities", {})
+                .get("reasoning", False)
+            )
             DETECT_SOLUTION = True
             DETECT_CODE_INTERPRETER = metadata.get("features", {}).get(
                 "code_interpreter", False

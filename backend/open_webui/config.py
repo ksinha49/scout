@@ -896,6 +896,17 @@ OPENAI_REASONING_MODELS = PersistentConfig(
     OPENAI_REASONING_MODELS,
 )
 
+REASONING_OVERRIDE = os.environ.get("REASONING_OVERRIDE", "").lower()
+if REASONING_OVERRIDE not in ["true", "false"]:
+    REASONING_OVERRIDE = None
+else:
+    REASONING_OVERRIDE = REASONING_OVERRIDE == "true"
+REASONING_OVERRIDE = PersistentConfig(
+    "REASONING_OVERRIDE",
+    "openai.reasoning_override",
+    REASONING_OVERRIDE,
+)
+
 # Get the actual OpenAI API key based on the base URL
 OPENAI_API_KEY = ""
 try:
