@@ -34,8 +34,6 @@ much the model thinks by setting the `reasoning_effort` parameter in model or re
 settings. Configure the `OPENAI_REASONING_MODELS` environment variable to list IDs of
 reasoning-capable models.
 
-  
-  
 ## Deployment Configuration
 
 - `GUNICORN_TIMEOUT` – Gunicorn worker timeout in seconds (default: `120`).

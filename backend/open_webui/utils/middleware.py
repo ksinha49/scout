@@ -727,6 +727,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         ):
             form_data["tools"].append(reason_tool)
 
+
     task_model_id = get_task_model_id(
         form_data["model"],
         request.app.state.config.TASK_MODEL,
