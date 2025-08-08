@@ -1,3 +1,11 @@
+"""
+Modification Log:
+------------------
+| Date       | Author         | MOD TAG            | Description                                                                                         |
+|------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Fixed web search                                                                                    |
+"""
+
 import logging
 from typing import Optional
 

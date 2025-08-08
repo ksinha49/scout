@@ -7,8 +7,10 @@ Modification Log:
 |            |                |                    | **Old Code:** Exposed detailed exception messages to users.                                         |
 |            |                |                    | **New Code:** Logged exception details while providing a generic error message to users.            |
 | 2024-11-05 | AAK7S          | CWE-918            | Fix for Full server-side request forgery                                                            | 
-| 2025-12-02 | X1BA           | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                    |
+| 2025-12-02 | X1BA           | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
 | 2025-12-02 | X1BA           | CWE-918 -parsed_url| Full server-side request forgery fix                                                                |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Validate Ollama model IDs with fallback                                                             |
+|            |                |                    | add upload progress metrics
 """
 # TODO: Implement a more intelligent load balancing mechanism for distributing requests among multiple backend instances.
 # Current implementation uses a simple round-robin approach (random.choice). Consider incorporating algorithms like weighted round-robin,

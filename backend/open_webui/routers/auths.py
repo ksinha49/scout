@@ -9,7 +9,9 @@ Modification Log:
 | 2025-12-02 | X1BA           | CWE-1004           | Ensured all `set_cookie` calls use `httponly`, `secure`, and `samesite` attributes.                 |
 | 2025-12-02 | X1BA           | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
 | 2025-12-02 | X1BA           | CWE-918            | Full server-side request forgery fix                                                                |
-| 2025-27-06 | X1BA           | OIDC_MS_SIGNOUT    | Retuning the JSON response instead of redirecting                                              |
+| 2025-27-06 | X1BA           | OIDC_MS_SIGNOUT    | Retuning the JSON response instead of redirecting                                                   |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Admin Activity Logs                                                                                 |
+
 """
 
 import re

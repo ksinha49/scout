@@ -9,6 +9,8 @@ Modification Log:
 | 2025-05-28 | AAK7S          | AMERITAS-ENH-3     | Proxy settings selective allocation for openai config only     |
 |            |                |                    | allowing usage of Bedrock OpenAPI configuration.               |
 | 2025-06-11 | AAK7S          | AMERITAS-ENH-3.1   | Added SSL certi for Bedrock API connection                     |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Validate  model IDs with fallback                                                             |
+|            |                |                    | add upload progress metrics
 """
 import asyncio
 import hashlib

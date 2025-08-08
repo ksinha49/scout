@@ -6,7 +6,7 @@ Modification Log:
 | 2024-11-05 | AAK7S          | CWE-312            | Replaced clear-text logging of sensitive information with generic logging messages.                 |
 |            |                |                    | **Old Code:** Logged user emails and API keys in plain text.                                        |
 |            |                |                    | **New Code:** Logs replaced with general action messages, omitting sensitive details.               |
-
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Fixed issue for duplicate user id allocation                                                        |
 """
 import logging
 import uuid
@@ -114,6 +114,7 @@ class AuthsTable:
         role: str = "pending",
         oauth_sub: Optional[str] = None,
     ) -> Optional[UserModel]:
+# AMER-ENH-V1.2.2
         email = email.lower()
         id = str(uuid.uuid4())
 
@@ -128,6 +129,8 @@ class AuthsTable:
 
         with get_db() as db:
             log.info("Inserting new authentication record.")
+
+# End of AMER-ENH-V1.2.2
             auth = AuthModel(
                 **{"id": id, "email": email, "password": password, "active": True}
             )

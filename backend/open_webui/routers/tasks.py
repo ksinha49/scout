@@ -5,9 +5,10 @@ Modification Log:
 |------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
 | 2025-03-07 | Bala           | CWE-1333           | Modified the RE to address the Inefficient Regular Expression Complexity                   |
 | 2025-11-02 | X1BA           | CWE-209            | Replaced direct str(e) messages with error message in user-facing outputs.                   |
-| 2025-12-02 | X1BA          | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
-
+| 2025-12-02 | X1BA           | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Validate Ollama model IDs with fallback                                                             |
 """
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 

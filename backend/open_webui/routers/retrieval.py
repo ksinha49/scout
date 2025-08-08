@@ -6,7 +6,9 @@ Modification Log:
 |------------|----------------|-------------------------------|--------------------------------------------------------------------------------|
 | 2024-11-16 | AAK7S          | AMER-HOTFIX-1                 | VECTOR DB INSERT IN BATCH FOR BETTER PERFORMANCE                               |
 | 2025-12-02 | X1BA           | CWE-209                       | Replace direct exception messages with generic responses in user-facing outputs|
-| 2025-04-06 | AAK7S          | ASYNC-IMPROVEMENT       | Added parallel asynchronous batch insertion for large vector DB loads                |
+| 2025-04-06 | AAK7S          | ASYNC-IMPROVEMENT             | Added parallel asynchronous batch insertion for large vector DB loads          |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2               | Admin Activity Logs                                                            |
+
 """
 
 import json

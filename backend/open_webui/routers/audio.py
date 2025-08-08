@@ -8,6 +8,7 @@ Modification Log:
 |            |                |                    | **New Code:** Logged exception details while providing a generic error message to users.            |
 | 2025-04-06 | AAK7S          | CWE-327            | Fix for Using a broken or weak cryptographic protocol may make a connection                         |
 |            |                |                    | vulnerable to interference from an attacker.                                                        |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Fixed audio issues                                                                                    |
 """
 
 import hashlib

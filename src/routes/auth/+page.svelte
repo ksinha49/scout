@@ -159,30 +159,27 @@ Modification Log:
                         const redirectPath = querystringValue('redirect') || '/';
                         goto(redirectPath);
                 }
-                await checkOauthCallback();
+               await checkOauthCallback();
 
-                const providerParam = querystringValue('provider');
-                const providers = providerParam
-                        ? [providerParam]
-                        : Object.keys($config?.oauth?.providers ?? {});
+              const providerParam = querystringValue('provider');
+              const providers = providerParam !== null
+                      ? [providerParam]
+                      : Object.keys($config?.oauth?.providers ?? {});
 
-                for (const provider of providers) {
-                        try {
-                                const resp = await fetch(
-                                        `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
-                                        { redirect: 'manual', credentials: 'include' }
-                                );
-                                if (resp.status >= 300 && resp.status < 400) {
-                                        const url = resp.headers.get('Location');
-                                        if (url) {
-                                                window.location.href = url;
-                                                return;
+               for (const provider of providers) {
+                       console.log('Attempting silent login for provider:', provider);
+                       const silentAuthWindow = window.open(
+                               `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
+                               'silent-auth',
+                               'width=1,height=1,left=-1000,top=-1000'
+                       );
+                       setTimeout(() => {
+                               if (silentAuthWindow && !silentAuthWindow.closed) {
+                                       silentAuthWindow.close();
                                         }
-                                }
-                        } catch (e) {
-                                console.error(e);
+                       }, 3000);
                         }
-                }
+               sessionStorage.removeItem('attemptSilentLogin');
                 loaded = true;
                 setLogoImage();
 

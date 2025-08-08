@@ -13,7 +13,7 @@ docker run -d -p "$host_port":"$container_port" \
     --add-host=host.docker.internal:host-gateway \
     -v "${image_name}:/app/backend/data" \
     --name "$container_name" \
-    -e "GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-120}" \
+    -e "GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT:-600}" \
     --restart always \
     "$image_name"
 

@@ -3,8 +3,8 @@ Modification Log:
 ------------------
 | Date       | Author         | MOD TAG            | Description                                                                                         |
 |------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
-| 2025-12-02 | X1BA          | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
-                                                             
+| 2025-12-02 | X1BA          | CWE-209             | Replaced direct exception messages with generic responses in user-facing outputs.                    |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Admin activity logs                                                                                 |                                                             
 """
 from typing import List, Optional
 from pydantic import BaseModel

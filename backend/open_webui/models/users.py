@@ -1,3 +1,12 @@
+"""
+Modification Log:
+------------------
+| Date       | Author         | MOD TAG            | Description                                                                                         |
+|------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Fixed issue for duplicate user id allocation                                                        |
+"""
+
+
 import time
 from typing import Optional
 
@@ -9,7 +18,7 @@ from open_webui.models.groups import Groups
 
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, String, Text, or_
+from sqlalchemy import BigInteger, Column, String, Text, or_  #AMER-ENH-V1.2.2 
 
 ####################
 # User DB Schema
@@ -21,7 +30,7 @@ class User(Base):
 
     id = Column(String, primary_key=True)
     name = Column(String)
-    email = Column(String, unique=True)
+    email = Column(String, unique=True)  #AMER-ENH-V1.2.2 
     role = Column(String)
     profile_image_url = Column(Text)
 
@@ -115,7 +124,7 @@ class UsersTable:
                 )
             else:
                 existing_user = db.query(User).filter_by(email=email).first()
-
+# AMER-ENH-V1.2.2 
             if existing_user:
                 updated = False
                 if existing_user.email != email:
@@ -144,7 +153,7 @@ class UsersTable:
             db.commit()
             db.refresh(user)
             return UserModel.model_validate(user)
-
+#End of AMER-ENH-V1.2.2 
     def get_user_by_id(self, id: str) -> Optional[UserModel]:
         try:
             with get_db() as db:

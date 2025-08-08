@@ -1,3 +1,11 @@
+"""
+Modification Log:
+------------------
+| Date       | Author         | MOD TAG            | Description                                                                                         |
+|------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Prompt Optimizer                                                                                    |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Admin activity logs                                                                                 |
+"""
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 

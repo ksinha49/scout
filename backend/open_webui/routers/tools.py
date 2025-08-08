@@ -6,7 +6,9 @@ Modification Log:
 | 2024-11-05 | AAK7S          | CWE-22             | Updated `create_new_toolkit` function to sanitize user-provided `form_data.id` input.               |
 |            |                |                    | Applied `secure_filename` to prevent path traversal attacks when creating the toolkit cache dir.    |
 | 2025-03-06 | Bala           | CWE-73             | Validated the path to address External Control of File Name or Path                                 |
-| 2025-12-02 | X1BA          | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
+| 2025-12-02 | X1BA           | CWE-209            | Replaced direct exception messages with generic responses in user-facing outputs.                   |
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Admin Activity Logs                                                                                 |
+
 """
 
 import os

@@ -4,11 +4,27 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-## [1.2.1] - 2025-08-02
-
-### Fixed Ameritas Custom Changes - 2025-08-02
+## [1.2.2] - 2025-08-08
+### Added
+-  🔁 **Advanced Logs**: Allocated advanced logging mechanism for errors and Admin activity
+-     **Prompt Optimizer**: LLM powered prompt engineer on chat. 
+### Updated
+-   **Guard users lookup**: Update to channels
+-   **Model Fallback**: Validate Ollama model IDs with fallback
+### Fixed Ameritas Changes
 - 🔐**Provider-aware Silent SSO Login**: Silent login now uses the configured OAuth provider instead of a Microsoft-only endpoint.
+-   **Audio fixed**: SST and TTS functional now.
+-   **Evaluation loads**: Fixed issue for evaluation loads  
 
+## [1.2.1] - 2025-07-25
+### Added
+-  🔁 **Self-recovery**: Operational fixes added self recovery feature in application to mitigate downtime using gunicorn
+-  📚 **Logging**: Logging updated for processes
+-  🧾 **Startup script**: Modified Startup script to be more scalable param store variable load.Fixing ssm load time.
+### Updated
+-  💼 **Rebranding Product**: Product name change to **Scout**
+### Fixed Ameritas Changes
+-  🛠️ **Sign-off updated**: Issues with sign out issue fixed
 ## [1.2.0] - 2025-04-06
 
 ### Fixed Ameritas Custom Changes - 2025-04-06

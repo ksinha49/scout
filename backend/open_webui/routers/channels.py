@@ -1,3 +1,10 @@
+"""
+Modification Log:
+------------------
+| Date       | Author         | MOD TAG            | Description                                                                                         |
+|------------|----------------|--------------------|-----------------------------------------------------------------------------------------------------|
+| 2025-08-01 | AAK7S          | AMER-ENH-V1.2.2    | Guard users lookup                                                                                  |
+"""
 import json
 import logging
 from typing import Optional
