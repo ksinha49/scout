@@ -173,12 +173,21 @@ Modification Log:
                                'silent-auth',
                                'width=1,height=1,left=-1000,top=-1000'
                        );
-                       setTimeout(() => {
+                       setTimeout(async () => {
                                if (silentAuthWindow && !silentAuthWindow.closed) {
                                        silentAuthWindow.close();
-                                        }
+                               }
+
+                               const sessionUser = await getSessionUser().catch((error) => {
+                                       console.log(error);
+                                       return null;
+                               });
+
+                               if (sessionUser) {
+                                       await setSessionUser(sessionUser);
+                               }
                        }, 3000);
-                        }
+                       }
                sessionStorage.removeItem('attemptSilentLogin');
                 loaded = true;
                 setLogoImage();
