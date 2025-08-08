@@ -89,7 +89,7 @@ async function* openAIStreamToIterator(
                                 parsedData.choices?.[0]?.delta?.reasoning ??
                                 parsedData.choices?.[0]?.message?.reasoning ??
                                 parsedData.reasoning;
-                        if (reasoning) {
+                        if (reasoning !== undefined) {
                                 yield { done: false, value: '', reasoning };
                         }
 
@@ -133,7 +133,7 @@ async function* streamLargeDeltasAsRandomChunks(
                         yield textStreamUpdate;
                         continue;
                 }
-                if (textStreamUpdate.reasoning) {
+                if (textStreamUpdate.reasoning !== undefined) {
                         yield textStreamUpdate;
                         continue;
                 }

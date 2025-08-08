@@ -1170,15 +1170,18 @@
 		let baseContent = removeDetails(message.content, ['reasoning']);
 		let ttsTriggered = false;
 
-		let reasoningDelta =
-			rootReasoning ??
-			choices?.[0]?.delta?.reasoning_content ??
-			choices?.[0]?.delta?.reasoning ??
-			choices?.[0]?.message?.reasoning ??
-			'';
-		if (reasoningDelta) {
-			message.reasoning = (message.reasoning ?? '') + reasoningDelta;
-		}
+                let reasoningDelta =
+                        rootReasoning ??
+                        choices?.[0]?.delta?.reasoning_content ??
+                        choices?.[0]?.delta?.reasoning ??
+                        choices?.[0]?.message?.reasoning;
+                if (reasoningDelta !== undefined) {
+                        if (message.reasoning === undefined) {
+                                message.reasoningStart = Date.now();
+                                message.reasoning = '';
+                        }
+                        message.reasoning += reasoningDelta;
+                }
 
 		if (choices) {
 			if (choices[0]?.message?.content) {
@@ -1198,13 +1201,22 @@
 			ttsTriggered = true;
 		}
 
-		message.content = `${
-			message.reasoning
-				? `<details type="reasoning" done="${done ? 'true' : 'false'}"${
-						extendedThinkingEnabled ? ' open="true"' : ''
-					}><summary>${$i18n.t('Thinking...')}</summary>${message.reasoning}</details>`
-				: ''
-		}${baseContent}`;
+                const reasoningDuration =
+                        done && message.reasoningStart
+                                ? Math.round((Date.now() - message.reasoningStart) / 1000)
+                                : undefined;
+                message.content = `${
+                        message.reasoning !== undefined
+                                ? `<details type="reasoning" done="${done ? 'true' : 'false'}"${
+                                          reasoningDuration !== undefined
+                                                  ? ` duration="${reasoningDuration}"`
+                                                  : ''
+                                  }${extendedThinkingEnabled ? ' open="true"' : ''}><summary>${$i18n.t('Thinking...')}</summary>${message.reasoning}</details>`
+                                : ''
+                }${baseContent}`;
+                if (done) {
+                        delete message.reasoningStart;
+                }
 
 		if (ttsTriggered) {
 			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
@@ -1871,9 +1883,9 @@
 
 			if (res && res.ok && res.body) {
 				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
-				for await (const update of textStream) {
-					const { value, done, sources, error, usage, reasoning } = update;
-					if (sources) {
+                                for await (const update of textStream) {
+                                        const { value, done, sources, error, usage, reasoning } = update;
+                                        if (sources) {
 						if (message?.sources) {
 							message.sources.push(...sources);
 						} else {
@@ -1883,38 +1895,52 @@
 						history.messages[messageId] = message;
 						history = history;
 					}
-					if (error || done) {
-						const baseContent = removeDetails(mergedResponse.content, ['reasoning']);
-						mergedResponse.content = `${
-							mergedResponse.reasoning
-								? `<details type="reasoning" done="true"${
-										extendedThinkingEnabled ? ' open="true"' : ''
-									}><summary>${$i18n.t('Thinking...')}</summary>${
-										mergedResponse.reasoning
-									}</details>`
-								: ''
-						}${baseContent}`;
-						history.messages[messageId] = message;
-						break;
-					}
+                                        if (error || done) {
+                                                const baseContent = removeDetails(mergedResponse.content, ['reasoning']);
+                                                const reasoningDuration =
+                                                        done && mergedResponse.reasoningStart
+                                                                ? Math.round(
+                                                                                (Date.now() - mergedResponse.reasoningStart) /
+                                                                                        1000
+                                                                        )
+                                                                : undefined;
+                                                mergedResponse.content = `${
+                                                        mergedResponse.reasoning !== undefined
+                                                                ? `<details type="reasoning" done="true"${
+                                                                                reasoningDuration !== undefined
+                                                                                        ? ` duration="${reasoningDuration}"`
+                                                                                        : ''
+                                                                        }${extendedThinkingEnabled ? ' open="true"' : ''}><summary>${$i18n.t('Thinking...')}</summary>${mergedResponse.reasoning}</details>`
+                                                                : ''
+                                                }${baseContent}`;
+                                                if (done) {
+                                                        delete mergedResponse.reasoningStart;
+                                                }
+                                                history.messages[messageId] = message;
+                                                break;
+                                        }
 
-					let baseContent = removeDetails(mergedResponse.content, ['reasoning']);
-					if (reasoning) {
-						mergedResponse.reasoning = (mergedResponse.reasoning ?? '') + reasoning;
-					}
+                                        let baseContent = removeDetails(mergedResponse.content, ['reasoning']);
+                                        if (reasoning !== undefined) {
+                                                if (mergedResponse.reasoning === undefined) {
+                                                        mergedResponse.reasoningStart = Date.now();
+                                                        mergedResponse.reasoning = '';
+                                                }
+                                                mergedResponse.reasoning += reasoning;
+                                        }
 
-					if (!(baseContent == '' && value == '\n' && !mergedResponse.reasoning)) {
-						baseContent += value;
-					}
+                                        if (!(baseContent == '' && value == '\n' && !mergedResponse.reasoning)) {
+                                                baseContent += value;
+                                        }
 
-					mergedResponse.content = `${
-						mergedResponse.reasoning
-							? `<details type="reasoning" done="false"${
-									extendedThinkingEnabled ? ' open="true"' : ''
-								}><summary>${$i18n.t('Thinking...')}</summary>${mergedResponse.reasoning}</details>`
-							: ''
-					}${baseContent}`;
-					history.messages[messageId] = message;
+                                        mergedResponse.content = `${
+                                                mergedResponse.reasoning !== undefined
+                                                        ? `<details type="reasoning" done="false"${
+                                                                        extendedThinkingEnabled ? ' open="true"' : ''
+                                                                }><summary>${$i18n.t('Thinking...')}</summary>${mergedResponse.reasoning}</details>`
+                                                        : ''
+                                        }${baseContent}`;
+                                        history.messages[messageId] = message;
 
 					if (autoScroll) {
 						scrollToBottom();
