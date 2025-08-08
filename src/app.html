@@ -249,13 +249,20 @@
                 font-size: 2rem;
                 font-weight: 500;
                 opacity: 0;
-                animation: app-name-in 0.6s ease-out forwards;
-                color: #000;
+                color: #ef4444;
+                animation:
+                        app-name-in 0.6s ease-out forwards,
+                        app-name-color 4s ease-in-out 0.6s infinite alternate;
         }
 
-        html.dark .app-name,
-        html.her .app-name {
-                color: #fff;
+        @keyframes app-name-color {
+                from {
+                        color: #ef4444;
+                }
+
+                to {
+                        color: #3b82f6;
+                }
         }
 
         @keyframes app-name-in {
