@@ -215,7 +215,14 @@ class OAuthManager:
                     id=group_model.id, form_data=update_form, overwrite=False
                 )
 
-    async def handle_login(self, request, provider, prompt: str | None = None):
+    async def handle_login(
+        self,
+        request,
+        provider,
+        prompt: str | None = None,
+        login_hint: str | None = None,
+        domain_hint: str | None = None,
+    ):
         if provider not in OAUTH_PROVIDERS:
             raise HTTPException(404)
         # If the provider has a custom redirect URL, use that, otherwise automatically generate one
@@ -225,11 +232,19 @@ class OAuthManager:
         client = self.get_client(provider)
         if client is None:
             raise HTTPException(404)
+
+        params = {}
         if prompt:
-            return await client.authorize_redirect(
-                request, redirect_uri, prompt=prompt
-            )
-        return await client.authorize_redirect(request, redirect_uri)
+            params["prompt"] = prompt
+
+        login_hint = login_hint or request.query_params.get("login_hint")
+        domain_hint = domain_hint or request.query_params.get("domain_hint")
+        if login_hint:
+            params["login_hint"] = login_hint
+        if domain_hint:
+            params["domain_hint"] = domain_hint
+
+        return await client.authorize_redirect(request, redirect_uri, **params)
 
     async def handle_callback(self, request, provider, response):
         if provider not in OAUTH_PROVIDERS:

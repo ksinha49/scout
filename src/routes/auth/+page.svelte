@@ -162,14 +162,25 @@ Modification Log:
                await checkOauthCallback();
 
               const providerParam = querystringValue('provider');
-              const providers = providerParam !== null
-                      ? [providerParam]
-                      : Object.keys($config?.oauth?.providers ?? {});
+               const providers = providerParam !== null
+                       ? [providerParam]
+                       : Object.keys($config?.oauth?.providers ?? {});
 
                for (const provider of providers) {
                        console.log('Attempting silent login for provider:', provider);
+                       const providerConfig = $config?.oauth?.providers?.[provider];
+                       const params = new URLSearchParams();
+                       if (providerConfig?.login_hint) {
+                               params.set('login_hint', providerConfig.login_hint);
+                       }
+                       if (providerConfig?.domain_hint) {
+                               params.set('domain_hint', providerConfig.domain_hint);
+                       }
+
                        const silentAuthWindow = window.open(
-                               `${WEBUI_BASE_URL}/oauth/${provider}/silent-login`,
+                               `${WEBUI_BASE_URL}/oauth/${provider}/silent-login${
+                                       params.toString() ? `?${params.toString()}` : ''
+                               }`,
                                'silent-auth',
                                'width=1,height=1,left=-1000,top=-1000'
                        );
