@@ -33,6 +33,8 @@ can stream its thought process via function calls. Operators can optionally cont
 much the model thinks by setting the `reasoning_effort` parameter in model or request
 settings. Configure the `OPENAI_REASONING_MODELS` environment variable to list IDs of
 reasoning-capable models.
+Administrators may override automatic detection entirely by setting the
+`REASONING_OVERRIDE` environment variable to `true` or `false`.
 
 ## Deployment Configuration
 
