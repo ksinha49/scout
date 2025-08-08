@@ -453,7 +453,11 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
                             {
                                 "id": model_id,
                                 "name": model_id,
-                                "owned_by": "openai",
+                                "owned_by": (
+                                    "anthropic"
+                                    if model_id.startswith("claude")
+                                    else "openai"
+                                ),
                                 "openai": {"id": model_id},
                                 "urlIdx": idx,
                             }
@@ -534,6 +538,7 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
     def merge_models_lists(model_lists):
         log.debug(f"merge_models_lists {model_lists}")
         merged_list = []
+        reasoning_models = set(request.app.state.config.OPENAI_REASONING_MODELS)
 
         for idx, models in enumerate(model_lists):
             if models is not None and "error" not in models:
@@ -543,9 +548,20 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
                         {
                             **model,
                             "name": model.get("name", model["id"]),
-                            "owned_by": "openai",
+                            "owned_by": model.get("owned_by", "openai"),
                             "openai": model,
                             "urlIdx": idx,
+                            **(
+                                {
+                                    "info": {
+                                        "meta": {
+                                            "capabilities": {"reasoning": True}
+                                        }
+                                    }
+                                }
+                                if model.get("id") in reasoning_models
+                                else {}
+                            ),
                         }
                         for model in models
                         if (model.get("id") or model.get("name"))

@@ -24,6 +24,16 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
 - 🔐 **Role-Based Access Control (RBAC)**: Ensure secure access with restricted permissions; only authorized individuals can access your Ollama, and exclusive model creation/pulling rights are reserved for administrators.
 - 🌐🌍 **Multilingual Support**: Experience Open WebUI in your preferred language with our internationalization (i18n) support. Join us in expanding our supported languages! We're actively seeking contributors!
 
+## Reasoning Models
+
+Supported models flagged with reasoning capability automatically receive a system prompt of
+`Think step by step: <think></think>`. For OpenAI-compatible models, including Claude
+variants served via OpenAI endpoints, a dummy `reason` tool is also exposed so the model
+can stream its thought process via function calls. Operators can optionally control how
+much the model thinks by setting the `reasoning_effort` parameter in model or request
+settings. Configure the `OPENAI_REASONING_MODELS` environment variable to list IDs of
+reasoning-capable models.
+
   
   
 ## Deployment Configuration
