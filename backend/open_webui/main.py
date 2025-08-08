@@ -1077,7 +1077,7 @@ if audit_level != AuditLevel.NONE:
 async def kerberos_auth(request: Request, response: Response):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Negotiate "):
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        return Response(status_code=401, headers={"WWW-Authenticate": "Negotiate"})
 
     try:
         import gssapi
@@ -1090,7 +1090,7 @@ async def kerberos_auth(request: Request, response: Response):
         principal = str(ctx.initiator_name)
     except Exception as err:
         logger.error(f"Kerberos auth failed: {err}")
-        raise HTTPException(status_code=401, detail="Unauthorized")
+        return Response(status_code=401, headers={"WWW-Authenticate": "Negotiate"})
 
     if not Users.get_user_by_email(principal.lower()):
         try:
