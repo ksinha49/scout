@@ -106,6 +106,85 @@ log = logging.getLogger(__name__)
 log.setLevel(SRC_LOG_LEVELS["MAIN"])
 
 
+def _serialize_simple_content_blocks(blocks):
+    content = ""
+    for block in blocks:
+        if block["type"] == "reasoning":
+            content += f"<{block['start_tag']}>{block['content']}<{block['end_tag']}>"
+        else:
+            content += block.get("content", "")
+    return content
+
+
+async def stream_body_handler(response, event_emitter):
+    """Parse a streamed response and emit events.
+
+    This utility is primarily intended for tests and developer tooling.
+    """
+    content_blocks = []
+    async for line in response.body_iterator:
+        line = line.decode("utf-8") if isinstance(line, bytes) else line
+        if not line.strip() or not line.startswith("data:"):
+            continue
+        data = line[len("data:") :].strip()
+        if data == "[DONE]":
+            break
+        payload = json.loads(data)
+        choices = payload.get("choices", [])
+        if not choices:
+            continue
+        delta = choices[0].get("delta", {})
+        reasoning_content = delta.get("reasoning_content") or delta.get("reasoning")
+        value = delta.get("content")
+        if reasoning_content:
+            if not content_blocks or content_blocks[-1]["type"] != "reasoning":
+                reasoning_block = {
+                    "type": "reasoning",
+                    "start_tag": "think",
+                    "end_tag": "/think",
+                    "content": "",
+                    "started_at": time.time(),
+                }
+                content_blocks.append(reasoning_block)
+                log.debug("Reasoning block started")
+            reasoning_block = content_blocks[-1]
+            reasoning_block["content"] += reasoning_content
+            await event_emitter(
+                {
+                    "type": "chat:completion",
+                    "data": {"content": _serialize_simple_content_blocks(content_blocks)},
+                }
+            )
+        if value:
+            if content_blocks and content_blocks[-1]["type"] == "reasoning":
+                reasoning_block = content_blocks[-1]
+                reasoning_block["ended_at"] = time.time()
+                reasoning_block["duration"] = int(
+                    reasoning_block["ended_at"] - reasoning_block["started_at"]
+                )
+                log.debug("Reasoning block ended")
+                await event_emitter(
+                    {
+                        "type": "chat:completion",
+                        "data": {
+                            "content": _serialize_simple_content_blocks(content_blocks),
+                            "done": True,
+                            "duration": reasoning_block["duration"],
+                        },
+                    }
+                )
+                content_blocks.append({"type": "text", "content": ""})
+            if not content_blocks:
+                content_blocks.append({"type": "text", "content": ""})
+            content_blocks[-1]["content"] += value
+            await event_emitter(
+                {
+                    "type": "chat:completion",
+                    "data": {"content": _serialize_simple_content_blocks(content_blocks)},
+                }
+            )
+
+
 async def chat_completion_tools_handler(
     request: Request, body: dict, extra_params: dict, user: UserModel, models, tools
 ) -> tuple[dict, dict]:
@@ -1722,6 +1801,7 @@ async def process_chat_response(
                                                 "started_at": time.time(),
                                             }
                                             content_blocks.append(reasoning_block)
+                                            log.debug("Reasoning block started")
                                         else:
                                             reasoning_block = content_blocks[-1]
 
@@ -1758,6 +1838,10 @@ async def process_chat_response(
                                             reasoning_block["duration"] = int(
                                                 reasoning_block["ended_at"]
                                                 - reasoning_block["started_at"]
+                                            )
+                                            log.debug(
+                                                "Reasoning block ended: %s",
+                                                reasoning_block["content"],
                                             )
                                             done_data = {
                                                 "content": serialize_content_blocks(
