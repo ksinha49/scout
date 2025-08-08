@@ -118,6 +118,7 @@ from open_webui.config import (
     OPENAI_API_BASE_URLS,
     OPENAI_API_KEYS,
     OPENAI_API_CONFIGS,
+    OPENAI_REASONING_MODELS,
     # Direct Connections
     ENABLE_DIRECT_CONNECTIONS,
     # Code Execution
@@ -546,6 +547,7 @@ app.state.config.ENABLE_OPENAI_API = ENABLE_OPENAI_API
 app.state.config.OPENAI_API_BASE_URLS = OPENAI_API_BASE_URLS
 app.state.config.OPENAI_API_KEYS = OPENAI_API_KEYS
 app.state.config.OPENAI_API_CONFIGS = OPENAI_API_CONFIGS
+app.state.config.OPENAI_REASONING_MODELS = OPENAI_REASONING_MODELS
 
 app.state.OPENAI_MODELS = {}
 
