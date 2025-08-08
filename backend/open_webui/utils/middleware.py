@@ -1732,6 +1732,16 @@ async def process_chat_response(
                                                 content_blocks
                                             )
                                         }
+                                        log.debug(
+                                            "Emitting reasoning start event: %s", data
+                                        )
+                                        await event_emitter(
+                                            {
+                                                "type": "chat:completion",
+                                                "data": data,
+                                            }
+                                        )
+                                        data = None
 
                                     if value:
                                         if (
@@ -1748,6 +1758,25 @@ async def process_chat_response(
                                             reasoning_block["duration"] = int(
                                                 reasoning_block["ended_at"]
                                                 - reasoning_block["started_at"]
+                                            )
+                                            done_data = {
+                                                "content": serialize_content_blocks(
+                                                    content_blocks
+                                                ),
+                                                "done": True,
+                                                "duration": reasoning_block[
+                                                    "duration"
+                                                ],
+                                            }
+                                            log.debug(
+                                                "Emitting reasoning end event: %s",
+                                                done_data,
+                                            )
+                                            await event_emitter(
+                                                {
+                                                    "type": "chat:completion",
+                                                    "data": done_data,
+                                                }
                                             )
 
                                             content_blocks.append(
@@ -1821,12 +1850,13 @@ async def process_chat_response(
                                                 ),
                                             }
 
-                                await event_emitter(
-                                    {
-                                        "type": "chat:completion",
-                                        "data": data,
-                                    }
-                                )
+                                if data:
+                                    await event_emitter(
+                                        {
+                                            "type": "chat:completion",
+                                            "data": data,
+                                        }
+                                    )
                         except Exception as e:
                             done = "data: [DONE]" in line
                             if done:
