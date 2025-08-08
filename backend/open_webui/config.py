@@ -883,7 +883,12 @@ OPENAI_API_CONFIGS = PersistentConfig(
 OPENAI_REASONING_MODELS = os.environ.get("OPENAI_REASONING_MODELS", "")
 OPENAI_REASONING_MODELS = (
     [m.strip() for m in OPENAI_REASONING_MODELS.split(",") if m.strip()]
-    or ["o1-mini", "o1-preview"]
+    or [
+        "o1-mini",
+        "o1-preview",
+        "claude-3-7-sonnet",
+        "claude-3-7-sonnet-latest",
+    ]
 )
 OPENAI_REASONING_MODELS = PersistentConfig(
     "OPENAI_REASONING_MODELS",

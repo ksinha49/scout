@@ -27,13 +27,13 @@ For more information, be sure to check out OpenwebUI documentation [Open WebUI D
 ## Reasoning Models
 
 Supported models flagged with reasoning capability automatically receive a system prompt of
-`Think step by step: <think></think>`. For OpenAI models, a dummy `reason` tool is also
-exposed so the model can stream its thought process via function calls. Operators can
-optionally control how much the model thinks by setting the `reasoning_effort` parameter
-in model or request settings.
+`Think step by step: <think></think>`. For OpenAI-compatible models, including Claude
+variants served via OpenAI endpoints, a dummy `reason` tool is also exposed so the model
+can stream its thought process via function calls. Operators can optionally control how
+much the model thinks by setting the `reasoning_effort` parameter in model or request
+settings. Configure the `OPENAI_REASONING_MODELS` environment variable to list IDs of
+reasoning-capable models.
 
-  
-  
 ## Deployment Configuration
 
 - `GUNICORN_TIMEOUT` – Gunicorn worker timeout in seconds (default: `120`).

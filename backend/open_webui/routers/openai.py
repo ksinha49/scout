@@ -453,7 +453,11 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
                             {
                                 "id": model_id,
                                 "name": model_id,
-                                "owned_by": "openai",
+                                "owned_by": (
+                                    "anthropic"
+                                    if model_id.startswith("claude")
+                                    else "openai"
+                                ),
                                 "openai": {"id": model_id},
                                 "urlIdx": idx,
                             }
@@ -544,7 +548,7 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
                         {
                             **model,
                             "name": model.get("name", model["id"]),
-                            "owned_by": "openai",
+                            "owned_by": model.get("owned_by", "openai"),
                             "openai": model,
                             "urlIdx": idx,
                             **(
