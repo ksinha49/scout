@@ -135,12 +135,14 @@
 					left: 50%;
 					transform: translateX(-50%);
 				"
-				src="/static/splash.png"
-			/>
+                                src="/static/splash.png"
+                        />
 
-			<div
-				style="
-					position: absolute;
+                        <h1 class="app-name">Scout</h1>
+
+                        <div
+                                style="
+                                        position: absolute;
 					top: 33%;
 					left: 50%;
 
@@ -235,13 +237,52 @@
 		display: block;
 	}
 
-	html.her #progress-bar {
-		display: block;
-	}
+        html.her #progress-bar {
+                display: block;
+        }
 
-	@media (max-width: 24rem) {
-		html.her #progress-background {
-			display: none;
+        .app-name {
+                position: absolute;
+                top: calc(44% + 7rem);
+                left: 50%;
+                transform: translate(-50%, 0);
+                font-size: 2rem;
+                font-weight: 500;
+                opacity: 0;
+                animation: app-name-in 0.6s ease-out forwards;
+                color: #000;
+        }
+
+        html.dark .app-name,
+        html.her .app-name {
+                color: #fff;
+        }
+
+        @keyframes app-name-in {
+                from {
+                        opacity: 0;
+                        transform: translate(-50%, 10px);
+                }
+
+                to {
+                        opacity: 1;
+                        transform: translate(-50%, 0);
+                }
+        }
+
+        #splash-screen.splash-exit {
+                animation: splash-fade-out 0.5s forwards;
+        }
+
+        @keyframes splash-fade-out {
+                to {
+                        opacity: 0;
+                }
+        }
+
+        @media (max-width: 24rem) {
+                html.her #progress-background {
+                        display: none;
 		}
 
 		html.her #progress-bar {
