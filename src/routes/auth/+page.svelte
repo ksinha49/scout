@@ -161,6 +161,19 @@ Modification Log:
                 }
                await checkOauthCallback();
 
+               try {
+                       const resp = await fetch(`${WEBUI_API_BASE_URL}/auth/kerberos`, {
+                               credentials: 'include'
+                       });
+                       if (resp.ok) {
+                               const sessionUser = await resp.json();
+                               await setSessionUser(sessionUser);
+                               return;
+                       }
+               } catch (err) {
+                       console.log(err);
+               }
+
               const providerParam = querystringValue('provider');
                const providers = providerParam !== null
                        ? [providerParam]
