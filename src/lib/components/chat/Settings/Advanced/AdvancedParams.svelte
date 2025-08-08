@@ -61,26 +61,32 @@
 				<div class=" self-center text-xs font-medium">
 					{$i18n.t('Stream Chat Response')}
 				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition"
-					on:click={() => {
-						params.stream_response =
-							(params?.stream_response ?? null) === null
-								? true
-								: params.stream_response
-									? false
-									: null;
-					}}
-					type="button"
-				>
-					{#if params.stream_response === true}
-						<span class="ml-2 self-center">{$i18n.t('On')}</span>
-					{:else if params.stream_response === false}
-						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{/if}
-				</button>
+                                {#if extendedThinkingEnabled}
+                                        <div class="p-1 px-3 text-xs flex rounded-sm transition">
+                                                <span class="ml-2 self-center">{$i18n.t('On')}</span>
+                                        </div>
+                                {:else}
+                                        <button
+                                                class="p-1 px-3 text-xs flex rounded-sm transition"
+                                                on:click={() => {
+                                                        params.stream_response =
+                                                                (params?.stream_response ?? null) === null
+                                                                        ? true
+                                                                        : params.stream_response
+                                                                                ? false
+                                                                                : null;
+                                                }}
+                                                type="button"
+                                        >
+                                                {#if params.stream_response === true}
+                                                        <span class="ml-2 self-center">{$i18n.t('On')}</span>
+                                                {:else if params.stream_response === false}
+                                                        <span class="ml-2 self-center">{$i18n.t('Off')}</span>
+                                                {:else}
+                                                        <span class="ml-2 self-center">{$i18n.t('Default')}</span>
+                                                {/if}
+                                        </button>
+                                {/if}
 			</div>
 		</Tooltip>
 	</div>
@@ -274,36 +280,40 @@
 				<div class=" self-center text-xs font-medium">
 					{$i18n.t('Reasoning Effort')}
 				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.reasoning_effort = (params?.reasoning_effort ?? null) === null ? 'medium' : null;
-					}}
-				>
-					{#if (params?.reasoning_effort ?? null) === null}
-						<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-					{:else}
-						<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
+                                {#if extendedThinkingEnabled}
+                                        <span class="ml-2 self-center">{$i18n.t('High')}</span>
+                                {:else}
+                                        <button
+                                                class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+                                                type="button"
+                                                on:click={() => {
+                                                        params.reasoning_effort = (params?.reasoning_effort ?? null) === null ? 'medium' : null;
+                                                }}
+                                        >
+                                                {#if (params?.reasoning_effort ?? null) === null}
+                                                        <span class="ml-2 self-center"> {$i18n.t('Default')} </span>
+                                                {:else}
+                                                        <span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
+                                                {/if}
+                                        </button>
+                                {/if}
+                        </div>
+                </Tooltip>
 
-		{#if (params?.reasoning_effort ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						class="w-full rounded-lg py-2 px-1 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-						type="text"
-						placeholder={$i18n.t('Enter reasoning effort')}
-						bind:value={params.reasoning_effort}
-						autocomplete="off"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
+                {#if !extendedThinkingEnabled && (params?.reasoning_effort ?? null) !== null}
+                        <div class="flex mt-0.5 space-x-2">
+                                <div class=" flex-1">
+                                        <input
+                                                class="w-full rounded-lg py-2 px-1 text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+                                                type="text"
+                                                placeholder={$i18n.t('Enter reasoning effort')}
+                                                bind:value={params.reasoning_effort}
+                                                autocomplete="off"
+                                        />
+                                </div>
+                        </div>
+                {/if}
+        </div>
 
 	<div class=" py-0.5 w-full justify-between">
 		<Tooltip

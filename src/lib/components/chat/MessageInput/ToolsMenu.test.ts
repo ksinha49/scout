@@ -69,39 +69,51 @@ describe('ToolsMenu', () => {
 	});
 });
 
-test('extended thinking sets temperature to 1 and restores previous value', async () => {
-	const { component } = render(ToolsMenu, {
-		props: {
-			selectedToolIds: [],
-			webSearchEnabled: false,
-			codeInterpreterEnabled: false,
-			imageGenerationEnabled: false,
-			extendedThinkingEnabled: false,
-			reasoningCapable: true,
-			onClose: () => {},
-			params: { temperature: 0.7 }
-		},
-		context: new Map([
-			[
-				'i18n',
-				{
-					subscribe: (run: Function) => {
-						run({ t: (s: string) => s });
-						return () => {};
-					}
-				}
-			]
-		])
-	});
+test('extended thinking updates params and restores previous values', async () => {
+        const { component } = render(ToolsMenu, {
+                props: {
+                        selectedToolIds: [],
+                        webSearchEnabled: false,
+                        codeInterpreterEnabled: false,
+                        imageGenerationEnabled: false,
+                        extendedThinkingEnabled: false,
+                        reasoningCapable: true,
+                        onClose: () => {},
+                        params: { temperature: 0.7, stream_response: false },
+                        selectedModels: ['llama']
+                },
+                context: new Map([
+                        [
+                                'i18n',
+                                {
+                                        subscribe: (run: Function) => {
+                                                run({ t: (s: string) => s });
+                                                return () => {};
+                                        }
+                                }
+                        ]
+                ])
+        });
 
-	const getParams = () => component.$$.ctx[component.$$.props['params']];
-	expect(getParams().temperature).toBe(0.7);
+        const getParams = () => component.$$.ctx[component.$$.props['params']];
+        const getSelectedModels = () => component.$$.ctx[component.$$.props['selectedModels']];
 
-	component.$set({ extendedThinkingEnabled: true });
-	await tick();
-	expect(getParams().temperature).toBe(1);
+        expect(getParams().temperature).toBe(0.7);
+        expect(getParams().stream_response).toBe(false);
+        expect(getParams().thinking).toBeUndefined();
+        expect(getSelectedModels()).toEqual(['llama']);
 
-	component.$set({ extendedThinkingEnabled: false });
-	await tick();
-	expect(getParams().temperature).toBe(0.7);
+        component.$set({ extendedThinkingEnabled: true });
+        await tick();
+        expect(getParams().temperature).toBe(1);
+        expect(getParams().stream_response).toBe(true);
+        expect(getParams().thinking).toEqual({ type: 'enabled', budget_tokens: 5000 });
+        expect(getSelectedModels()).toEqual(['claude']);
+
+        component.$set({ extendedThinkingEnabled: false });
+        await tick();
+        expect(getParams().temperature).toBe(0.7);
+        expect(getParams().stream_response).toBe(false);
+        expect(getParams().thinking).toBeUndefined();
+        expect(getSelectedModels()).toEqual(['llama']);
 });
