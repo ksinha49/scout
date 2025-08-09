@@ -19,9 +19,15 @@
 }
 
 @font-face {
-	font-family: 'InstrumentSerif';
-	src: url('/assets/fonts/InstrumentSerif-Regular.ttf');
-	font-display: swap;
+        font-family: 'InstrumentSerif';
+        src: url('/assets/fonts/InstrumentSerif-Regular.ttf');
+        font-display: swap;
+}
+
+@font-face {
+        font-family: 'Google Sans';
+        src: url('/assets/fonts/GoogleSans.woff2');
+        font-display: swap;
 }
 
 html {
