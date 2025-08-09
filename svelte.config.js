@@ -14,10 +14,7 @@ const config = {
                         pages: 'build',
                         assets: 'build',
                         fallback: 'index.html'
-                }),
-                alias: {
-                        $lib: 'src/lib'
-                }
+		})
         },
 	vitePlugin: {
 		// inspector: {

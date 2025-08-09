@@ -7,14 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.2] - 2025-08-08
 ### Added
 -  🔁 **Advanced Logs**: Allocated advanced logging mechanism for errors and Admin activity
--     **Prompt Optimizer**: LLM powered prompt engineer on chat. 
+-  ✨ **Prompt Optimizer**: LLM powered prompt engineer on chat. 
 ### Updated
--   **Guard users lookup**: Update to channels
--   **Model Fallback**: Validate Ollama model IDs with fallback
+-  🛠 **Guard users lookup**: Update to channels
+-  📦 **Model Fallback**: Validate Ollama model IDs with fallback
 ### Fixed Ameritas Changes
 - 🔐**Provider-aware Silent SSO Login**: Silent login now uses the configured OAuth provider instead of a Microsoft-only endpoint.
--   **Audio fixed**: SST and TTS functional now.
--   **Evaluation loads**: Fixed issue for evaluation loads  
+- 🎤 **Audio fixed**: SST and TTS functional now.
+- 📋 **Evaluation loads**: Fixed issue for evaluation loads  
 
 ## [1.2.1] - 2025-07-25
 ### Added
