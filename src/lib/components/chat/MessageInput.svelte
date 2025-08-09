@@ -1150,8 +1150,8 @@ import Spinner from '../common/Spinner.svelte';
                                                                                         <button
                                                                                                 class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
                                                                                                 type="button"
-                                                                                                aria-label="More"
-                                                                                        >
+                                                                                               aria-label={$i18n.t('Add Files and More')}
+                                                                                       >
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
 													viewBox="0 0 20 20"
