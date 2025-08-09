@@ -6,7 +6,7 @@
         import ShortcutsModal from '../chat/ShortcutsModal.svelte';
         import Tooltip from '../common/Tooltip.svelte';
         import HelpMenu from './Help/HelpMenu.svelte';
-        import ShieldCheck from '../icons/ShieldCheck.svelte';
+        import ShieldCheck from '$lib/components/icons/ShieldCheck.svelte';
         import { showSecuritymd } from '$lib/stores';
 
 	let showShortcuts = false;
