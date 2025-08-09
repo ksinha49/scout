@@ -17,6 +17,11 @@ export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
 export const REQUIRED_OLLAMA_VERSION = '0.1.16';
 
+export const AUTOCOMPLETE_TYPES = {
+        GENERAL: 'General',
+        SEARCH_QUERY: 'Search Query'
+} as const;
+
 export const SUPPORTED_FILE_TYPE = [
 	'application/epub+zip',
 	'application/pdf',
