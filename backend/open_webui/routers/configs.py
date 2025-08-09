@@ -276,10 +276,31 @@ class ModelsConfigForm(BaseModel):
 
 @router.get("/models", response_model=ModelsConfigForm)
 async def get_models_config(request: Request, user=Depends(get_admin_user)):
+    def _as_str(value):
+        if value is None:
+            return None
+        return value if isinstance(value, str) else str(value)
+
+    def _as_list_of_str(value):
+        if value is None:
+            return []
+        if isinstance(value, list):
+            return [str(v) for v in value]
+        if isinstance(value, str):
+            return [value]
+        try:
+            return [str(v) for v in list(value)]
+        except Exception:
+            return []
+
     return {
-        "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "MODEL_ORDER_LIST": request.app.state.config.MODEL_ORDER_LIST,
-        "MODEL_FALLBACK_PRIORITIES": request.app.state.config.MODEL_FALLBACK_PRIORITIES,
+        "DEFAULT_MODELS": _as_str(request.app.state.config.DEFAULT_MODELS),
+        "MODEL_ORDER_LIST": _as_list_of_str(
+            request.app.state.config.MODEL_ORDER_LIST
+        ),
+        "MODEL_FALLBACK_PRIORITIES": _as_str(
+            request.app.state.config.MODEL_FALLBACK_PRIORITIES
+        ),
     }
 
 
