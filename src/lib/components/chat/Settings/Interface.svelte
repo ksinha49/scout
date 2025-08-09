@@ -247,6 +247,9 @@
 
 		richTextInput = $settings.richTextInput ?? true;
 		promptAutocomplete = $settings.promptAutocomplete ?? false;
+		if ($settings.promptAutocomplete === undefined) {
+			saveSettings({ promptAutocomplete });
+		}
 		largeTextAsFile = $settings.largeTextAsFile ?? false;
 
 		collapseCodeBlocks = $settings.collapseCodeBlocks ?? false;
