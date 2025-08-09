@@ -80,24 +80,24 @@
 		sortKey = '';
 		sortOrder = '';
 	};
-	const submitHandler = async () => {
-		loading = true;
+        const submitHandler = async () => {
+                loading = true;
 
-		const res = await setModelsConfig(localStorage.token, {
-			DEFAULT_MODELS: defaultModelIds.join(','),
-			MODEL_ORDER_LIST: modelIds
-		});
+                try {
+                        await setModelsConfig(localStorage.token, {
+                                DEFAULT_MODELS: defaultModelIds.join(','),
+                                MODEL_ORDER_LIST: modelIds
+                        });
 
-		if (res) {
-			toast.success($i18n.t('Models configuration saved successfully'));
-			initHandler();
-			show = false;
-		} else {
-			toast.error($i18n.t('Failed to save models configuration'));
-		}
-
-		loading = false;
-	};
+                        toast.success($i18n.t('Models configuration saved successfully'));
+                        initHandler();
+                        show = false;
+                } catch (error) {
+                        toast.error($i18n.t('Failed to save models configuration'));
+                } finally {
+                        loading = false;
+                }
+        };
 
 	onMount(async () => {
 		init();
