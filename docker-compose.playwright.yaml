@@ -8,5 +8,5 @@ services:
     environment:
       - 'RAG_WEB_LOADER_ENGINE=playwright'
       - 'PLAYWRIGHT_WS_URI=ws://playwright:3000'
-      - 'GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT-120}'
+      - 'GUNICORN_TIMEOUT=${GUNICORN_TIMEOUT-600}'
 
