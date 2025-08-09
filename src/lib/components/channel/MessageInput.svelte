@@ -13,25 +13,25 @@
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import VoiceRecording from '../chat/MessageInput/VoiceRecording.svelte';
 	import InputMenu from './MessageInput/InputMenu.svelte';
-import { uploadFile } from '$lib/apis/files';
-import { WEBUI_API_BASE_URL } from '$lib/constants';
-import FileItem from '../common/FileItem.svelte';
-import Image from '../common/Image.svelte';
-import Spinner from '../common/Spinner.svelte';
-import { transcribeAudio } from '$lib/apis/audio';
-import { optimizePrompt } from '$lib/apis';
-import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
-import Sparkles from '../icons/Sparkles.svelte';
+	import { uploadFile } from '$lib/apis/files';
+	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import FileItem from '../common/FileItem.svelte';
+	import Image from '../common/Image.svelte';
+	import Spinner from '../common/Spinner.svelte';
+	import { transcribeAudio } from '$lib/apis/audio';
+	import { optimizePrompt } from '$lib/apis';
+	import FilesOverlay from '../chat/MessageInput/FilesOverlay.svelte';
+	import Sparkles from '../icons/Sparkles.svelte';
 
-        export let placeholder = $i18n.t('Send a Message');
-        
-        export let id = null;
+	export let placeholder = $i18n.t('Send a Message');
 
-        let draggedOver = false;
+	export let id = null;
 
-        let recording = false;
-        let optimizingPrompt = false;
-        let content = '';
+	let draggedOver = false;
+
+	let recording = false;
+	let optimizingPrompt = false;
+	let content = '';
 	let files = [];
 
 	let filesInputElement;
@@ -501,11 +501,11 @@ import Sparkles from '../icons/Sparkles.svelte';
 										filesInputElement.click();
 									}}
 								>
-                                                                        <button
-                                                                                class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
-                                                                                type="button"
-                                                                                aria-label="More"
-                                                                        >
+									<button
+										class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
+										type="button"
+										aria-label={$i18n.t('Add Files and More')}
+									>
 										<svg
 											xmlns="http://www.w3.org/2000/svg"
 											viewBox="0 0 20 20"
@@ -520,36 +520,36 @@ import Sparkles from '../icons/Sparkles.svelte';
 								</InputMenu>
 							</div>
 
-                                                        <div class="self-end flex space-x-1 mr-1">
-                                                                  {#if $config?.features?.enable_prompt_optimizer}
-                                                                          <Tooltip content={$i18n.t('Optimize prompt')}>
-                                                                                  <button
-                                                                                          class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
-                                                                                          type="button"
-                                                                                          disabled={optimizingPrompt}
-                                                                                          on:click={async () => {
-                                                                                                  try {
-                                                                                                          optimizingPrompt = true;
-                                                                                                          content = await optimizePrompt(localStorage.token, content);
-                                                                                                  } catch (error) {
-                                                                                                          console.error(error);
-                                                                                                          toast.error(error);
-                                                                                                  } finally {
-                                                                                                          optimizingPrompt = false;
-                                                                                                  }
-                                                                                          }}
-                                                                                  >
-                                                                                          {#if optimizingPrompt}
-                                                                                                  <Spinner className="size-5" />
-                                                                                          {:else}
-                                                                                                  <Sparkles className="size-5" strokeWidth="1.75" />
-                                                                                          {/if}
-                                                                                  </button>
-                                                                          </Tooltip>
-                                                                  {/if}
+							<div class="self-end flex space-x-1 mr-1">
+								{#if $config?.features?.enable_prompt_optimizer}
+									<Tooltip content={$i18n.t('Optimize prompt')}>
+										<button
+											class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
+											type="button"
+											disabled={optimizingPrompt}
+											on:click={async () => {
+												try {
+													optimizingPrompt = true;
+													content = await optimizePrompt(localStorage.token, content);
+												} catch (error) {
+													console.error(error);
+													toast.error(error);
+												} finally {
+													optimizingPrompt = false;
+												}
+											}}
+										>
+											{#if optimizingPrompt}
+												<Spinner className="size-5" />
+											{:else}
+												<Sparkles className="size-5" strokeWidth="1.75" />
+											{/if}
+										</button>
+									</Tooltip>
+								{/if}
 
-                                                                {#if content === ''}
-                                                                        <Tooltip content={$i18n.t('Record voice')}>
+								{#if content === ''}
+									<Tooltip content={$i18n.t('Record voice')}>
 										<button
 											id="voice-input-button"
 											class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"

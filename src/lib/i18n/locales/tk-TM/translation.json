@@ -715,9 +715,9 @@
 	"You've reached your token limit for the day.": "Günüňize token çägiňize ýetdiňiz.",
 	"ZIP Code": "Poçta Kody",
 	"WhisperSpeech": "WhisperSpeech",
-        "Prompt Optimization": "",
-        "Enable Prompt Optimization": "",
-        "Prompt Optimization Model": "",
-        "Prompt Optimization Prompt Template": "",
-        "Tools": ""
+	"Prompt Optimization": "",
+	"Enable Prompt Optimization": "",
+	"Prompt Optimization Model": "",
+	"Prompt Optimization Prompt Template": "",
+	"Tools": ""
 }

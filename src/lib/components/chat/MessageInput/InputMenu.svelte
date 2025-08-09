@@ -1,14 +1,14 @@
 <script lang="ts">
-        import { DropdownMenu } from 'bits-ui';
-        import { flyAndScale } from '$lib/utils/transitions';
-        import { getContext } from 'svelte';
+	import { DropdownMenu } from 'bits-ui';
+	import { flyAndScale } from '$lib/utils/transitions';
+	import { getContext } from 'svelte';
 
-        import { config, user } from '$lib/stores';
+	import { config, user } from '$lib/stores';
 
-        import Dropdown from '$lib/components/common/Dropdown.svelte';
-        import Tooltip from '$lib/components/common/Tooltip.svelte';
-        import DocumentArrowUpSolid from '$lib/components/icons/DocumentArrowUpSolid.svelte';
-        import CameraSolid from '$lib/components/icons/CameraSolid.svelte';
+	import Dropdown from '$lib/components/common/Dropdown.svelte';
+	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import DocumentArrowUpSolid from '$lib/components/icons/DocumentArrowUpSolid.svelte';
+	import CameraSolid from '$lib/components/icons/CameraSolid.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -16,15 +16,15 @@
 	export let uploadFilesHandler: Function;
 	export let inputFilesHandler: Function;
 
-        export let uploadGoogleDriveHandler: Function;
-        export let uploadOneDriveHandler: Function;
+	export let uploadGoogleDriveHandler: Function;
+	export let uploadOneDriveHandler: Function;
 
-        export let onClose: Function;
+	export let onClose: Function;
 
-        let show = false;
+	let show = false;
 
-        let fileUploadEnabled = true;
-        $: fileUploadEnabled = $user.role === 'admin' || $user?.permissions?.chat?.file_upload;
+	let fileUploadEnabled = true;
+	$: fileUploadEnabled = $user.role === 'admin' || $user?.permissions?.chat?.file_upload;
 
 	const detectMobile = () => {
 		const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -58,7 +58,7 @@
 		}
 	}}
 >
-	<Tooltip content={$i18n.t('More')}>
+	<Tooltip content={$i18n.t('Add Files and More')}>
 		<slot />
 	</Tooltip>
 
@@ -71,7 +71,6 @@
 			align="start"
 			transition={flyAndScale}
 		>
-
 			<Tooltip
 				content={!fileUploadEnabled ? $i18n.t('You do not have permission to upload files') : ''}
 				className="w-full"
