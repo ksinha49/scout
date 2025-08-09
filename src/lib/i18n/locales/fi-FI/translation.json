@@ -939,6 +939,7 @@
 	"Select Engine": "Valitse moottori",
 	"Select Knowledge": "Valitse tietämys",
 	"Select only one model to call": "Valitse vain yksi malli kutsuttavaksi",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Valitut mallit eivät tue kuvasöytteitä",
 	"Semantic distance to query": "Semanttinen etäisyys kyselyyn",
 	"Send": "Lähetä",

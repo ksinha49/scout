@@ -939,6 +939,7 @@
 	"Select Engine": "",
 	"Select Knowledge": "",
 	"Select only one model to call": "Välj endast en modell att ringa",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Valda modeller stöder inte bildinmatningar",
 	"Semantic distance to query": "",
 	"Send": "Skicka",

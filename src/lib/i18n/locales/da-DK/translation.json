@@ -939,6 +939,7 @@
 	"Select Engine": "Vælg engine",
 	"Select Knowledge": "Vælg viden",
 	"Select only one model to call": "Vælg kun én model at kalde",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Valgte model(ler) understøtter ikke billedinput",
 	"Semantic distance to query": "",
 	"Send": "Send",

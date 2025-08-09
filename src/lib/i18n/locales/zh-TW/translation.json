@@ -939,6 +939,7 @@
 	"Select Engine": "選擇引擎",
 	"Select Knowledge": "選擇知識庫",
 	"Select only one model to call": "僅選擇一個模型來呼叫",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "選取的模型不支援圖片輸入",
 	"Semantic distance to query": "與查詢的語義距離",
 	"Send": "傳送",

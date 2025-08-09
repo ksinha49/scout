@@ -939,6 +939,7 @@
 	"Select Engine": "",
 	"Select Knowledge": "",
 	"Select only one model to call": "",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "მონიშნულ მოდელებს გამოსახულების შეყვანის მხარდაჭერა არ გააჩნიათ",
 	"Semantic distance to query": "",
 	"Send": "გაგზავნა",

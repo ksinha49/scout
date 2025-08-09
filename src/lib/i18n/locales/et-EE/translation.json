@@ -939,6 +939,7 @@
 	"Select Engine": "Valige mootor",
 	"Select Knowledge": "Valige teadmised",
 	"Select only one model to call": "Valige ainult üks mudel kutsumiseks",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Valitud mudel(id) ei toeta pilte sisendina",
 	"Semantic distance to query": "Semantiline kaugus päringust",
 	"Send": "Saada",

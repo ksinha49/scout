@@ -939,6 +939,7 @@
 	"Select Engine": "Selectează motorul",
 	"Select Knowledge": "Selectarea cunoștințelor (Knowledge Selection) este un proces esențial în multiple domenii, incluzând inteligența artificială și învățarea automată. Aceasta presupune alegerea corectă a informațiilor sau datelor relevante dintr-un set mai mare pentru a le utiliza în analize, modele sau sisteme specifice. De exemplu, în învățarea automată, selectarea caracteristicilor este un aspect al selectării cunoștințelor și implică alegerea celor mai relevante date de intrare care contribuie la îmbunătățirea preciziei modelului.",
 	"Select only one model to call": "Selectează doar un singur model pentru apel",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Modelul(e) selectat(e) nu suportă intrări de imagine",
 	"Semantic distance to query": "Distanța semantică față de interogare",
 	"Send": "Trimite",

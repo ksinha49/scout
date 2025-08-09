@@ -76,7 +76,7 @@
                     >
                         <div class="flex gap-2 items-center">
                             <EllipsisVertical />
-                            <div>{$i18n.t('Tools')}</div>
+                            <div>{$i18n.t('Select Tools')}</div>
                         </div>
                     </DropdownMenu.SubTrigger>
                     <DropdownMenu.SubContent

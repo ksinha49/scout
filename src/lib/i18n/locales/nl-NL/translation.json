@@ -939,6 +939,7 @@
 	"Select Engine": "Selecteer Engine",
 	"Select Knowledge": "Selecteer kennis",
 	"Select only one model to call": "Selecteer maar één model om aan te roepen",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Geselecteerde modellen ondersteunen geen beeldinvoer",
 	"Semantic distance to query": "Semantische afstand tot query",
 	"Send": "Verzenden",

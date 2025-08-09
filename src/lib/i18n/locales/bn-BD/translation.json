@@ -939,6 +939,7 @@
 	"Select Engine": "",
 	"Select Knowledge": "",
 	"Select only one model to call": "",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "নির্বাচিত মডেল(গুলি) চিত্র ইনপুট সমর্থন করে না",
 	"Semantic distance to query": "",
 	"Send": "পাঠান",

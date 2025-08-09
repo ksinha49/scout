@@ -939,6 +939,7 @@
 	"Select Engine": "",
 	"Select Knowledge": "",
 	"Select only one model to call": "Pasirinkite vieną modelį",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Pasirinkti modeliai nepalaiko vaizdinių užklausų",
 	"Semantic distance to query": "",
 	"Send": "Siųsti",

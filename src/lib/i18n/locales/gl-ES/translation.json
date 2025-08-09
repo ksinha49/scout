@@ -910,6 +910,7 @@
 	"Select Engine": "Selecciona Motor",
 	"Select Knowledge": "Selecciona coñecemento",
 	"Select only one model to call": "Selecciona sólo un modelo para llamar",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Os modelos seleccionados no admiten entradas de imaxen",
 	"Semantic distance to query": "Distancia semántica a a consulta",
 	"Send": "Enviar",

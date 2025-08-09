@@ -939,6 +939,7 @@
 	"Select Engine": "انجن منتخب کریں",
 	"Select Knowledge": "علم منتخب کریں",
 	"Select only one model to call": "صرف ایک ماڈل کو کال کرنے کے لئے منتخب کریں",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "منتخب کردہ ماڈل(ز) تصویری ان پٹ کی حمایت نہیں کرتے",
 	"Semantic distance to query": "سوال کے لیے معنوی فاصلہ",
 	"Send": "بھیجیں",

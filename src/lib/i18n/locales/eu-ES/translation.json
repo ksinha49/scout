@@ -939,6 +939,7 @@
 	"Select Engine": "Hautatu motorra",
 	"Select Knowledge": "Hautatu ezagutza",
 	"Select only one model to call": "Hautatu modelo bakarra deitzeko",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Hautatutako modelo(e)k ez dute irudi sarrerarik onartzen",
 	"Semantic distance to query": "Kontsultarako distantzia semantikoa",
 	"Send": "Bidali",

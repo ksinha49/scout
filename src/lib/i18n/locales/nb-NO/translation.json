@@ -939,6 +939,7 @@
 	"Select Engine": "Velg motor",
 	"Select Knowledge": "Velg kunnskap",
 	"Select only one model to call": "Velg bare én modell som skal kalles",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Valgte modell(er) støtter ikke bildeinndata",
 	"Semantic distance to query": "Semantisk distanse til spørring",
 	"Send": "Send",
