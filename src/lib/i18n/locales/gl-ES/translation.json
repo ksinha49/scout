@@ -764,7 +764,7 @@
 	"OpenAI API Key is required.": "Achave da API de OpenAI es requerida.",
 	"OpenAI API settings updated": "Configuración de OpenAI API actualizada",
 	"OpenAI URL/Key required.": "URL/chave de OpenAI es requerida.",
-        "Optimize prompt": "",
+	"Optimize prompt": "",
 	"or": "ou",
 	"Organize your users": "Organiza os teus usuarios",
 	"Other": "Outro",
@@ -1178,8 +1178,8 @@
 	"Youtube": "Youtube",
 	"Youtube Language": "",
 	"Youtube Proxy URL": "",
-        "Prompt Optimization": "",
-        "Enable Prompt Optimization": "",
-        "Prompt Optimization Model": "",
-        "Prompt Optimization Prompt Template": ""
+	"Prompt Optimization": "",
+	"Enable Prompt Optimization": "",
+	"Prompt Optimization Model": "",
+	"Prompt Optimization Prompt Template": ""
 }

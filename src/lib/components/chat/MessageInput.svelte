@@ -24,32 +24,32 @@
 	import { blobToFile, compressImage, createMessagesList, findWordIndices } from '$lib/utils';
 	import { transcribeAudio } from '$lib/apis/audio';
 	import { uploadFile } from '$lib/apis/files';
-        import { generateAutoCompletion, optimizePrompt } from '$lib/apis';
+	import { generateAutoCompletion, optimizePrompt } from '$lib/apis';
 	import { deleteFileById } from '$lib/apis/files';
 
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
-        import InputMenu from './MessageInput/InputMenu.svelte';
-        import ToolsMenu from './MessageInput/ToolsMenu.svelte';
+	import InputMenu from './MessageInput/InputMenu.svelte';
+	import ToolsMenu from './MessageInput/ToolsMenu.svelte';
 	import VoiceRecording from './MessageInput/VoiceRecording.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
 	import Commands from './MessageInput/Commands.svelte';
 
 	import RichTextInput from '../common/RichTextInput.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
-import FileItem from '../common/FileItem.svelte';
-import Image from '../common/Image.svelte';
-import Spinner from '../common/Spinner.svelte';
+	import FileItem from '../common/FileItem.svelte';
+	import Image from '../common/Image.svelte';
+	import Spinner from '../common/Spinner.svelte';
 
-        import XMark from '../icons/XMark.svelte';
-        import Headphone from '../icons/Headphone.svelte';
-        import Photo from '../icons/Photo.svelte';
-        import GlobeAlt from '../icons/GlobeAlt.svelte';
-        import CommandLine from '../icons/CommandLine.svelte';
-        import WrenchSolid from '../icons/WrenchSolid.svelte';
-        import Sparkles from '../icons/Sparkles.svelte';
-        import { KokoroWorker } from '$lib/workers/KokoroWorker';
-        import ToolServersModal from './ToolServersModal.svelte';
+	import XMark from '../icons/XMark.svelte';
+	import Headphone from '../icons/Headphone.svelte';
+	import Photo from '../icons/Photo.svelte';
+	import GlobeAlt from '../icons/GlobeAlt.svelte';
+	import CommandLine from '../icons/CommandLine.svelte';
+	import WrenchSolid from '../icons/WrenchSolid.svelte';
+	import Sparkles from '../icons/Sparkles.svelte';
+	import { KokoroWorker } from '$lib/workers/KokoroWorker';
+	import ToolServersModal from './ToolServersModal.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -74,48 +74,48 @@ import Spinner from '../common/Spinner.svelte';
 
 	export let toolServers = [];
 
-        export let selectedToolIds = [];
+	export let selectedToolIds = [];
 
-        export let imageGenerationEnabled = false;
-        export let webSearchEnabled = false;
-        export let codeInterpreterEnabled = false;
+	export let imageGenerationEnabled = false;
+	export let webSearchEnabled = false;
+	export let codeInterpreterEnabled = false;
 
-        $: activeTools = [
-                ...selectedToolIds.map((id) => {
-                        const tool = $tools ? $tools.find((t) => t.id === id) : { id, name: id };
-                        return { ...tool, type: 'dynamic', removable: true };
-                }),
-                ...(imageGenerationEnabled
-                        ? [
-                                  {
-                                          id: 'image-generation',
-                                          name: $i18n.t('Image'),
-                                          type: 'image',
-                                          removable: true
-                                  }
-                          ]
-                        : []),
-                ...(webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
-                        ? [
-                                  {
-                                          id: 'web-search',
-                                          name: $i18n.t('Web Search'),
-                                          type: 'web',
-                                          removable: ($settings?.webSearch ?? false) !== 'always'
-                                  }
-                          ]
-                        : []),
-                ...(codeInterpreterEnabled
-                        ? [
-                                  {
-                                          id: 'code-interpreter',
-                                          name: $i18n.t('Code Interpreter'),
-                                          type: 'code',
-                                          removable: true
-                                  }
-                          ]
-                        : [])
-        ];
+	$: activeTools = [
+		...selectedToolIds.map((id) => {
+			const tool = $tools ? $tools.find((t) => t.id === id) : { id, name: id };
+			return { ...tool, type: 'dynamic', removable: true };
+		}),
+		...(imageGenerationEnabled
+			? [
+					{
+						id: 'image-generation',
+						name: $i18n.t('Image'),
+						type: 'image',
+						removable: true
+					}
+				]
+			: []),
+		...(webSearchEnabled || ($settings?.webSearch ?? false) === 'always'
+			? [
+					{
+						id: 'web-search',
+						name: $i18n.t('Web Search'),
+						type: 'web',
+						removable: ($settings?.webSearch ?? false) !== 'always'
+					}
+				]
+			: []),
+		...(codeInterpreterEnabled
+			? [
+					{
+						id: 'code-interpreter',
+						name: $i18n.t('Code Interpreter'),
+						type: 'code',
+						removable: true
+					}
+				]
+			: [])
+	];
 
 	$: onChange({
 		prompt,
@@ -127,9 +127,9 @@ import Spinner from '../common/Spinner.svelte';
 
 	let showToolServers = false;
 
-        let loaded = false;
-        let recording = false;
-        let optimizingPrompt = false;
+	let loaded = false;
+	let recording = false;
+	let optimizingPrompt = false;
 
 	let isComposing = false;
 
@@ -428,15 +428,15 @@ import Spinner from '../common/Spinner.svelte';
 					{/if}
 				</div>
 
-                                <div class="w-full relative">
-                                        {#if atSelectedModel !== undefined || activeTools.length > 0}
-                                                <div
-                                                        class="px-3 pb-0.5 pt-1.5 text-left w-full flex flex-col absolute bottom-0 left-0 right-0 bg-linear-to-t from-white dark:from-gray-900 z-10"
-                                                >
-                                                        {#if activeTools.length > 0}
-                                                                <div class="flex items-center justify-between w-full">
-                                                                        <div class="flex items-center gap-2.5 text-sm dark:text-gray-500">
-                                                                                <div class="pl-1">
+				<div class="w-full relative">
+					{#if atSelectedModel !== undefined || activeTools.length > 0}
+						<div
+							class="px-3 pb-0.5 pt-1.5 text-left w-full flex flex-col absolute bottom-0 left-0 right-0 bg-linear-to-t from-white dark:from-gray-900 z-10"
+						>
+							{#if activeTools.length > 0}
+								<div class="flex items-center justify-between w-full">
+									<div class="flex items-center gap-2.5 text-sm dark:text-gray-500">
+										<div class="pl-1">
 											<span class="relative flex size-2">
 												<span
 													class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"
@@ -444,26 +444,26 @@ import Spinner from '../common/Spinner.svelte';
 												<span class="relative inline-flex rounded-full size-2 bg-yellow-500" />
 											</span>
 										</div>
-                                                                                <div class="  text-ellipsis line-clamp-1 flex">
-                                                                                        {#each activeTools as tool, toolIdx (tool.id)}
-                                                                                                <Tooltip
-                                                                                                        content={tool?.meta?.description ?? ''}
-                                                                                                        className=" {toolIdx !== 0 ? 'pl-0.5' : ''} shrink-0"
-                                                                                                        placement="top"
-                                                                                                >
-                                                                                                        {tool.name}
-                                                                                                </Tooltip>
+										<div class="  text-ellipsis line-clamp-1 flex">
+											{#each activeTools as tool, toolIdx (tool.id)}
+												<Tooltip
+													content={tool?.meta?.description ?? ''}
+													className=" {toolIdx !== 0 ? 'pl-0.5' : ''} shrink-0"
+													placement="top"
+												>
+													{tool.name}
+												</Tooltip>
 
-                                                                                                {#if toolIdx !== activeTools.length - 1}
-                                                                                                        <span>, </span>
-                                                                                                {/if}
-                                                                                        {/each}
-                                                                                </div>
-                                                                        </div>
-                                                                </div>
-                                                        {/if}
+												{#if toolIdx !== activeTools.length - 1}
+													<span>, </span>
+												{/if}
+											{/each}
+										</div>
+									</div>
+								</div>
+							{/if}
 
-                                                        {#if atSelectedModel !== undefined}
+							{#if atSelectedModel !== undefined}
 								<div class="flex items-center justify-between w-full">
 									<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
 										<img
@@ -1098,9 +1098,9 @@ import Spinner from '../common/Spinner.svelte';
 
 								<div class=" flex justify-between mt-1.5 mb-2.5 mx-0.5 max-w-full">
 									<div class="ml-1 self-end gap-0.5 flex items-center flex-1 max-w-[80%]">
-                                                                                <InputMenu
-                                                                                        {screenCaptureHandler}
-                                                                                        {inputFilesHandler}
+										<InputMenu
+											{screenCaptureHandler}
+											{inputFilesHandler}
 											uploadFilesHandler={() => {
 												filesInputElement.click();
 											}}
@@ -1146,11 +1146,11 @@ import Spinner from '../common/Spinner.svelte';
 												chatInput?.focus();
 											}}
 										>
-                                                                                        <button
-                                                                                                class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
-                                                                                                type="button"
-                                                                                                aria-label="More"
-                                                                                        >
+											<button
+												class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
+												type="button"
+												aria-label={$i18n.t('Add Files and More')}
+											>
 												<svg
 													xmlns="http://www.w3.org/2000/svg"
 													viewBox="0 0 20 20"
@@ -1162,68 +1162,71 @@ import Spinner from '../common/Spinner.svelte';
 													/>
 												</svg>
 											</button>
-                                                                                </InputMenu>
+										</InputMenu>
 
-                                                                                <ToolsMenu
-                                                                                        bind:selectedToolIds
-                                                                                        bind:webSearchEnabled
-                                                                                        bind:codeInterpreterEnabled
-                                                                                        bind:imageGenerationEnabled
-                                                                                        onClose={async () => {
-                                                                                                await tick();
+										<ToolsMenu
+											bind:selectedToolIds
+											bind:webSearchEnabled
+											bind:codeInterpreterEnabled
+											bind:imageGenerationEnabled
+											onClose={async () => {
+												await tick();
 
-                                                                                                const chatInput = document.getElementById('chat-input');
-                                                                                                chatInput?.focus();
-                                                                                        }}
-                                                                                >
-                                                                                        <button
-                                                                                                class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
-                                                                                                type="button"
-                                                                                                aria-label="Tools"
-                                                                                        >
-                                                                                                <WrenchSolid className="size-5" />
-                                                                                        </button>
-                                                                                </ToolsMenu>
+												const chatInput = document.getElementById('chat-input');
+												chatInput?.focus();
+											}}
+										>
+											<button
+												class="text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5"
+												type="button"
+												aria-label="Tools"
+											>
+												<WrenchSolid className="size-5" />
+											</button>
+										</ToolsMenu>
 
-                                                                                <div class="flex gap-0.5 items-center overflow-x-auto scrollbar-none flex-1">
-                                                                                        {#each activeTools as tool (tool.id)}
-                                                                                                <div
-                                                                                                        class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400"
-                                                                                                >
-                                                                                                        {#if tool.type === 'web'}
-                                                                                                                <GlobeAlt className="size-5" />
-                                                                                                        {:else if tool.type === 'code'}
-                                                                                                                <CommandLine className="size-5" />
-                                                                                                        {:else if tool.type === 'image'}
-                                                                                                                <Photo className="size-5" strokeWidth="1.75" />
-                                                                                                        {:else}
-                                                                                                                <WrenchSolid className="size-5" />
-                                                                                                        {/if}
-                                                                                                        <span class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5">{tool.name}</span>
-                                                                                                        {#if tool.removable}
-                                                                                                                <button
-                                                                                                                        class="translate-y-[1px] -mr-1"
-                                                                                                                        type="button"
-                                                                                                                        aria-label={$i18n.t('Remove')}
-                                                                                                                        on:click={() => {
-                                                                                                                                if (tool.type === 'web') {
-                                                                                                                                        webSearchEnabled = false;
-                                                                                                                                } else if (tool.type === 'code') {
-                                                                                                                                        codeInterpreterEnabled = false;
-                                                                                                                                } else if (tool.type === 'image') {
-                                                                                                                                        imageGenerationEnabled = false;
-                                                                                                                                } else {
-                                                                                                                                        selectedToolIds = selectedToolIds.filter((id) => id !== tool.id);
-                                                                                                                                }
-                                                                                                                        }}
-                                                                                                                >
-                                                                                                                        <XMark className="size-4" />
-                                                                                                                </button>
-                                                                                                        {/if}
-                                                                                                </div>
-                                                                                        {/each}
-                                                                               </div>
-                                                                       </div>
+										<div class="flex gap-0.5 items-center overflow-x-auto scrollbar-none flex-1">
+											{#each activeTools as tool (tool.id)}
+												<div
+													class="px-1.5 @xl:px-2.5 py-1.5 flex gap-1.5 items-center text-sm rounded-full font-medium transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400"
+												>
+													{#if tool.type === 'web'}
+														<GlobeAlt className="size-5" />
+													{:else if tool.type === 'code'}
+														<CommandLine className="size-5" />
+													{:else if tool.type === 'image'}
+														<Photo className="size-5" strokeWidth="1.75" />
+													{:else}
+														<WrenchSolid className="size-5" />
+													{/if}
+													<span
+														class="hidden @xl:block whitespace-nowrap overflow-hidden text-ellipsis translate-y-[0.5px] mr-0.5"
+														>{tool.name}</span
+													>
+													{#if tool.removable}
+														<button
+															class="translate-y-[1px] -mr-1"
+															type="button"
+															aria-label={$i18n.t('Remove')}
+															on:click={() => {
+																if (tool.type === 'web') {
+																	webSearchEnabled = false;
+																} else if (tool.type === 'code') {
+																	codeInterpreterEnabled = false;
+																} else if (tool.type === 'image') {
+																	imageGenerationEnabled = false;
+																} else {
+																	selectedToolIds = selectedToolIds.filter((id) => id !== tool.id);
+																}
+															}}
+														>
+															<XMark className="size-4" />
+														</button>
+													{/if}
+												</div>
+											{/each}
+										</div>
+									</div>
 
 									<div class="self-end flex space-x-1 mr-1 shrink-0">
 										{#if toolServers.length > 0}
@@ -1267,40 +1270,40 @@ import Spinner from '../common/Spinner.svelte';
 											</Tooltip>
 										{/if}
 
-                                                                                {#if (!history?.currentId || history.messages[history.currentId]?.done == true) && $config?.features?.enable_prompt_optimizer}
-                                                                                          <Tooltip content={$i18n.t('Optimize prompt')}>
-                                                                                                  <button
-                                                                                                          class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
-                                                                                                          type="button"
-                                                                                                          disabled={optimizingPrompt}
-                                                                                                          on:click={async () => {
-                                                                                                                  try {
-                                                                                                                          optimizingPrompt = true;
-                                                                                                                          prompt = await optimizePrompt(localStorage.token, prompt);
-                                                                                                                  } catch (error) {
-                                                                                                                          console.error(error);
-                                                                                                                          toast.error(error);
-                                                                                                                  } finally {
-                                                                                                                          optimizingPrompt = false;
-                                                                                                                  }
-                                                                                                          }}
-                                                                                                  >
-                                                                                                         {#if optimizingPrompt}
-                                                                                                                 <Spinner className="size-5" />
-                                                                                                         {:else}
-                                                                                                                 <Sparkles className="size-5" strokeWidth="1.75" />
-                                                                                                         {/if}
-                                                                                                 </button>
-                                                                                          </Tooltip>
-                                                                                {/if}
+										{#if (!history?.currentId || history.messages[history.currentId]?.done == true) && $config?.features?.enable_prompt_optimizer}
+											<Tooltip content={$i18n.t('Optimize prompt')}>
+												<button
+													class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
+													type="button"
+													disabled={optimizingPrompt}
+													on:click={async () => {
+														try {
+															optimizingPrompt = true;
+															prompt = await optimizePrompt(localStorage.token, prompt);
+														} catch (error) {
+															console.error(error);
+															toast.error(error);
+														} finally {
+															optimizingPrompt = false;
+														}
+													}}
+												>
+													{#if optimizingPrompt}
+														<Spinner className="size-5" />
+													{:else}
+														<Sparkles className="size-5" strokeWidth="1.75" />
+													{/if}
+												</button>
+											</Tooltip>
+										{/if}
 
-                                                                                {#if !history.currentId || history.messages[history.currentId]?.done == true}
-                                                                                          <Tooltip content={$i18n.t('Record voice')}>
-                                                                                                  <button
-                                                                                                          id="voice-input-button"
-                                                                                                        class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
-                                                                                                        type="button"
-                                                                                                        on:click={async () => {
+										{#if !history.currentId || history.messages[history.currentId]?.done == true}
+											<Tooltip content={$i18n.t('Record voice')}>
+												<button
+													id="voice-input-button"
+													class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
+													type="button"
+													on:click={async () => {
 														try {
 															let stream = await navigator.mediaDevices
 																.getUserMedia({ audio: true })
@@ -1339,13 +1342,13 @@ import Spinner from '../common/Spinner.svelte';
 															d="M5.5 9.643a.75.75 0 00-1.5 0V10c0 3.06 2.29 5.585 5.25 5.954V17.5h-1.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-1.5v-1.546A6.001 6.001 0 0016 10v-.357a.75.75 0 00-1.5 0V10a4.5 4.5 0 01-9 0v-.357z"
 														/>
 													</svg>
-                                                                                                </button>
-                                                                                        </Tooltip>
-                                                                                {/if}
+												</button>
+											</Tooltip>
+										{/if}
 
-                                                                                {#if !history.currentId || history.messages[history.currentId]?.done == true}
-                                                                                        {#if prompt === '' && files.length === 0}
-                                                                                                <div class=" flex items-center">
+										{#if !history.currentId || history.messages[history.currentId]?.done == true}
+											{#if prompt === '' && files.length === 0}
+												<div class=" flex items-center">
 													<Tooltip content={$i18n.t('Call')}>
 														<button
 															class=" {webSearchEnabled ||
