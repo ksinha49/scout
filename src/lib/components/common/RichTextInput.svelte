@@ -164,16 +164,14 @@
 
 		editor = new Editor({
 			element: element,
-			extensions: [
-				StarterKit,
-				CodeBlockLowlight.configure({
-					lowlight
-				}),
-				Highlight,
-				Typography,
-				Placeholder.configure({ placeholder }),
-				...(autocomplete
-					? [
+                       extensions: [
+                               StarterKit.configure({ codeBlock: false }),
+                               CodeBlockLowlight.configure({ lowlight }),
+                               Highlight,
+                               Typography,
+                               Placeholder.configure({ placeholder }),
+                               ...(autocomplete
+                                        ? [
 							AIAutocompletion.configure({
 								generateCompletion: async (text) => {
 									if (text.trim().length === 0) {
