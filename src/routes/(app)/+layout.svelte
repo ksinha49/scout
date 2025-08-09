@@ -15,13 +15,13 @@
 	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
 	import { getAllTags } from '$lib/apis/chats';
 	import { getPrompts } from '$lib/apis/prompts';
-        import { getTools } from '$lib/apis/tools';
-        import { getBanners } from '$lib/apis/configs';
-        import { getUserSettings, updateUserSettings } from '$lib/apis/users';
+	import { getTools } from '$lib/apis/tools';
+	import { getBanners } from '$lib/apis/configs';
+	import { getUserSettings, updateUserSettings } from '$lib/apis/users';
 
-        import { WEBUI_VERSION } from '$lib/constants';
-        import { compareVersion } from '$lib/utils';
-        import { getTodayDate } from '$lib/utils/date';
+	import { WEBUI_VERSION } from '$lib/constants';
+	import { compareVersion } from '$lib/utils';
+	import { getTodayDate } from '$lib/utils/date';
 
 	import {
 		config,
@@ -38,13 +38,14 @@
 		showChangelog,
 		showSecuritymd,
 		temporaryChatEnabled,
-		toolServers
+		toolServers,
+		DEFAULT_SETTINGS
 	} from '$lib/stores';
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
 	import ChangelogModal from '$lib/components/ChangelogModal.svelte';
-        import SecurityModal from '$lib/components/SecurityModal.svelte';
+	import SecurityModal from '$lib/components/SecurityModal.svelte';
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import { get } from 'svelte/store';
@@ -55,17 +56,16 @@
 	let DB = null;
 	let localDBChats = [];
 
-        let version;
+	let version;
 
 	onMount(async () => {
 		if ($user === undefined) {
-                       sessionStorage.setItem('attemptSilentLogin', 'true');
+			sessionStorage.setItem('attemptSilentLogin', 'true');
 			await goto('/auth');
 		} else if (['user', 'admin'].includes($user.role)) {
 			try {
 				// Check if IndexedDB exists
-                               DB = await openDB('Chats', 1);
-
+				DB = await openDB('Chats', 1);
 
 				if (DB) {
 					const chats = await DB.getAllFromIndex('chats', 'timestamp');
@@ -87,7 +87,7 @@
 			});
 
 			if (userSettings) {
-				settings.set(userSettings.ui);
+				settings.set({ ...DEFAULT_SETTINGS, ...userSettings.ui });
 			} else {
 				let localStorageSettings = {} as Parameters<(typeof settings)['set']>[0];
 
@@ -97,7 +97,7 @@
 					console.error('Failed to parse settings from localStorage', e);
 				}
 
-				settings.set(localStorageSettings);
+				settings.set({ ...DEFAULT_SETTINGS, ...localStorageSettings });
 			}
 
 			models.set(
@@ -195,14 +195,14 @@
 					}, 0);
 				}
 			});
-                        
-                        if ($user.role === 'admin' || $user.role === 'user') {
-                                const today = getTodayDate();
-                                if (userSettings?.security_md_last_shown !== today) {
-                                        showSecuritymd.set(true);
-                                }
-                        }
-                         
+
+			if ($user.role === 'admin' || $user.role === 'user') {
+				const today = getTodayDate();
+				if (userSettings?.security_md_last_shown !== today) {
+					showSecuritymd.set(true);
+				}
+			}
+
 			if ($page.url.searchParams.get('temporary-chat') === 'true') {
 				temporaryChatEnabled.set(true);
 			}
@@ -213,25 +213,25 @@
 				temporaryChatEnabled.set(true);
 			}
 
-                        // Check for version updates
-                        if ($user.role === 'admin') {
-                                // Check if the user has dismissed the update toast in the last 24 hours
-                                try {
-                                        if (localStorage.dismissedUpdateToast) {
-                                                const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
-                                                const now = new Date();
+			// Check for version updates
+			if ($user.role === 'admin') {
+				// Check if the user has dismissed the update toast in the last 24 hours
+				try {
+					if (localStorage.dismissedUpdateToast) {
+						const dismissedUpdateToast = new Date(Number(localStorage.dismissedUpdateToast));
+						const now = new Date();
 
-                                                if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
-                                                        checkForVersionUpdates();
-                                                }
-                                        } else {
-                                                checkForVersionUpdates();
-                                        }
-                                } catch (error) {
-                                        console.error('Unable to access localStorage', error);
-                                        checkForVersionUpdates();
-                                }
-                        }
+						if (now - dismissedUpdateToast > 24 * 60 * 60 * 1000) {
+							checkForVersionUpdates();
+						}
+					} else {
+						checkForVersionUpdates();
+					}
+				} catch (error) {
+					console.error('Unable to access localStorage', error);
+					checkForVersionUpdates();
+				}
+			}
 			await tick();
 		}
 
@@ -251,26 +251,26 @@
 <SettingsModal bind:show={$showSettings} />
 <ChangelogModal bind:show={$showChangelog} />
 <SecurityModal
-        bind:show={$showSecuritymd}
-        on:dismiss={async () => {
-                await updateUserSettings(localStorage.token, {
-                        security_md_last_shown: getTodayDate()
-                });
-        }}
+	bind:show={$showSecuritymd}
+	on:dismiss={async () => {
+		await updateUserSettings(localStorage.token, {
+			security_md_last_shown: getTodayDate()
+		});
+	}}
 />
 
 {#if version && compareVersion(version.latest, version.current) && ($settings?.showUpdateToast ?? true)}
 	<div class=" absolute bottom-8 right-8 z-50" in:fade={{ duration: 100 }}>
 		<UpdateInfoToast
 			{version}
-                        on:close={() => {
-                                try {
-                                        localStorage.setItem('dismissedUpdateToast', Date.now().toString());
-                                } catch (error) {
-                                        console.error('Unable to access localStorage', error);
-                                }
-                                version = null;
-                        }}
+			on:close={() => {
+				try {
+					localStorage.setItem('dismissedUpdateToast', Date.now().toString());
+				} catch (error) {
+					console.error('Unable to access localStorage', error);
+				}
+				version = null;
+			}}
 		/>
 	</div>
 {/if}
