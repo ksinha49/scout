@@ -1140,6 +1140,7 @@
 	"Use Gravatar": "Kasuta Gravatari",
 	"Use groups to group your users and assign permissions.": "Kasutage gruppe oma kasutajate grupeerimiseks ja õiguste määramiseks.",
 	"Use Initials": "Kasuta initsiaale",
+        "Use Voice Mode": "",
 	"use_mlock (Ollama)": "use_mlock (Ollama)",
 	"use_mmap (Ollama)": "use_mmap (Ollama)",
 	"user": "kasutaja",

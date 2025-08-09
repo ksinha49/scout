@@ -1140,6 +1140,7 @@
 	"Use Gravatar": "Utiliser Gravatar",
 	"Use groups to group your users and assign permissions.": "Utilisez des groupes pour regrouper vos utilisateurs et attribuer des permissions.",
 	"Use Initials": "Utiliser les initiales",
+        "Use Voice Mode": "",
 	"use_mlock (Ollama)": "Utiliser mlock (Ollama)",
 	"use_mmap (Ollama)": "Utiliser mmap (Ollama)",
 	"user": "utilisateur",
