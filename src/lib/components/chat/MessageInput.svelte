@@ -47,6 +47,7 @@ import Spinner from '../common/Spinner.svelte';
         import GlobeAlt from '../icons/GlobeAlt.svelte';
         import CommandLine from '../icons/CommandLine.svelte';
         import WrenchSolid from '../icons/WrenchSolid.svelte';
+        import EllipsisVertical from '$lib/components/icons/EllipsisVertical.svelte';
         import Sparkles from '../icons/Sparkles.svelte';
         import { KokoroWorker } from '$lib/workers/KokoroWorker';
         import ToolServersModal from './ToolServersModal.svelte';
@@ -1181,7 +1182,7 @@ import Spinner from '../common/Spinner.svelte';
                                                                                                 type="button"
                                                                                                 aria-label="Tools"
                                                                                         >
-                                                                                                <WrenchSolid className="size-5" />
+                                                                                                <EllipsisVertical className="size-5" />
                                                                                         </button>
                                                                                 </ToolsMenu>
 
