@@ -151,13 +151,23 @@ import Spinner from '../common/Spinner.svelte';
 		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.vision ?? true
 	);
 
-	const scrollToBottom = () => {
-		const element = document.getElementById('messages-container');
-		element.scrollTo({
-			top: element.scrollHeight,
-			behavior: 'smooth'
-		});
-	};
+        const scrollToBottom = () => {
+                const element = document.getElementById('messages-container');
+                element.scrollTo({
+                        top: element.scrollHeight,
+                        behavior: 'smooth'
+                });
+        };
+
+       const submitPrompt = () => {
+               const text = prompt.trim();
+               if (text.length === 0) {
+                       toast.warning($i18n.t('Please enter a message.'));
+                       return;
+               }
+               prompt = text;
+               dispatch('submit', prompt);
+       };
 
 	const screenCaptureHandler = async () => {
 		try {
@@ -561,19 +571,19 @@ import Spinner from '../common/Spinner.svelte';
 								await tick();
 								document.getElementById('chat-input')?.focus();
 
-								if ($settings?.speechAutoSend ?? false) {
-									dispatch('submit', prompt);
-								}
-							}}
-						/>
-					{:else}
-						<form
-							class="w-full flex gap-1.5"
-							on:submit|preventDefault={() => {
-								// check if selectedModels support image input
-								dispatch('submit', prompt);
-							}}
-						>
+                                                               if ($settings?.speechAutoSend ?? false) {
+                                                                       submitPrompt();
+                                                               }
+                                                        }}
+                                                />
+                                        {:else}
+                                                <form
+                                                        class="w-full flex gap-1.5"
+                                                       on:submit|preventDefault={() => {
+                                                               // check if selectedModels support image input
+                                                               submitPrompt();
+                                                       }}
+                                                >
 							<div
 								class="flex-1 flex flex-col relative w-full shadow-lg rounded-3xl border border-gray-100 dark:border-gray-850 hover:border-gray-200 focus-within:border-gray-200 hover:dark:border-gray-800 focus-within:dark:border-gray-800 transition px-1 bg-white/90 dark:bg-gray-400/5 dark:text-gray-100"
 								dir={$settings?.chatDirection ?? 'LTR'}
@@ -823,12 +833,10 @@ import Spinner from '../common/Spinner.svelte';
 																	? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
 																	: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
 
-															if (enterPressed) {
-																e.preventDefault();
-																if (prompt !== '' || files.length > 0) {
-																	dispatch('submit', prompt);
-																}
-															}
+                                                       if (enterPressed) {
+                                                               e.preventDefault();
+                                                               submitPrompt();
+                                                       }
 														}
 													}
 
@@ -1005,14 +1013,10 @@ import Spinner from '../common/Spinner.svelte';
 
 														console.log('Enter pressed:', enterPressed);
 
-														if (enterPressed) {
-															e.preventDefault();
-														}
-
-														// Submit the prompt when Enter key is pressed
-														if ((prompt !== '' || files.length > 0) && enterPressed) {
-															dispatch('submit', prompt);
-														}
+                                               if (enterPressed) {
+                                                       e.preventDefault();
+                                                       submitPrompt();
+                                               }
 													}
 												}
 

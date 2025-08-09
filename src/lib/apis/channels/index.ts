@@ -248,14 +248,16 @@ export const getChannelThreadMessages = async (
 };
 
 type MessageForm = {
-	parent_id?: string;
-	content: string;
-	data?: object;
-	meta?: object;
+       parent_id?: string;
+       // content is assumed to be a validated, non-empty string
+       content: string;
+       data?: object;
+       meta?: object;
 };
 
 export const sendMessage = async (token: string = '', channel_id: string, message: MessageForm) => {
-	let error = null;
+       // message.content is expected to be non-empty and already validated by the caller
+       let error = null;
 
 	const res = await fetch(`${WEBUI_API_BASE_URL}/channels/${channel_id}/messages/post`, {
 		method: 'POST',
