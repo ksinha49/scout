@@ -130,7 +130,8 @@
 		currentId: null
 	};
 
-	let taskId = null;
+       let taskId = null;
+       let currentController: AbortController | null = null;
 
 	// Chat Input
 	let prompt = '';
@@ -896,8 +897,9 @@
 			}
 		}
 
-		taskId = null;
-	};
+               taskId = null;
+               currentController = null;
+       };
 
 	const chatActionHandler = async (chatId, actionId, modelId, responseMessageId, event = null) => {
 		const messages = createMessagesList(history, responseMessageId);
@@ -1552,15 +1554,17 @@
 			}))
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
 
-		const res = await generateOpenAIChatCompletion(
-			localStorage.token,
-			{
-				stream: stream,
-				model: model.id,
-				messages: messages,
-				params: {
-					...$settings?.params,
-					...params,
+               let res;
+               try {
+                       [res, currentController] = await generateOpenAIChatCompletion(
+                               localStorage.token,
+                               {
+                                        stream: stream,
+                                        model: model.id,
+                                        messages: messages,
+                                        params: {
+                                                ...$settings?.params,
+                                                ...params,
 
 					format: $settings.requestFormat ?? undefined,
 					keep_alive: $settings.keepAlive ?? undefined,
@@ -1624,35 +1628,37 @@
 						}
 					: {}),
 
-				...(stream && (model.info?.meta?.capabilities?.usage ?? false)
-					? {
-							stream_options: {
-								include_usage: true
-							}
-						}
-					: {})
-			},
-			`${WEBUI_BASE_URL}/api`
-		).catch(async (error) => {
-			toast.error(`${error}`);
+                               ...(stream && (model.info?.meta?.capabilities?.usage ?? false)
+                                       ? {
+                                                       stream_options: {
+                                                               include_usage: true
+                                                       }
+                                               }
+                                       : {})
+                               },
+                               `${WEBUI_BASE_URL}/api`
+                       );
+               } catch (error) {
+                       toast.error(`${error}`);
 
-			responseMessage.error = {
-				content: error
-			};
-			responseMessage.done = true;
+                       responseMessage.error = {
+                               content: error
+                       };
+                       responseMessage.done = true;
 
-			history.messages[responseMessageId] = responseMessage;
-			history.currentId = responseMessageId;
-			return null;
-		});
+                       history.messages[responseMessageId] = responseMessage;
+                       history.currentId = responseMessageId;
+                       currentController = null;
+                       return null;
+               }
 
-		if (res) {
-			if (res.error) {
-				await handleOpenAIError(res.error, responseMessage);
-			} else {
-				taskId = res.task_id;
-			}
-		}
+               if (res) {
+                        if (res.error) {
+                                await handleOpenAIError(res.error, responseMessage);
+                        } else {
+                                taskId = res.task_id;
+                        }
+               }
 
 		await tick();
 		scrollToBottom();
@@ -1700,27 +1706,30 @@
 		history.messages[responseMessage.id] = responseMessage;
 	};
 
-	const stopResponse = async () => {
-		if (taskId) {
-			const res = await stopTask(localStorage.token, taskId).catch((error) => {
-				toast.error(`${error}`);
-				return null;
-			});
+       const stopResponse = async () => {
+               currentController?.abort();
 
-			if (res) {
-				taskId = null;
+               if (taskId) {
+                       await stopTask(localStorage.token, taskId).catch((error) => {
+                               toast.error(`${error}`);
+                               return null;
+                       });
+               }
 
-				const responseMessage = history.messages[history.currentId];
-				responseMessage.done = true;
+               taskId = null;
+               currentController = null;
 
-				history.messages[history.currentId] = responseMessage;
+               if (history.currentId) {
+                       const responseMessage = history.messages[history.currentId];
+                       responseMessage.done = true;
 
-				if (autoScroll) {
-					scrollToBottom();
-				}
-			}
-		}
-	};
+                       history.messages[history.currentId] = responseMessage;
+
+                       if (autoScroll) {
+                               scrollToBottom();
+                       }
+               }
+       };
 
 	const submitMessage = async (parentId, prompt) => {
 		let userPrompt = prompt;
@@ -1799,13 +1808,14 @@
 		message.merged = mergedResponse;
 		history.messages[messageId] = message;
 
-		try {
-			const [res, controller] = await generateMoACompletion(
-				localStorage.token,
-				message.model,
-				history.messages[message.parentId].content,
-				responses
-			);
+               try {
+                       const [res, controller] = await generateMoACompletion(
+                                localStorage.token,
+                                message.model,
+                                history.messages[message.parentId].content,
+                                responses
+                        );
+                       currentController = controller;
 
 			if (res && res.ok && res.body) {
 				const textStream = await createOpenAITextStream(res.body, $settings.splitLargeChunks);
