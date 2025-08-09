@@ -1,4 +1,4 @@
-import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, AUTOCOMPLETE_TYPES } from '$lib/constants';
 import { convertOpenApiToToolPayload } from '$lib/utils';
 import { getOpenAIModelsDirect } from './openai';
 
@@ -725,11 +725,11 @@ export const generateQueries = async (
 };
 
 export const generateAutoCompletion = async (
-	token: string = '',
-	model: string,
-	prompt: string,
-	messages?: object[],
-	type: string = 'search query'
+        token: string = '',
+        model: string,
+        prompt: string,
+        messages?: object[],
+        type: string = AUTOCOMPLETE_TYPES.GENERAL
 ) => {
 	const controller = new AbortController();
 	let error = null;

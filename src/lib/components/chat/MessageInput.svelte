@@ -27,7 +27,7 @@
         import { generateAutoCompletion, optimizePrompt } from '$lib/apis';
 	import { deleteFileById } from '$lib/apis/files';
 
-	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
+import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT, AUTOCOMPLETE_TYPES } from '$lib/constants';
 
         import InputMenu from './MessageInput/InputMenu.svelte';
         import ToolsMenu from './MessageInput/ToolsMenu.svelte';
@@ -703,14 +703,15 @@ import Spinner from '../common/Spinner.svelte';
 														toast.error($i18n.t('Please select a model first.'));
 													}
 
-													const res = await generateAutoCompletion(
-														localStorage.token,
-														selectedModelIds.at(0),
-														text,
-														history?.currentId
-															? createMessagesList(history, history.currentId)
-															: null
-													).catch((error) => {
+                                                                                                        const res = await generateAutoCompletion(
+                                                                                                                localStorage.token,
+                                                                                                                selectedModelIds.at(0),
+                                                                                                                text,
+                                                                                                                history?.currentId
+                                                                                                                        ? createMessagesList(history, history.currentId)
+                                                                                                                        : null,
+                                                                                                                AUTOCOMPLETE_TYPES.GENERAL
+                                                                                                        ).catch((error) => {
 														console.log(error);
 
 														return null;
