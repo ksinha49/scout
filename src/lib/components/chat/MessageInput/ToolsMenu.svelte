@@ -10,6 +10,7 @@
     import Tooltip from '$lib/components/common/Tooltip.svelte';
 
     import WrenchSolid from '$lib/components/icons/WrenchSolid.svelte';
+    import EllipsisVertical from '$lib/components/icons/EllipsisVertical.svelte';
     import GlobeAltSolid from '$lib/components/icons/GlobeAltSolid.svelte';
     import CommandLineSolid from '$lib/components/icons/CommandLineSolid.svelte';
     import PhotoSolid from '$lib/components/icons/PhotoSolid.svelte';
@@ -74,7 +75,7 @@
                         class="flex w-full justify-between gap-2 items-center px-3 py-2 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
                     >
                         <div class="flex gap-2 items-center">
-                            <WrenchSolid />
+                            <EllipsisVertical />
                             <div>{$i18n.t('Tools')}</div>
                         </div>
                     </DropdownMenu.SubTrigger>
