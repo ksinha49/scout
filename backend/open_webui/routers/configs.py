@@ -9,7 +9,7 @@ Modification Log:
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
-from typing import Optional
+from typing import Optional, Union
 import logging
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
@@ -269,9 +269,9 @@ async def set_code_execution_config(
 # SetDefaultModels
 ############################
 class ModelsConfigForm(BaseModel):
-    DEFAULT_MODELS: Optional[str]
-    MODEL_ORDER_LIST: Optional[list[str]]
-    MODEL_FALLBACK_PRIORITIES: Optional[str]
+    DEFAULT_MODELS: Optional[str] = None
+    MODEL_ORDER_LIST: Optional[Union[list[str], str]] = None
+    MODEL_FALLBACK_PRIORITIES: Optional[str] = None
 
 
 @router.get("/models", response_model=ModelsConfigForm)
@@ -284,12 +284,10 @@ async def get_models_config(request: Request, user=Depends(get_admin_user)):
     def _as_list_of_str(value):
         if value is None:
             return []
-        if isinstance(value, list):
-            return [str(v) for v in value]
         if isinstance(value, str):
-            return [value]
+            return [v for v in (s.strip() for s in value.split(",")) if v]
         try:
-            return [str(v) for v in list(value)]
+            return [str(v) for v in value if isinstance(v, str)]
         except Exception:
             return []
 
@@ -309,7 +307,15 @@ async def set_models_config(
     request: Request, form_data: ModelsConfigForm, user=Depends(get_admin_user)
 ):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
-    request.app.state.config.MODEL_ORDER_LIST = form_data.MODEL_ORDER_LIST
+
+    order_list = []
+    if isinstance(form_data.MODEL_ORDER_LIST, str):
+        order_list = [v for v in (s.strip() for s in form_data.MODEL_ORDER_LIST.split(",")) if v]
+    elif isinstance(form_data.MODEL_ORDER_LIST, list):
+        order_list = [v for v in form_data.MODEL_ORDER_LIST if isinstance(v, str)]
+
+    request.app.state.config.MODEL_ORDER_LIST = order_list
+
     request.app.state.config.MODEL_FALLBACK_PRIORITIES = (
         form_data.MODEL_FALLBACK_PRIORITIES
     )
