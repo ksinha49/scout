@@ -939,6 +939,7 @@
 	"Select Engine": "",
 	"Select Knowledge": "",
 	"Select only one model to call": "",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "דגמים נבחרים אינם תומכים בקלט תמונה",
 	"Semantic distance to query": "",
 	"Send": "שלח",

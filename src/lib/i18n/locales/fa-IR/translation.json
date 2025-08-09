@@ -939,6 +939,7 @@
 	"Select Engine": "انتخاب موتور",
 	"Select Knowledge": "انتخاب دانش",
 	"Select only one model to call": "تنها یک مدل را برای صدا زدن انتخاب کنید",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "مدل) های (انتخاب شده ورودیهای تصویر را پشتیبانی نمیکند",
 	"Semantic distance to query": "",
 	"Send": "ارسال",

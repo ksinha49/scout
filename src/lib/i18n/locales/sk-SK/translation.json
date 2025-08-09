@@ -939,6 +939,7 @@
 	"Select Engine": "Vyberte engine",
 	"Select Knowledge": "Vybrať znalosti",
 	"Select only one model to call": "Vyberte iba jeden model, ktorý chcete použiť",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Vybraný(é) model(y) nepodporujú vstupy v podobe obrázkov.",
 	"Semantic distance to query": "Sémantická vzdialenosť k dotazu",
 	"Send": "Odoslať",

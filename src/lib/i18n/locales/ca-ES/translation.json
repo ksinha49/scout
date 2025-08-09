@@ -938,6 +938,7 @@
 	"Select Engine": "Seleccionar el motor",
 	"Select Knowledge": "Seleccionar coneixement",
 	"Select only one model to call": "Seleccionar només un model per trucar",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "El(s) model(s) seleccionats no admeten l'entrada d'imatges",
 	"Semantic distance to query": "Distància semàntica a la pregunta",
 	"Send": "Enviar",

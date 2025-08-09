@@ -939,6 +939,7 @@
 	"Select Engine": "エンジンの選択",
 	"Select Knowledge": "ナレッジベースの選択",
 	"Select only one model to call": "",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "一部のモデルは画像入力をサポートしていません",
 	"Semantic distance to query": "",
 	"Send": "送信",

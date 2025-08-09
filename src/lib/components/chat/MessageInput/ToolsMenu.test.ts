@@ -48,7 +48,7 @@ describe('ToolsMenu', () => {
         await fireEvent.click(getByText('open'));
         await tick();
 
-        await fireEvent.click(getByText('Tools'));
+        await fireEvent.click(getByText('Select Tools'));
         await tick();
         await fireEvent.click(getByText('Test Tool'));
         const selectedToolIds = component.$$.ctx[component.$$.props['selectedToolIds']];

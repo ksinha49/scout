@@ -939,6 +939,7 @@
 	"Select Engine": "Επιλέξτε Μηχανή",
 	"Select Knowledge": "Επιλέξτε Γνώση",
 	"Select only one model to call": "Επιλέξτε μόνο ένα μοντέλο για κλήση",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Τα επιλεγμένα μοντέλα δεν υποστηρίζουν είσοδο εικόνων",
 	"Semantic distance to query": "Σημαντική απόσταση προς την ερώτηση",
 	"Send": "Αποστολή",

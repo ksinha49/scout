@@ -939,6 +939,7 @@
 	"Select Engine": "Motor kiválasztása",
 	"Select Knowledge": "Tudásbázis kiválasztása",
 	"Select only one model to call": "Csak egy modellt válasszon ki hívásra",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "A kiválasztott modell(ek) nem támogatják a képbemenetet",
 	"Semantic distance to query": "Szemantikai távolság a lekérdezéshez",
 	"Send": "Küldés",

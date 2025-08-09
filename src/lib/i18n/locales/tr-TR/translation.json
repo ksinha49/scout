@@ -939,6 +939,7 @@
 	"Select Engine": "Motor Seç",
 	"Select Knowledge": "Bilgi Seç",
 	"Select only one model to call": "Arama için sadece bir model seç",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Seçilen model(ler) görüntü girişlerini desteklemiyor",
 	"Semantic distance to query": "Sorguya semantik mesafe",
 	"Send": "Gönder",

@@ -938,6 +938,7 @@
 	"Select Engine": "Изберете двигател",
 	"Select Knowledge": "Изберете знание",
 	"Select only one model to call": "Изберете само един модел за извикване",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Избраният(те) модел(и) не поддържа въвеждане на изображения",
 	"Semantic distance to query": "Семантично разстояние до заявката",
 	"Send": "Изпрати",

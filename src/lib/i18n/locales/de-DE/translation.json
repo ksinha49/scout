@@ -939,6 +939,7 @@
 	"Select Engine": "Engine auswählen",
 	"Select Knowledge": "Wissensdatenbank auswählen",
 	"Select only one model to call": "Wählen Sie nur ein Modell zum Anrufen aus",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Ihre ausgewählten Modelle unterstützen keine Bildeingaben",
 	"Semantic distance to query": "Semantische Distanz zur Abfrage",
 	"Send": "Senden",

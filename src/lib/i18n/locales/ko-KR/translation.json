@@ -939,6 +939,7 @@
 	"Select Engine": "엔진 선택",
 	"Select Knowledge": "지식 기반 선택",
 	"Select only one model to call": "음성 기능을 위해서는 모델을 하나만 선택해야 합니다.",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "선택한 모델은 이미지 입력을 지원하지 않습니다.",
 	"Semantic distance to query": "쿼리까지 의미적 거리",
 	"Send": "보내기",

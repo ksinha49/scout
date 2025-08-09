@@ -939,6 +939,7 @@
 	"Select Engine": "",
 	"Select Knowledge": "",
 	"Select only one model to call": "",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "I modelli selezionati non supportano l'input di immagini",
 	"Semantic distance to query": "",
 	"Send": "Invia",

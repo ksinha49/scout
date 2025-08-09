@@ -939,6 +939,7 @@
 	"Select Engine": "Изабери мотор",
 	"Select Knowledge": "Изабери знање",
 	"Select only one model to call": "",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Изабрани модели не подржавају уносе слика",
 	"Semantic distance to query": "",
 	"Send": "Пошаљи",

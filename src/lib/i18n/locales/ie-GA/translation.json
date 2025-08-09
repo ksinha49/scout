@@ -939,6 +939,7 @@
 	"Select Engine": "Roghnaigh Inneall",
 	"Select Knowledge": "Roghnaigh Eolais",
 	"Select only one model to call": "Roghnaigh múnla amháin le glaoch",
+        "Select Tools": "",
 	"Selected model(s) do not support image inputs": "Ní tacaíonn an munla/nna roghnaithe le h-ionchuir íomhá",
 	"Semantic distance to query": "Fad shéimeantach le fiosrú",
 	"Send": "Seol",
