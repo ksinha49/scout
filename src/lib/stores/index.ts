@@ -62,7 +62,12 @@ export const toolServers = writable([]);
 
 export const banners: Writable<Banner[]> = writable([]);
 
-export const settings: Writable<Settings> = writable({});
+export const DEFAULT_SETTINGS: Settings = {
+	chatDirection: 'LTR',
+	promptAutocomplete: false
+};
+
+export const settings: Writable<Settings> = writable(DEFAULT_SETTINGS);
 
 export const showSidebar = writable(false);
 export const showSettings = writable(false);
@@ -132,7 +137,7 @@ type OllamaModelDetails = {
 	quantization_level: string;
 };
 
-type Settings = {
+export type Settings = {
 	models?: string[];
 	conversationMode?: boolean;
 	speechAutoSend?: boolean;
@@ -144,6 +149,7 @@ type Settings = {
 	splitLargeDeltas?: boolean;
 	chatDirection: 'LTR' | 'RTL';
 	ctrlEnterToSend?: boolean;
+	promptAutocomplete?: boolean;
 
 	system?: string;
 	requestFormat?: string;
@@ -211,15 +217,15 @@ type Config = {
 		enable_onedrive_integration: boolean;
 		enable_image_generation: boolean;
 		enable_admin_export: boolean;
-                enable_admin_chat_access: boolean;
-                enable_community_sharing: boolean;
-                enable_autocomplete_generation: boolean;
-                enable_prompt_optimizer?: boolean;
-        };
-        oauth: {
-                providers: {
-                        [key: string]: string;
-                };
+		enable_admin_chat_access: boolean;
+		enable_community_sharing: boolean;
+		enable_autocomplete_generation: boolean;
+		enable_prompt_optimizer?: boolean;
+	};
+	oauth: {
+		providers: {
+			[key: string]: string;
+		};
 	};
 };
 
