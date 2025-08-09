@@ -1295,7 +1295,7 @@ import Spinner from '../common/Spinner.svelte';
                                                                                 {/if}
 
                                                                                 {#if !history.currentId || history.messages[history.currentId]?.done == true}
-                                                                                          <Tooltip content={$i18n.t('Record voice')}>
+                                                                                          <Tooltip content={$i18n.t('Dictate')}>
                                                                                                   <button
                                                                                                           id="voice-input-button"
                                                                                                         class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 mr-0.5 self-center"
@@ -1326,7 +1326,7 @@ import Spinner from '../common/Spinner.svelte';
 															toast.error($i18n.t('Permission denied when accessing microphone'));
 														}
 													}}
-													aria-label="Voice Input"
+													aria-label={$i18n.t('Dictate')}
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"

@@ -855,6 +855,7 @@
 	"Read Aloud": "Czytaj na głos",
 	"Reasoning Effort": "Wysiłek rozumowania",
 	"Record voice": "Nagraj swój głos",
+	"Dictate": "Nagraj swój głos",
 	"Redirecting you to Open WebUI Community": "Przekierowujemy Cię do społeczności Open WebUI",
 	"Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.": "",
 	"Refer to yourself as \"User\" (e.g., \"User is learning Spanish\")": "Odnosić się do siebie jako \"Użytkownik\" (np. \"Użytkownik uczy się hiszpańskiego\")",

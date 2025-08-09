@@ -855,6 +855,7 @@
 	"Read Aloud": "Loe valjult",
 	"Reasoning Effort": "Arutluspingutus",
 	"Record voice": "Salvesta hääl",
+	"Dictate": "Salvesta hääl",
 	"Redirecting you to Open WebUI Community": "Suunamine Open WebUI kogukonda",
 	"Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.": "Vähendab mõttetuste genereerimise tõenäosust. Kõrgem väärtus (nt 100) annab mitmekesisemaid vastuseid, samas kui madalam väärtus (nt 10) on konservatiivsem.",
 	"Refer to yourself as \"User\" (e.g., \"User is learning Spanish\")": "Viita endale kui \"Kasutaja\" (nt \"Kasutaja õpib hispaania keelt\")",
