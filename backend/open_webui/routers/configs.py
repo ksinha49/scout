@@ -261,9 +261,9 @@ async def set_code_execution_config(
 # SetDefaultModels
 ############################
 class ModelsConfigForm(BaseModel):
-    DEFAULT_MODELS: Optional[str]
+    DEFAULT_MODELS: Optional[str | list[str]]
     MODEL_ORDER_LIST: Optional[list[str]]
-    MODEL_FALLBACK_PRIORITIES: Optional[str]
+    MODEL_FALLBACK_PRIORITIES: Optional[str | list[str]]
 
 
 @router.get("/models", response_model=ModelsConfigForm)

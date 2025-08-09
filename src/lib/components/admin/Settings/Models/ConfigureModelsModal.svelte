@@ -59,11 +59,15 @@
 	const init = async () => {
 		config = await getModelsConfig(localStorage.token);
 
-		if (config?.DEFAULT_MODELS) {
-			defaultModelIds = (config?.DEFAULT_MODELS).split(',').filter((id) => id);
-		} else {
-			defaultModelIds = [];
-		}
+                if (config?.DEFAULT_MODELS) {
+                        if (Array.isArray(config.DEFAULT_MODELS)) {
+                                defaultModelIds = config.DEFAULT_MODELS;
+                        } else {
+                                defaultModelIds = config.DEFAULT_MODELS.split(',').filter((id) => id);
+                        }
+                } else {
+                        defaultModelIds = [];
+                }
 		const modelOrderList = config.MODEL_ORDER_LIST || [];
 		const allModelIds = $models.map((model) => model.id);
 
@@ -83,10 +87,10 @@
 	const submitHandler = async () => {
 		loading = true;
 
-		const res = await setModelsConfig(localStorage.token, {
-			DEFAULT_MODELS: defaultModelIds.join(','),
-			MODEL_ORDER_LIST: modelIds
-		});
+                const res = await setModelsConfig(localStorage.token, {
+                        DEFAULT_MODELS: defaultModelIds,
+                        MODEL_ORDER_LIST: modelIds
+                });
 
 		if (res) {
 			toast.success($i18n.t('Models configuration saved successfully'));
