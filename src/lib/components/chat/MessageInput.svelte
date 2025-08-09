@@ -1449,17 +1449,18 @@ import Spinner from '../common/Spinner.svelte';
 										{:else}
 											<div class=" flex items-center">
 												<Tooltip content={$i18n.t('Stop')}>
-													<button
-														class="bg-white hover:bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 transition rounded-full p-1.5"
-														on:click={() => {
-															stopResponse();
-														}}
-													>
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															viewBox="0 0 24 24"
-															fill="currentColor"
-															class="size-5"
+                                                                                                        <button
+                                                                                                                class="bg-white hover:bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 transition rounded-full p-1.5"
+                                                                                                                type="button"
+                                                                                                                on:click={() => {
+                                                                                                                        stopResponse();
+                                                                                                                }}
+                                                                                                        >
+                                                                                                                <svg
+                                                                                                                        xmlns="http://www.w3.org/2000/svg"
+                                                                                                                        viewBox="0 0 24 24"
+                                                                                                                        fill="currentColor"
+                                                                                                                        class="size-5"
 														>
 															<path
 																fill-rule="evenodd"
