@@ -26,8 +26,9 @@
 
 @font-face {
         font-family: 'Google Sans';
-        src: url('/assets/fonts/GoogleSansCode-SemiBold.ttf');
-        font-display: swap;
+       src: url('/assets/fonts/GoogleSansCode-Medium.ttf');
+       font-display: swap;
+       font-weight: 500;
 }
 
 html {
