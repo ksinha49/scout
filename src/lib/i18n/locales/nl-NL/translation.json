@@ -855,6 +855,7 @@
 	"Read Aloud": "Voorlezen",
 	"Reasoning Effort": "",
 	"Record voice": "Neem stem op",
+	"Dictate": "Neem stem op",
 	"Redirecting you to Open WebUI Community": "Je wordt doorgestuurd naar OpenWebUI Community",
 	"Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.": "",
 	"Refer to yourself as \"User\" (e.g., \"User is learning Spanish\")": "Refereer naar jezelf als \"user\" (bv. \"User is Spaans aan het leren\"",

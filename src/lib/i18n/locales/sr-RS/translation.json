@@ -855,6 +855,7 @@
 	"Read Aloud": "Прочитај наглас",
 	"Reasoning Effort": "Јачина размишљања",
 	"Record voice": "Сними глас",
+	"Dictate": "Сними глас",
 	"Redirecting you to Open WebUI Community": "Преусмеравање на OpenWebUI заједницу",
 	"Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.": "",
 	"Refer to yourself as \"User\" (e.g., \"User is learning Spanish\")": "",

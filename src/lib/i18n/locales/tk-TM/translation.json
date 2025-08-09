@@ -719,5 +719,6 @@
         "Enable Prompt Optimization": "",
         "Prompt Optimization Model": "",
         "Prompt Optimization Prompt Template": "",
-        "Tools": ""
+        "Tools": "",
+"Dictate": ""
 }

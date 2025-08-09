@@ -855,6 +855,7 @@
 	"Read Aloud": "Lue ääneen",
 	"Reasoning Effort": "",
 	"Record voice": "Nauhoita ääntä",
+	"Dictate": "Nauhoita ääntä",
 	"Redirecting you to Open WebUI Community": "Ohjataan sinut OpenWebUI-yhteisöön",
 	"Reduces the probability of generating nonsense. A higher value (e.g. 100) will give more diverse answers, while a lower value (e.g. 10) will be more conservative.": "",
 	"Refer to yourself as \"User\" (e.g., \"User is learning Spanish\")": "Viittaa itseen \"Käyttäjänä\" (esim. \"Käyttäjä opiskelee espanjaa\")",
