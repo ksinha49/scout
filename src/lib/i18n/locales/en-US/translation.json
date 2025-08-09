@@ -1219,5 +1219,6 @@
         "Prompt Optimization": "",
         "Enable Prompt Optimization": "",
         "Prompt Optimization Model": "",
-        "Prompt Optimization Prompt Template": ""
+        "Prompt Optimization Prompt Template": "",
+        "Select Tools": ""
 }
