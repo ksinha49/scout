@@ -22,8 +22,9 @@
 
 	let taskConfig = {
 		TASK_MODEL: '',
-		TASK_MODEL_EXTERNAL: '',
-		ENABLE_TITLE_GENERATION: true,
+	       TASK_MODEL_EXTERNAL: '',
+	       AUTOCOMPLETE_GENERATION_MODEL: '',
+	       ENABLE_TITLE_GENERATION: true,
 		TITLE_GENERATION_PROMPT_TEMPLATE: '',
 		IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE: '',
 		ENABLE_AUTOCOMPLETE_GENERATION: true,
@@ -130,9 +131,47 @@
 							{/each}
 						</select>
 					</div>
-				</div>
+			       </div>
 
-				<div class="mb-2.5 flex w-full items-center justify-between">
+			       <div class=" mb-1 font-medium flex items-center">
+				       <div class=" text-xs mr-1">{$i18n.t('Autocomplete Model')}</div>
+			       </div>
+
+			       <div class=" mb-2.5 flex w-full gap-2">
+				       <div class="flex-1">
+					       <div class=" text-xs mb-1">{$i18n.t('Local Models')}</div>
+					       <select
+						       class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+						       bind:value={taskConfig.AUTOCOMPLETE_GENERATION_MODEL}
+						       placeholder={$i18n.t('Select a model')}
+					       >
+						       <option value="" selected>{$i18n.t('Current Model')}</option>
+						       {#each $models.filter((m) => m.owned_by === 'ollama') as model}
+							       <option value={model.id} class="bg-gray-100 dark:bg-gray-700">
+								       {model.name}
+							       </option>
+						       {/each}
+					       </select>
+				       </div>
+
+				       <div class="flex-1">
+					       <div class=" text-xs mb-1">{$i18n.t('External Models')}</div>
+					       <select
+						       class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+						       bind:value={taskConfig.AUTOCOMPLETE_GENERATION_MODEL}
+						       placeholder={$i18n.t('Select a model')}
+					       >
+						       <option value="" selected>{$i18n.t('Current Model')}</option>
+						       {#each $models as model}
+							       <option value={model.id} class="bg-gray-100 dark:bg-gray-700">
+								       {model.name}
+							       </option>
+						       {/each}
+					       </select>
+				       </div>
+			       </div>
+
+			       <div class="mb-2.5 flex w-full items-center justify-between">
 					<div class=" self-center text-xs font-medium">
 						{$i18n.t('Title Generation')}
 					</div>

@@ -1,4 +1,5 @@
 {
+	"Autocomplete Model": "",
 	"-1 for no limit, or a positive integer for a specific limit": "-1 piirangu puudumisel või positiivne täisarv konkreetse piirangu jaoks",
 	"'s', 'm', 'h', 'd', 'w' or '-1' for no expiration.": "'s', 'm', 'h', 'd', 'w' või '-1' aegumiseta.",
 	"(e.g. `sh webui.sh --api --api-auth username_password`)": "(nt `sh webui.sh --api --api-auth kasutajanimi_parool`)",

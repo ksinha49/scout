@@ -1,4 +1,5 @@
 {
+	"Autocomplete Model": "",
 	"-1 for no limit, or a positive integer for a specific limit": "-1 за липса на ограничение или положително цяло число за определено ограничение.",
 	"'s', 'm', 'h', 'd', 'w' or '-1' for no expiration.": "'s', 'm', 'h', 'd', 'w' или '-1' за неограничен срок.",
 	"(e.g. `sh webui.sh --api --api-auth username_password`)": "(напр. `sh webui.sh --api --api-auth username_password`)",

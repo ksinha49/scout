@@ -1,4 +1,5 @@
 {
+	"Autocomplete Model": "",
 	"-1 for no limit, or a positive integer for a specific limit": "-1 per a cap límit, o un nombre positiu per a un límit específic",
 	"'s', 'm', 'h', 'd', 'w' or '-1' for no expiration.": "'s', 'm', 'h', 'd', 'w' o '-1' perquè no caduqui mai.",
 	"(e.g. `sh webui.sh --api --api-auth username_password`)": "(p. ex. `sh webui.sh --api --api-auth username_password`)",

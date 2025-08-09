@@ -1,4 +1,5 @@
 {
+	"Autocomplete Model": "",
 	"-1 for no limit, or a positive integer for a specific limit": "",
 	"'s', 'm', 'h', 'd', 'w' or '-1' for no expiration.": "만료 없음은 's', 'm', 'h', 'd', 'w' 아니면 '-1' 중 하나를 사용하세요.",
 	"(e.g. `sh webui.sh --api --api-auth username_password`)": "(예: `sh webui.sh --api --api-auth 사용자이름_비밀번호`)",
