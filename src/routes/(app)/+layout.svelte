@@ -12,7 +12,7 @@
 
 	import { getKnowledgeBases } from '$lib/apis/knowledge';
 	import { getFunctions } from '$lib/apis/functions';
-	import { getModels, getToolServersData, getVersionUpdates } from '$lib/apis';
+        import { getModels, getToolServersData, getVersionUpdates, getTaskConfig } from '$lib/apis';
 	import { getAllTags } from '$lib/apis/chats';
 	import { getPrompts } from '$lib/apis/prompts';
 	import { getTools } from '$lib/apis/tools';
@@ -35,12 +35,13 @@
 		tags,
 		banners,
 		showSettings,
-		showChangelog,
-		showSecuritymd,
-		temporaryChatEnabled,
-		toolServers,
-		DEFAULT_SETTINGS
-	} from '$lib/stores';
+                showChangelog,
+                showSecuritymd,
+                temporaryChatEnabled,
+                toolServers,
+                DEFAULT_SETTINGS,
+                taskConfig
+        } from '$lib/stores';
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
 	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
@@ -107,9 +108,10 @@
 				)
 			);
 
-			banners.set(await getBanners(localStorage.token));
-			tools.set(await getTools(localStorage.token));
-			toolServers.set(await getToolServersData($i18n, $settings?.toolServers ?? []));
+                        banners.set(await getBanners(localStorage.token));
+                        tools.set(await getTools(localStorage.token));
+                        toolServers.set(await getToolServersData($i18n, $settings?.toolServers ?? []));
+                        taskConfig.set(await getTaskConfig(localStorage.token));
 
 			document.addEventListener('keydown', async function (event) {
 				const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey is for Cmd key on Mac

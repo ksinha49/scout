@@ -10,6 +10,7 @@ import emojiShortCodes from '$lib/emoji-shortcodes.json';
 export const WEBUI_NAME = writable(APP_NAME);
 export const config: Writable<Config | undefined> = writable(undefined);
 export const user: Writable<SessionUser | undefined> = writable(undefined);
+export const taskConfig: Writable<TaskConfig | undefined> = writable(undefined);
 
 // Electron App
 export const isApp = writable(false);
@@ -193,16 +194,33 @@ type Prompt = {
 };
 
 type Document = {
-	collection_name: string;
-	filename: string;
-	name: string;
-	title: string;
+        collection_name: string;
+        filename: string;
+        name: string;
+        title: string;
+};
+
+export type TaskConfig = {
+        TASK_MODEL?: string;
+        TASK_MODEL_EXTERNAL?: string;
+        AUTOCOMPLETE_GENERATION_MODEL?: string;
+        ENABLE_TITLE_GENERATION: boolean;
+        TITLE_GENERATION_PROMPT_TEMPLATE: string;
+        IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE: string;
+        ENABLE_AUTOCOMPLETE_GENERATION: boolean;
+        AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH: number;
+        TAGS_GENERATION_PROMPT_TEMPLATE: string;
+        ENABLE_TAGS_GENERATION: boolean;
+        ENABLE_SEARCH_QUERY_GENERATION: boolean;
+        ENABLE_RETRIEVAL_QUERY_GENERATION: boolean;
+        QUERY_GENERATION_PROMPT_TEMPLATE: string;
+        TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE: string;
 };
 
 type Config = {
-	status: boolean;
-	name: string;
-	version: string;
+        status: boolean;
+        name: string;
+        version: string;
 	default_locale: string;
 	default_models: string;
 	default_prompt_suggestions: PromptSuggestion[];

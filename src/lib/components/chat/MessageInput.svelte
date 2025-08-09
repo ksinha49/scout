@@ -14,12 +14,13 @@
 		showSidebar,
 		models,
 		config,
-		showCallOverlay,
-		tools,
-		user as _user,
-		showControls,
-		TTSWorker
-	} from '$lib/stores';
+                showCallOverlay,
+                tools,
+                user as _user,
+                showControls,
+                TTSWorker,
+                taskConfig
+        } from '$lib/stores';
 
 	import { blobToFile, compressImage, createMessagesList, findWordIndices } from '$lib/utils';
 	import { transcribeAudio } from '$lib/apis/audio';
@@ -698,28 +699,29 @@ import Spinner from '../common/Spinner.svelte';
 												largeTextAsFile={$settings?.largeTextAsFile ?? false}
 												autocomplete={$config?.features?.enable_autocomplete_generation &&
 													($settings?.promptAutocomplete ?? false)}
-												generateAutoCompletion={async (text) => {
-													if (selectedModelIds.length === 0 || !selectedModelIds.at(0)) {
-														toast.error($i18n.t('Please select a model first.'));
-													}
+                                                                                                generateAutoCompletion={async (text) => {
+                                                                                                        if (!$taskConfig?.AUTOCOMPLETE_GENERATION_MODEL) {
+                                                                                                                toast.error($i18n.t('Please select a model first.'));
+                                                                                                                return;
+                                                                                                        }
 
                                                                                                         const res = await generateAutoCompletion(
                                                                                                                 localStorage.token,
-                                                                                                                selectedModelIds.at(0),
+                                                                                                                $taskConfig.AUTOCOMPLETE_GENERATION_MODEL,
                                                                                                                 text,
                                                                                                                 history?.currentId
                                                                                                                         ? createMessagesList(history, history.currentId)
                                                                                                                         : null,
                                                                                                                 AUTOCOMPLETE_TYPES.GENERAL
                                                                                                         ).catch((error) => {
-														console.log(error);
+                                                                                                                console.log(error);
 
-														return null;
-													});
+                                                                                                                return null;
+                                                                                                        });
 
-													console.log(res);
-													return res;
-												}}
+                                                                                                        console.log(res);
+                                                                                                        return res;
+                                                                                                }}
 												oncompositionstart={() => (isComposing = true)}
 												oncompositionend={() => (isComposing = false)}
 												on:keydown={async (e) => {
