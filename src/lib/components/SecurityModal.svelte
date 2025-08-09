@@ -1,6 +1,5 @@
 <script lang="ts">
         import { onMount, getContext, createEventDispatcher } from 'svelte';
-        import { Confetti } from 'svelte-confetti';
 
         import { WEBUI_NAME } from '$lib/stores';
 
@@ -31,7 +30,6 @@
 		<div class="flex justify-between items-start">
 			<div class="text-xl font-semibold">
 				{$i18n.t('Ameritas AI Application Security Policy')}				
-				<Confetti x={[-1, -0.25]} y={[0, 0.5]} />
 			</div>
                         <button
                                 class="self-center"
