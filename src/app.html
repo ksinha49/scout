@@ -259,10 +259,10 @@
 			app-name-color 4s ease-in-out 0.6s infinite alternate;
 	}
 
-	.app-name::after {
-		content: 'Scout';
-		animation: app-name-text 0.001s steps(1, end) infinite;
-	}
+        .app-name::after {
+                content: 'Scout';
+               animation: app-name-text 2s steps(1, end) infinite;
+        }
 
 	@keyframes app-name-color {
 		from {
@@ -296,9 +296,9 @@
 		}
 	}
 
-	#splash-screen.splash-exit {
-		animation: splash-fade-out 0.5s forwards;
-	}
+       #splash-screen.splash-exit {
+               animation: splash-fade-out 1s forwards;
+       }
 
 	@keyframes splash-fade-out {
 		to {
