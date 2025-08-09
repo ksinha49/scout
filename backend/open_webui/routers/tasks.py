@@ -104,6 +104,7 @@ async def get_task_config(request: Request, user=Depends(get_verified_user)):
         "IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE": request.app.state.config.IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE,
         "ENABLE_AUTOCOMPLETE_GENERATION": request.app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
         "AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH": request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
+        "AUTOCOMPLETE_GENERATION_MODEL": request.app.state.config.AUTOCOMPLETE_GENERATION_MODEL,
         "TAGS_GENERATION_PROMPT_TEMPLATE": request.app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE,
         "ENABLE_TAGS_GENERATION": request.app.state.config.ENABLE_TAGS_GENERATION,
         "ENABLE_TITLE_GENERATION": request.app.state.config.ENABLE_TITLE_GENERATION,
@@ -122,6 +123,7 @@ class TaskConfigForm(BaseModel):
     IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE: str
     ENABLE_AUTOCOMPLETE_GENERATION: bool
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH: int
+    AUTOCOMPLETE_GENERATION_MODEL: Optional[str]
     TAGS_GENERATION_PROMPT_TEMPLATE: str
     ENABLE_TAGS_GENERATION: bool
     ENABLE_SEARCH_QUERY_GENERATION: bool
@@ -151,6 +153,9 @@ async def update_task_config(
     request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
         form_data.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
     )
+    request.app.state.config.AUTOCOMPLETE_GENERATION_MODEL = (
+        form_data.AUTOCOMPLETE_GENERATION_MODEL
+    )
 
     request.app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE = (
         form_data.TAGS_GENERATION_PROMPT_TEMPLATE
@@ -178,6 +183,7 @@ async def update_task_config(
         "IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE": request.app.state.config.IMAGE_PROMPT_GENERATION_PROMPT_TEMPLATE,
         "ENABLE_AUTOCOMPLETE_GENERATION": request.app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
         "AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH": request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
+        "AUTOCOMPLETE_GENERATION_MODEL": request.app.state.config.AUTOCOMPLETE_GENERATION_MODEL,
         "TAGS_GENERATION_PROMPT_TEMPLATE": request.app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE,
         "ENABLE_TAGS_GENERATION": request.app.state.config.ENABLE_TAGS_GENERATION,
         "ENABLE_SEARCH_QUERY_GENERATION": request.app.state.config.ENABLE_SEARCH_QUERY_GENERATION,
@@ -204,7 +210,6 @@ async def generate_title(
         }
     else:
         models = request.app.state.MODELS
-
     model_id = validate_model_id(request, form_data["model"], models)
 
     # Check if the user has a custom task model
@@ -527,8 +532,8 @@ async def generate_autocompletion(
         }
     else:
         models = request.app.state.MODELS
-
-    model_id = validate_model_id(request, form_data["model"], models)
+    model_id = form_data.get("model") or request.app.state.config.AUTOCOMPLETE_GENERATION_MODEL
+    model_id = validate_model_id(request, model_id, models)
 
     # Check if the user has a custom task model
     # If the user has a custom task model, use that model
