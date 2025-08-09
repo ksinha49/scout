@@ -1346,7 +1346,7 @@ import Spinner from '../common/Spinner.svelte';
                                                                                 {#if !history.currentId || history.messages[history.currentId]?.done == true}
                                                                                         {#if prompt === '' && files.length === 0}
                                                                                                 <div class=" flex items-center">
-													<Tooltip content={$i18n.t('Call')}>
+													<Tooltip content={$i18n.t('Use Voice Mode')}>
 														<button
 															class=" {webSearchEnabled ||
 															($settings?.webSearch ?? false) === 'always'
@@ -1405,7 +1405,7 @@ import Spinner from '../common/Spinner.svelte';
 																	);
 																}
 															}}
-															aria-label="Call"
+															aria-label="Use Voice Mode"
 														>
 															<Headphone className="size-5" />
 														</button>

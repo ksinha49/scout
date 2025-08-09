@@ -1140,6 +1140,7 @@
 	"Use Gravatar": "Úsáid Gravatar",
 	"Use groups to group your users and assign permissions.": "Úsáid grúpaí chun d'úsáideoirí a ghrúpáil agus ceadanna a shannadh",
 	"Use Initials": "Úsáid ceannlitreacha",
+        "Use Voice Mode": "",
 	"use_mlock (Ollama)": "use_mlock (Ollama)",
 	"use_mmap (Ollama)": "use_mmap (Ollama)",
 	"user": "úsáideoir",

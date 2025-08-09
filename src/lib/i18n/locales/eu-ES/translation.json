@@ -1140,6 +1140,7 @@
 	"Use Gravatar": "Erabili Gravatar",
 	"Use groups to group your users and assign permissions.": "Erabili taldeak zure erabiltzaileak taldekatu eta baimenak esleitzeko.",
 	"Use Initials": "Erabili inizialak",
+        "Use Voice Mode": "",
 	"use_mlock (Ollama)": "use_mlock (Ollama)",
 	"use_mmap (Ollama)": "use_mmap (Ollama)",
 	"user": "erabiltzailea",

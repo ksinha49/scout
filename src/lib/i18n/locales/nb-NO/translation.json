@@ -1140,6 +1140,7 @@
 	"Use Gravatar": "Bruk Gravatar",
 	"Use groups to group your users and assign permissions.": "Bruk grupper til å samle brukere og tildele tillatelser.",
 	"Use Initials": "Bruk initialer",
+        "Use Voice Mode": "",
 	"use_mlock (Ollama)": "use_mlock (Ollama)",
 	"use_mmap (Ollama)": "use_mmap (Ollama)",
 	"user": "bruker",

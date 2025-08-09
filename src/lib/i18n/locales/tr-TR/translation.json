@@ -1140,6 +1140,7 @@
 	"Use Gravatar": "Gravatar Kullan",
 	"Use groups to group your users and assign permissions.": "Kullanıcılarınızı gruplamak ve izinler atamak için grupları kullanın.",
 	"Use Initials": "Baş Harfleri Kullan",
+        "Use Voice Mode": "",
 	"use_mlock (Ollama)": "use_mlock (Ollama)",
 	"use_mmap (Ollama)": "use_mmap (Ollama)",
 	"user": "kullanıcı",
